@@ -8,28 +8,28 @@ Ansible playbook using the inventory committed to
 
 ## Deployed state
 
-| Item | Value |
-|------------|------------------------------------------------------------------|
-| Binary | `/usr/local/bin/bitcoin-shard-listener` |
-| Config | `/etc/bitcoin-shard-listener/config.env` |
-| Service | `bitcoin-shard-listener.service` (systemd) |
-| UDP listen | `[::]:9001` — multicast groups joined on `enp6s0` |
-| Egress | `127.0.0.1:9100` UDP (local sink) |
-| Metrics | `http://<mgmt-ip>:9200/metrics` |
-| Health | `http://<mgmt-ip>:9200/healthz` |
-| Readiness | `http://<mgmt-ip>:9200/readyz` |
-| Firewall | `enable_firewall=true`, allow-list `10.10.10.0/24` + `fd20::/64` |
+| Item       | Value                                                            |
+| ---------- | ---------------------------------------------------------------- |
+| Binary     | `/usr/local/bin/bitcoin-shard-listener`                          |
+| Config     | `/etc/bitcoin-shard-listener/config.env`                         |
+| Service    | `bitcoin-shard-listener.service` (systemd)                       |
+| UDP listen | `[::]:9001` — multicast groups joined on `enp6s0`                |
+| Egress     | `127.0.0.1:9100` UDP (local sink)                                |
+| Metrics    | `http://<mgmt-ip>:9200/metrics`                                  |
+| Health     | `http://<mgmt-ip>:9200/healthz`                                  |
+| Readiness  | `http://<mgmt-ip>:9200/readyz`                                   |
+| Firewall   | `enable_firewall=true`, allow-list `10.10.10.0/24` + `fd20::/64` |
 
 ## Filter policy per host
 
 Pinned with seed `lax-lab-2026`, pool size 8:
 
-| VM | `shard_include` | `subtree_include` | `subtree_exclude` | `mc_egress_enabled` | `mc_scope` |
-|-----------|-----------------|----------------------------------|----------------------------------|---------------------|------------|
-| listener1 | — | — | — | `true` (scope: `link`) | `site` |
-| listener2 | `0,1` | — | `836021c2…0700a42` (pool idx 2) | `false` | `site` |
-| listener3 | — | `07015348…f956dbb` (pool idx 5) | — | `false` | `site` |
-| listener4 | — | — | — | `false` | `link` |
+| VM        | `shard_include` | `subtree_include`               | `subtree_exclude`               | `mc_egress_enabled`    | `mc_scope` |
+| --------- | --------------- | ------------------------------- | ------------------------------- | ---------------------- | ---------- |
+| listener1 | —               | —                               | —                               | `true` (scope: `link`) | `site`     |
+| listener2 | `0,1`           | —                               | `836021c2…0700a42` (pool idx 2) | `false`                | `site`     |
+| listener3 | —               | `07015348…f956dbb` (pool idx 5) | —                               | `false`                | `site`     |
+| listener4 | —               | —                               | —                               | `false`                | `link`     |
 
 Regenerate the pool with:
 

@@ -14,6 +14,7 @@ The retransmission pipeline involves three components:
    maintain a dynamic endpoint registry
 
 Testing validates:
+
 - Gap detection and NACK generation
 - ACK response → gap cancellation
 - MISS response → immediate escalation to next endpoint
@@ -169,15 +170,15 @@ in `scenarios/`. Existing automated scenarios follow the convention
 
 Current state of the seven scenarios above:
 
-| # | Scenario               | Automated script                              | Status      | Blockers  |
-|---|------------------------|-----------------------------------------------|-------------|-----------|
-| 1 | Single-endpoint ACK    | `scenarios/10-single-endpoint-ack/`           | Implemented | —         |
-| 2 | MISS + escalation      | `scenarios/13-miss-escalation-tier/` (see §3) | Implemented | —         |
-| 3 | Cross-tier escalation  | `scenarios/13-miss-escalation-tier/`          | Implemented | —         |
-| 4 | Beacon discovery       | (pending)                                     | Ready       | script TBD |
-| 5 | Beacon eviction        | (pending)                                     | Ready       | script TBD |
-| 6 | Draining flag          | (pending)                                     | Ready       | script TBD |
-| 7 | Response suppression   | (pending)                                     | Ready       | script TBD |
+| #   | Scenario              | Automated script                              | Status      | Blockers   |
+| --- | --------------------- | --------------------------------------------- | ----------- | ---------- |
+| 1   | Single-endpoint ACK   | `scenarios/10-single-endpoint-ack/`           | Implemented | —          |
+| 2   | MISS + escalation     | `scenarios/13-miss-escalation-tier/` (see §3) | Implemented | —          |
+| 3   | Cross-tier escalation | `scenarios/13-miss-escalation-tier/`          | Implemented | —          |
+| 4   | Beacon discovery      | (pending)                                     | Ready       | script TBD |
+| 5   | Beacon eviction       | (pending)                                     | Ready       | script TBD |
+| 6   | Draining flag         | (pending)                                     | Ready       | script TBD |
+| 7   | Response suppression  | (pending)                                     | Ready       | script TBD |
 
 Scenarios 2 and 3 are both covered by `scenarios/13-miss-escalation-tier/run.sh`,
 which deploys retry1 (T0/P128), retry2 (T0/P64), and retry3 (T1/P128), blocks
@@ -189,13 +190,13 @@ behaviour; only the driver scripts remain.
 
 ## Metrics Reference
 
-| Metric | Component | Description |
-|--------|-----------|-------------|
-| `bsl_gaps_detected_total` | listener | New gaps detected |
-| `bsl_gaps_suppressed_total` | listener | Gaps cancelled (fill or ACK) |
-| `bsl_nacks_dispatched_total` | listener | NACK datagrams sent |
-| `bsl_gaps_unrecovered_total` | listener | Gaps evicted (TTL/retries exhausted) |
-| `bre_nack_requests_total` | retry-endpoint | NACKs received |
-| `bre_cache_hits_total` | retry-endpoint | Cache hits |
-| `bre_cache_misses_total` | retry-endpoint | Cache misses |
-| `bre_retransmits_total` | retry-endpoint | Frames retransmitted |
+| Metric                       | Component      | Description                          |
+| ---------------------------- | -------------- | ------------------------------------ |
+| `bsl_gaps_detected_total`    | listener       | New gaps detected                    |
+| `bsl_gaps_suppressed_total`  | listener       | Gaps cancelled (fill or ACK)         |
+| `bsl_nacks_dispatched_total` | listener       | NACK datagrams sent                  |
+| `bsl_gaps_unrecovered_total` | listener       | Gaps evicted (TTL/retries exhausted) |
+| `bre_nack_requests_total`    | retry-endpoint | NACKs received                       |
+| `bre_cache_hits_total`       | retry-endpoint | Cache hits                           |
+| `bre_cache_misses_total`     | retry-endpoint | Cache misses                         |
+| `bre_retransmits_total`      | retry-endpoint | Frames retransmitted                 |

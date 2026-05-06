@@ -4,17 +4,17 @@ The `proxy` VM runs [bitcoin-shard-proxy](https://github.com/lightwebinc/bitcoin
 
 ## Deployed state
 
-| Item | Value |
-|------------|--------------------------------------------------|
-| Binary | `/usr/local/bin/bitcoin-shard-proxy` |
-| Config | `/etc/bitcoin-shard-proxy/config.env` |
-| Service | `bitcoin-shard-proxy.service` (systemd, enabled) |
-| Listen | `[::]:9000` UDP — BRC-124/v2 (or legacy BRC-12/v1) frames in |
-| Egress | `enp6s0` → `ff05::/16` (site-local multicast) |
-| Shard bits | `2` (4 groups: `ff05::0`–`ff05::3`) |
-| Metrics | `http://10.10.10.20:9100/metrics` |
-| Health | `http://10.10.10.20:9100/healthz` |
-| Readiness | `http://10.10.10.20:9100/readyz` |
+| Item       | Value                                                        |
+| ---------- | ------------------------------------------------------------ |
+| Binary     | `/usr/local/bin/bitcoin-shard-proxy`                         |
+| Config     | `/etc/bitcoin-shard-proxy/config.env`                        |
+| Service    | `bitcoin-shard-proxy.service` (systemd, enabled)             |
+| Listen     | `[::]:9000` UDP — BRC-124/v2 (or legacy BRC-12/v1) frames in |
+| Egress     | `enp6s0` → `ff05::/16` (site-local multicast)                |
+| Shard bits | `2` (4 groups: `ff05::0`–`ff05::3`)                          |
+| Metrics    | `http://10.10.10.20:9100/metrics`                            |
+| Health     | `http://10.10.10.20:9100/healthz`                            |
+| Readiness  | `http://10.10.10.20:9100/readyz`                             |
 
 ## Ansible inventory
 
@@ -32,7 +32,7 @@ all:
       vars:
         ansible_user: ubuntu
         ansible_connection: ssh
-        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
         egress_mode: ethernet
         shard_bits: 2
         mc_scope: site
@@ -40,7 +40,7 @@ all:
       hosts:
         proxy:
           ansible_host: 10.10.10.20
-          egress_iface: enp6s0   # must be host-level var, not group vars
+          egress_iface: enp6s0 # must be host-level var, not group vars
 ```
 
 > **Note:** `egress_iface` must be set at the host level. Setting it under `vars:` is silently overridden by `group_vars/all.yml` in bitcoin-ingress. See [bitcoin-ingress docs/ansible.md](https://github.com/lightwebinc/bitcoin-ingress/blob/main/docs/ansible.md) for details.

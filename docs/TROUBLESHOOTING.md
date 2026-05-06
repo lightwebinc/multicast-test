@@ -3,6 +3,7 @@
 This guide documents common issues and solutions discovered during testing of the bitcoin-shard-proxy multicast test lab.
 
 ## Table of Contents
+
 - [Listener Issues](#listener-issues)
 - [Beacon Discovery Issues](#beacon-discovery-issues)
 - [Dashboard Issues](#dashboard-issues)
@@ -30,6 +31,7 @@ bridge) and re-run `ansible/run-deploy.sh`.
 `bsl_frames_received_total` on every listener stays at 0.
 
 **Likely causes:**
+
 1. `ingress_iface` in the inventory is `eth0` (wrong) instead of `enp6s0`.
 2. Bridge MLD querier disabled — `cat /sys/devices/virtual/net/lxdbr1/bridge/multicast_querier` returns 0.
 3. `shard_bits` on listener differs from proxy. Must match exactly.
@@ -78,6 +80,7 @@ instead of the fabric NIC, causing beacons to arrive on the wrong interface and
 be dropped by the listener's nftables rule.
 
 **Diagnosis:**
+
 ```bash
 # On the LXD host, capture on the fabric bridge
 sudo tcpdump -i lxdbr1 -n 'udp and dst port 9300' &
@@ -90,6 +93,7 @@ verify the `MC_IFACE` env var on the retry endpoint is set to the fabric
 interface (`enp6s0`).
 
 **Verification:**
+
 ```bash
 # Confirm beacons arriving at listener
 lxc exec listener1 -- journalctl -u bitcoin-shard-listener --since "1 min ago" | grep upsert
@@ -106,6 +110,7 @@ entries in the registry (6 total) and `NACK_MAX_RETRIES=5` (default), the
 counter is exhausted at entry #5 — one short of the last seed.
 
 **Fix:** Set `NACK_MAX_RETRIES=8` on all listeners:
+
 ```bash
 for vm in listener1 listener2 listener3; do
   lxc exec $vm -- sed -i 's/^NACK_MAX_RETRIES=.*/NACK_MAX_RETRIES=8/' \
@@ -141,14 +146,17 @@ match the actual number of multicast delivery losses.
 ### Grafana Dashboard Shows No Data
 
 **Symptoms:**
+
 - Dashboard URL loads but shows "No data"
 - Prometheus metrics endpoint accessible but dashboard empty
 
 **Root Cause:**
+
 - Prometheus not configured to scrape bitcoin-shard-proxy metrics
 - Dashboard queries using `rate()` functions without sufficient data
 
 **Solution:**
+
 ```bash
 # 1. Add bitcoin-shard-proxy to Prometheus config
 lxc exec metrics -- cp /etc/prometheus/prometheus.yml /etc/prometheus/prometheus.yml.backup
@@ -186,6 +194,7 @@ lxc exec metrics -- curl -s http://localhost:9090/api/v1/targets | jq '.data.act
 ```
 
 **Verification:**
+
 ```bash
 # Check metrics are accessible
 lxc exec metrics -- curl -s 'http://localhost:9090/api/v1/query?query=bsp_packets_forwarded_total'
@@ -199,12 +208,14 @@ lxc exec metrics -- curl -s 'http://localhost:9090/api/v1/query?query=bsp_packet
 ### Only recv1 Receives Traffic
 
 **Symptoms:**
+
 - Only recv1 gets multicast traffic; recv2/recv3 get nothing
 - Proxy `bsp_flow_packets_total` metrics show forwarding across all groups
 - Bridge MDB entries exist for recv2/recv3 taps
 - Host-level tcpdump on recv2/recv3 tap interfaces shows packets arriving
 
 **Correct Diagnostic Flow:**
+
 ```bash
 # Step 1: Run the full verification script
 bash 08-verify.sh
@@ -234,6 +245,7 @@ echo "recv2 delta: $((R2_NEW - R2))  recv3 delta: $((R3_NEW - R3))"
 The most common cause is the bridge MDB not being fully populated at boot. This happens when `mcast-join.service` on the receiver VMs starts before the bridge querier has fully initialized.
 
 **Fix:**
+
 ```bash
 # Restart bridge querier first, then receivers sequentially
 sudo systemctl restart lxd-bridge-mcast-querier.service
@@ -260,11 +272,13 @@ These interfaces from the 10gb-direct-testing setup are **not** bridge members o
 ### Source Cannot Reach Proxy
 
 **Symptoms:**
+
 - send-test-frames fails with connection errors
 - Proxy metrics don't increase
 - Traffic doesn't flow
 
 **Diagnostics:**
+
 ```bash
 # 1. Check proxy listening
 lxc exec proxy -- ss -ulnp | grep 9000
@@ -281,6 +295,7 @@ lxc exec source -- ip addr show enp6s0 | grep fd20
 ```
 
 **Solutions:**
+
 ```bash
 # Use correct proxy address format
 lxc exec source -- send-test-frames -addr '[fd20::2]:9000' -shard-bits 2 -count 4
@@ -294,6 +309,7 @@ echo "test" | lxc exec source -- socat - UDP6-DATAGRAM:[fd20::2]:9000 2>/dev/nul
 ### send-test-frames Flag Issues
 
 **Common Mistake:** Using flags that don't exist
+
 ```bash
 # ❌ WRONG - these flags don't exist
 lxc exec source -- send-test-frames -addr '[fd20::2]:9000' -pps 5000 -duration 24h
@@ -303,15 +319,17 @@ lxc exec source -- send-test-frames -addr '[fd20::2]:9000' -shard-bits 2 -count 
 ```
 
 **Available Flags:**
+
 ```bash
 -addr string        # Proxy listen address (default: "[::1]:9000")
--count int          # Number of frames (0 = infinite)  
+-count int          # Number of frames (0 = infinite)
 -interval int       # Milliseconds between frames (default: 200)
 -shard-bits uint    # Shard bits for group prediction (default: 2)
 -spread             # Send one per group, ignores -count
 ```
 
 **24-Hour Test Commands:**
+
 ```bash
 # High rate (maximum)
 timeout 24h lxc exec source -- send-test-frames -addr '[fd20::2]:9000' -shard-bits 2 -count 0 -interval 0
@@ -331,12 +349,14 @@ done
 ### Expected Performance Metrics
 
 **Packet Rate Estimates:**
+
 - `-interval 0`: Maximum rate (CPU/network limited)
 - `-interval 1`: ~1,000 PPS
 - `-interval 10`: ~100 PPS
 - `-interval 100`: ~10 PPS
 
 **24-Hour Estimates:**
+
 - 1000 PPS: ~86M packets
 - 100 PPS: ~8.6M packets
 
@@ -382,6 +402,7 @@ done
 ## Quick Reference Commands
 
 ### Essential Verification Commands
+
 ```bash
 # 1. Check dashboard access
 curl -s -u admin:admin http://10.10.10.142:3000/api/datasources | jq '.[] | select(.name == "prometheus")'
@@ -399,6 +420,7 @@ lxc exec source -- send-test-frames -addr '[fd20::2]:9000' -shard-bits 2 -count 
 ```
 
 ### Cleanup Commands
+
 ```bash
 # Stop all traffic generation
 lxc exec source -- pkill -f send-test-frames

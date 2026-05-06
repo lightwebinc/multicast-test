@@ -17,7 +17,7 @@ as the traffic source.
                                     retry2              │       │  ③ retry3 (T1/P128) → ACK
                                     retry3 ◄────────────│───────┘
                                       └──► ff05::%enp6s0 (retransmit → listeners)
-                                    listener4 ◄──────────┘  (ff02:: subscriber, scenario 05)
+                                    listener4 ◄─────────┘  (ff02:: subscriber, scenario 05)
 ```
 
 Tests target **1000 pps / 10 s** (functional, ~10 000 frames).
@@ -33,31 +33,31 @@ bash deploy.sh           # provisions everything from scratch
 
 ## Layout
 
-| Path | Purpose |
-|---------------------------|------------------------------------------------------------------------------|
-| `deploy.sh` | Top-level: full lab bring-up |
-| `lab/01-*..09-*` | LXD provisioning + verification scripts |
-| `lab/06-netplan/` | Per-VM static IP netplans |
-| `ansible/` | Inventory + thin wrapper for upstream proxy/listener playbooks |
-| `scenarios/` | End-to-end test scenarios (see [`scenarios/README.md`](scenarios/README.md)) |
-| `docs/prometheus/` | `prometheus.yml` (source of truth for metrics VM) |
-| `docs/grafana/` | Proxy + listener dashboard JSON |
-| `docs/` | Network, listener/proxy, and troubleshooting docs |
+| Path               | Purpose                                                                      |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `deploy.sh`        | Top-level: full lab bring-up                                                 |
+| `lab/01-*..09-*`   | LXD provisioning + verification scripts                                      |
+| `lab/06-netplan/`  | Per-VM static IP netplans                                                    |
+| `ansible/`         | Inventory + thin wrapper for upstream proxy/listener playbooks               |
+| `scenarios/`       | End-to-end test scenarios (see [`scenarios/README.md`](scenarios/README.md)) |
+| `docs/prometheus/` | `prometheus.yml` (source of truth for metrics VM)                            |
+| `docs/grafana/`    | Proxy + listener dashboard JSON                                              |
+| `docs/`            | Network, listener/proxy, and troubleshooting docs                            |
 
 ## VMs
 
-| VM | mgmt (enp5s0) | egress (enp6s0) | Role |
-|-------------|---------------|-----------------|-------------------------------------------------|
-| `source`    | 10.10.10.10   | fd20::10/64     | runs `subtx-gen` to emit BRC-124/v2 frames      |
-| `proxy` | 10.10.10.20 | fd20::2/64 | `bitcoin-shard-proxy` ingress |
-| `listener1` | 10.10.10.31 | fd20::21/64 | all shards, all subtrees; mc-egress re-emits ff05→ff02 |
-| `listener2` | 10.10.10.32 | fd20::22/64 | shards 0,1 + subtree_exclude |
-| `listener3` | 10.10.10.33 | fd20::23/64 | all shards + single subtree_include |
-| `listener4` | 10.10.10.37 | fd20::27/64 | `ff02::` subscriber; terminal consumer for mc-egress bridge (scenario 05) |
-| `retry1`    | 10.10.10.34 | fd20::24/64 | `bitcoin-retry-endpoint` Tier 0 / Pref 128 (primary) |
-| `retry2`    | 10.10.10.35 | fd20::25/64 | `bitcoin-retry-endpoint` Tier 0 / Pref 64 (secondary) |
-| `retry3`    | 10.10.10.36 | fd20::26/64 | `bitcoin-retry-endpoint` Tier 1 / Pref 128 (escalation target) |
-| `metrics` | 10.10.10.142 | — | Prometheus :9090 + Grafana :3000 (pre-existing) |
+| VM          | mgmt (enp5s0) | egress (enp6s0) | Role                                                                      |
+| ----------- | ------------- | --------------- | ------------------------------------------------------------------------- |
+| `source`    | 10.10.10.10   | fd20::10/64     | runs `subtx-gen` to emit BRC-124/v2 frames                                |
+| `proxy`     | 10.10.10.20   | fd20::2/64      | `bitcoin-shard-proxy` ingress                                             |
+| `listener1` | 10.10.10.31   | fd20::21/64     | all shards, all subtrees; mc-egress re-emits ff05→ff02                    |
+| `listener2` | 10.10.10.32   | fd20::22/64     | shards 0,1 + subtree_exclude                                              |
+| `listener3` | 10.10.10.33   | fd20::23/64     | all shards + single subtree_include                                       |
+| `listener4` | 10.10.10.37   | fd20::27/64     | `ff02::` subscriber; terminal consumer for mc-egress bridge (scenario 05) |
+| `retry1`    | 10.10.10.34   | fd20::24/64     | `bitcoin-retry-endpoint` Tier 0 / Pref 128 (primary)                      |
+| `retry2`    | 10.10.10.35   | fd20::25/64     | `bitcoin-retry-endpoint` Tier 0 / Pref 64 (secondary)                     |
+| `retry3`    | 10.10.10.36   | fd20::26/64     | `bitcoin-retry-endpoint` Tier 1 / Pref 128 (escalation target)            |
+| `metrics`   | 10.10.10.142  | —               | Prometheus :9090 + Grafana :3000 (pre-existing)                           |
 
 ## Documentation
 
