@@ -58,6 +58,7 @@ snapshot_metrics() {
     local host="${LISTENERS[$i]}"
     local ip="${LISTENER_IPS[$i]}"
     for m in bsl_frames_received_total bsl_frames_forwarded_total bsl_egress_errors_total \
+             bsl_mc_egress_errors_total \
              'bsl_frames_dropped_total|shard_filter' \
              'bsl_frames_dropped_total|subtree_exclude' \
              'bsl_frames_dropped_total|subtree_include_miss' \

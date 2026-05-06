@@ -18,7 +18,7 @@ systemctl is-active lxd-bridge-mcast-querier.service && echo "  lxd-bridge-mcast
 
 echo ""
 echo "--- MLD group membership per listener ---"
-for vm in listener1 listener2 listener3; do
+for vm in listener1 listener2 listener3 listener4; do
   echo ""
   echo "  [$vm] ip maddr show dev enp6s0:"
   lxc exec "$vm" -- ip maddr show dev enp6s0

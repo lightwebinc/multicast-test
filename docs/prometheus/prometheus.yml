@@ -26,10 +26,11 @@ scrape_configs:
           - '10.10.10.31:9200'
           - '10.10.10.32:9200'
           - '10.10.10.33:9200'
+          - '10.10.10.37:9200'
         labels:
           instance_role: listener
     relabel_configs:
-      # Friendly `instance` label: listener1 / listener2 / listener3.
+      # Friendly `instance` label: listener1 / listener2 / listener3 / listener4.
       - source_labels: [__address__]
         regex: '10\.10\.10\.31:9200'
         target_label: instance
@@ -42,6 +43,10 @@ scrape_configs:
         regex: '10\.10\.10\.33:9200'
         target_label: instance
         replacement: 'listener3'
+      - source_labels: [__address__]
+        regex: '10\.10\.10\.37:9200'
+        target_label: instance
+        replacement: 'listener4'
 
   - job_name: bitcoin-retry-endpoint
     metrics_path: /metrics

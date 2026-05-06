@@ -29,9 +29,10 @@ lxdbr0) and `enp6s0` (egress, lxdbr1).
 |-----------|---------------|-----------------|--------------------|----------------------|------------------------|
 | source | 10.10.10.10 | fd20::10/64 | ubuntu-small-mcast | Traffic source | host-only |
 | proxy | 10.10.10.20 | fd20::2/64 | ubuntu-small-mcast | Ingress proxy | open |
-| listener1 | 10.10.10.31 | fd20::21/64 | ubuntu-small-mcast | Listener (all) | `enable_firewall=true` |
+| listener1 | 10.10.10.31 | fd20::21/64 | ubuntu-small-mcast | Listener (all, mc-egress enabled) | `enable_firewall=true` |
 | listener2 | 10.10.10.32 | fd20::22/64 | ubuntu-small-mcast | Listener (filter) | `enable_firewall=true` |
 | listener3 | 10.10.10.33 | fd20::23/64 | ubuntu-small-mcast | Listener (subtree) | `enable_firewall=true` |
+| listener4 | 10.10.10.37 | fd20::27/64 | ubuntu-small-mcast | Listener (mc-egress consumer, ff02::) | `enable_firewall=true` |
 | retry1 | 10.10.10.34 | fd20::24/64 | ubuntu-small-mcast | Retry endpoint T0/P128 | `enable_firewall=true` |
 | retry2 | 10.10.10.35 | fd20::25/64 | ubuntu-small-mcast | Retry endpoint T0/P64 | `enable_firewall=true` |
 | retry3 | 10.10.10.36 | fd20::26/64 | ubuntu-small-mcast | Retry endpoint T1/P128 | `enable_firewall=true` |
@@ -77,6 +78,11 @@ Scope: site-local (`ff05::/16`). With `shard_bits=2` the proxy fans out
 across four groups `ff05::0..3`. Listeners join groups according to
 their `shard_include` filter — listener1 and listener3 join all four,
 listener2 joins only `ff05::0` and `ff05::1`.
+
+**Egress domain (scenario 05):** listener1 re-emits received frames onto
+`ff02::0..3` (link-local scope) via `-mc-egress-scope=link`. listener4 joins
+`ff02::0..3` as the terminal downstream consumer. The same shard index and
+port (9001) are used; only the scope prefix changes (`ff05` → `ff02`).
 
 The join is performed by `bitcoin-shard-listener` itself (socket
 `IPV6_JOIN_GROUP` on `enp6s0`); no separate `mcast-join.service` is

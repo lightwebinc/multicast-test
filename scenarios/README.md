@@ -14,6 +14,7 @@ baselines under [`../testing/`](../testing/).
 | `02-functional-shard-filter/` | Half shards + subtree-exclude | listener2 | — |
 | `03-functional-subtree-filter/` | Single subtree-include | listener3 | — |
 | `04-extended-dashboard/` | 24h+ 1000 pps for dashboard population | all | — |
+| `05-mc-egress-bridge/` | MC egress domain bridge: listener1 re-emits ff05→ff02; listener4 receives | listener1 + listener4 | — |
 | `10-single-endpoint-ack/` | Low-PPS per-gap ACK recovery | all | bitcoin-retry-endpoint |
 | `11-permanent-gap-miss/` | Cache-empty MISS → unrecovered gaps | all | bitcoin-retry-endpoint |
 | `12-burst-gap-ratelimit/` | Multi-frame bursts → rate limiter fires | all | bitcoin-retry-endpoint |
