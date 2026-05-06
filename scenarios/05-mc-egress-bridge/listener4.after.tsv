@@ -1,5 +1,5 @@
-listener4	bsl_frames_received_total	34157
-listener4	bsl_frames_forwarded_total	24672
+listener4	bsl_frames_received_total	57025
+listener4	bsl_frames_forwarded_total	47524
 listener4	bsl_egress_errors_total	9501
 listener4	bsl_mc_egress_errors_total	0
 listener4	bsl_frames_dropped_total|bad_frame	0
