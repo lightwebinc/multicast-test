@@ -29,7 +29,7 @@ source (fd20::10)
 |------------------------|------------------------------------------------------------------------------------------|
 | bitcoin-shard-proxy | local build, `github.com/lightwebinc/bitcoin-shard-proxy` (feat/v2-frame-sequencing tip) |
 | bitcoin-shard-listener | local build, `github.com/lightwebinc/bitcoin-shard-listener` main tip |
-| bitcoin-shard-common | v0.1.0 (92-byte BRC-124/v2 header with SenderID) |
+| bitcoin-shard-common | v0.1.0 (92-byte BRC-124/v2 header with PrevSeq/CurSeq) |
 | subtx-gen | 0225f35 |
 
 ## Scenario 01 — Functional: All Shards

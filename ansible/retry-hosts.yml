@@ -25,7 +25,7 @@ all:
         nack_port: 9300             # NACK listener (listeners dial this)
         egress_port: 9001           # retransmission multicast egress
         cache_backend: memory
-        cache_ttl: "10m"
+        cache_ttl: "60s"
         # NOTE: any var that bitcoin-retransmission's playbook group_vars/all.yml
         # defines (rl_*, enable_firewall, manage_netplan, ...) MUST be set
         # host-level — playbook group_vars beats inventory group vars in
@@ -48,7 +48,7 @@ all:
           # run produces (≈10k NACKs/10s × 3 listeners × NACK_MAX_RETRIES) is
           # not throttled. Production deployments should keep role defaults.
           # Two-level RL: per-IP token bucket + per-LookupSeq sliding window.
-          # rl_sender_rate is a no-op since BRC-124 removed SenderID from wire.
+          # rl_sender_rate is a no-op since BRC-124 uses LookupSeq (not SenderID) for rate limiting.
           rl_ip_rate: 100000
           rl_ip_burst: 100
           rl_sequence_max: 1000000
