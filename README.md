@@ -11,17 +11,16 @@ as the traffic source.
 
 ```
  source ──► proxy (ingress) ──► ff05::%enp6s0 ──► listener1 / listener2 / listener3
-                                      │                     │  NACK (escalating)    sink :9100
-                                      ▼                     │  ① retry1 (T0/P128) → MISS
-                                    retry1                  │  ② retry2 (T0/P64)  → MISS
-                                    retry2                  │  ③ retry3 (T1/P128) → ACK
-                                    retry3 ◄────────────────┘
+                                      │                 │       │  NACK (escalating)    sink :9100
+                                      ▼          ff02:: │       │  ① retry1 (T0/P128) → MISS
+                                    retry1      (mc-egress)     │  ② retry2 (T0/P64)  → MISS
+                                    retry2              │       │  ③ retry3 (T1/P128) → ACK
+                                    retry3 ◄────────────│───────┘
                                       └──► ff05::%enp6s0 (retransmit → listeners)
+                                    listener4 ◄──────────┘  (ff02:: subscriber, scenario 05)
 ```
 
-Tests target **1000 pps / 10 s** (functional, ~10 000 frames). The LXD
-bridge has a known PPS ceiling so higher rates live as historical perf
-baselines under [`testing/`](testing/).
+Tests target **1000 pps / 10 s** (functional, ~10 000 frames).
 
 ## Quickstart
 
@@ -44,7 +43,6 @@ bash deploy.sh           # provisions everything from scratch
 | `docs/prometheus/` | `prometheus.yml` (source of truth for metrics VM) |
 | `docs/grafana/` | Proxy + listener dashboard JSON |
 | `docs/` | Network, listener/proxy, and troubleshooting docs |
-| `testing/` | Historical perf baselines (pre-listener reorg) |
 
 ## VMs
 
@@ -52,9 +50,10 @@ bash deploy.sh           # provisions everything from scratch
 |-------------|---------------|-----------------|-------------------------------------------------|
 | `source`    | 10.10.10.10   | fd20::10/64     | runs `subtx-gen` to emit BRC-124/v2 frames      |
 | `proxy` | 10.10.10.20 | fd20::2/64 | `bitcoin-shard-proxy` ingress |
-| `listener1` | 10.10.10.31 | fd20::21/64 | all shards, all subtrees |
+| `listener1` | 10.10.10.31 | fd20::21/64 | all shards, all subtrees; mc-egress re-emits ff05→ff02 |
 | `listener2` | 10.10.10.32 | fd20::22/64 | shards 0,1 + subtree_exclude |
 | `listener3` | 10.10.10.33 | fd20::23/64 | all shards + single subtree_include |
+| `listener4` | 10.10.10.37 | fd20::27/64 | `ff02::` subscriber; terminal consumer for mc-egress bridge (scenario 05) |
 | `retry1`    | 10.10.10.34 | fd20::24/64 | `bitcoin-retry-endpoint` Tier 0 / Pref 128 (primary) |
 | `retry2`    | 10.10.10.35 | fd20::25/64 | `bitcoin-retry-endpoint` Tier 0 / Pref 64 (secondary) |
 | `retry3`    | 10.10.10.36 | fd20::26/64 | `bitcoin-retry-endpoint` Tier 1 / Pref 128 (escalation target) |

@@ -24,11 +24,12 @@ Ansible playbook using the inventory committed to
 
 Pinned with seed `lax-lab-2026`, pool size 8:
 
-| VM | `shard_include` | `subtree_include` | `subtree_exclude` |
-|-----------|-----------------|---------------------------------|---------------------------------|
-| listener1 | — | — | — |
-| listener2 | `0,1` | — | `836021c2…0700a42` (pool idx 2) |
-| listener3 | — | `07015348…f956dbb` (pool idx 5) | — |
+| VM | `shard_include` | `subtree_include` | `subtree_exclude` | `mc_egress_enabled` | `mc_scope` |
+|-----------|-----------------|----------------------------------|----------------------------------|---------------------|------------|
+| listener1 | — | — | — | `true` (scope: `link`) | `site` |
+| listener2 | `0,1` | — | `836021c2…0700a42` (pool idx 2) | `false` | `site` |
+| listener3 | — | `07015348…f956dbb` (pool idx 5) | — | `false` | `site` |
+| listener4 | — | — | — | `false` | `link` |
 
 Regenerate the pool with:
 
@@ -76,7 +77,7 @@ The same script imports/updates both Grafana dashboards under
 
 ```bash
 # Service state across all listeners
-for vm in listener1 listener2 listener3; do
+for vm in listener1 listener2 listener3 listener4; do
   lxc exec "$vm" -- systemctl is-active bitcoin-shard-listener.service
 done
 
@@ -87,6 +88,7 @@ curl -s http://10.10.10.31:9200/metrics | grep bsl_frames_received_total
 bash scenarios/01-functional-all-shards/run.sh
 bash scenarios/02-functional-shard-filter/run.sh
 bash scenarios/03-functional-subtree-filter/run.sh
+bash scenarios/05-mc-egress-bridge/run.sh
 ```
 
 ## Known deployment notes

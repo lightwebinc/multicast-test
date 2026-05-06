@@ -1,9 +1,7 @@
 # Scenarios
 
 Each directory is a self-contained end-to-end test. Functional scenarios
-target **1000 pps for 10 s** (10 000 frames) — the LXD bridge has a known
-low PPS ceiling, so higher rates are covered only as historical perf
-baselines under [`../testing/`](../testing/).
+target **1000 pps for 10 s** (10 000 frames).
 
 ## Index
 
