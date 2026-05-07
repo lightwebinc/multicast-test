@@ -57,7 +57,7 @@ snapshot_metrics() {
   for i in "${!LISTENERS[@]}"; do
     local host="${LISTENERS[$i]}"
     local ip="${LISTENER_IPS[$i]}"
-    for m in bsl_frames_received_total bsl_frames_forwarded_total bsl_egress_errors_total \
+    for m in bsl_frames_received_total 'bsl_frames_forwarded_total|proto="udp"' bsl_egress_errors_total \
              bsl_mc_egress_errors_total \
              'bsl_frames_dropped_total|shard_filter' \
              'bsl_frames_dropped_total|subtree_exclude' \
@@ -68,7 +68,12 @@ snapshot_metrics() {
       local name="${m%%|*}"
       local filter=""
       if [[ "$m" == *'|'* ]]; then
-        filter="reason=\"${m##*|}\""
+        local _raw_filter="${m##*|}"
+        if [[ "$_raw_filter" == *=* ]]; then
+          filter="$_raw_filter"
+        else
+          filter="reason=\"$_raw_filter\""
+        fi
       fi
       local v
       v=$(metric_value "$ip:$METRICS_PORT" "$name" "$filter")

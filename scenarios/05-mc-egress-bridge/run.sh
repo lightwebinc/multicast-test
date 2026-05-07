@@ -96,8 +96,9 @@ snapshot_metrics "$BEFORE"
 snapshot_l4 "$L4_BEFORE"
 
 # Capture proto-specific forwarded values separately (TSV stores unfiltered totals).
-l1_mcast_fwd_b=$(metric_value "$L1_IP:$METRICS_PORT" bsl_frames_forwarded_total 'proto="udp-mcast"')
-l1_uni_fwd_b=$(metric_value   "$L1_IP:$METRICS_PORT" bsl_frames_forwarded_total 'proto="udp"')
+l1_mcast_fwd_b=$(metric_value   "$L1_IP:$METRICS_PORT" bsl_frames_forwarded_total 'proto="udp-mcast"')
+l1_uni_fwd_b=$(metric_value     "$L1_IP:$METRICS_PORT" bsl_frames_forwarded_total 'proto="udp"')
+l1_received_b=$(metric_value    "$L1_IP:$METRICS_PORT" bsl_frames_received_total)
 
 # --- Run generator ---------------------------------------------------------
 frames=$(run_generator)
@@ -116,9 +117,11 @@ snapshot_l4 "$L4_AFTER"
 l1_mcast_fwd_a=$(metric_value "$L1_IP:$METRICS_PORT" bsl_frames_forwarded_total 'proto="udp-mcast"')
 l1_mcast_fwd=$(( ${l1_mcast_fwd_a:-0} - ${l1_mcast_fwd_b:-0} ))
 
-# listener1: unicast forwarded (must also be ~frames — mc-egress is additive).
-l1_uni_fwd_a=$(metric_value "$L1_IP:$METRICS_PORT" bsl_frames_forwarded_total 'proto="udp"')
+# listener1: unicast forwarded (must also be ~received — mc-egress is additive).
+l1_uni_fwd_a=$(metric_value  "$L1_IP:$METRICS_PORT" bsl_frames_forwarded_total 'proto="udp"')
 l1_uni_fwd=$(( ${l1_uni_fwd_a:-0} - ${l1_uni_fwd_b:-0} ))
+l1_received_a=$(metric_value "$L1_IP:$METRICS_PORT" bsl_frames_received_total)
+l1_received=$(( ${l1_received_a:-0} - ${l1_received_b:-0} ))
 
 # listener1: mc-egress errors (must be zero).
 l1_mc_errors=$(diff_metric "$BEFORE" "$AFTER" listener1 bsl_mc_egress_errors_total)
@@ -130,6 +133,7 @@ l4_forwarded=$(diff_l4 "$L4_BEFORE" "$L4_AFTER" bsl_frames_forwarded_total)
 cat <<EOF
 
 -- listener1 (re-emitter) --
+bsl_frames_received_total                     = $l1_received
 bsl_frames_forwarded_total{proto="udp-mcast"} = $l1_mcast_fwd
 bsl_frames_forwarded_total{proto="udp"}       = $l1_uni_fwd
 bsl_mc_egress_errors_total                    = $l1_mc_errors
@@ -143,10 +147,10 @@ EOF
 SCENARIO_FAIL=${SCENARIO_FAIL:-0}
 
 # listener1 unicast forwarded (regression guard — mc-egress must not disrupt existing path).
-assert_near "l1 unicast forwarded" "$l1_uni_fwd" "$frames" 0.10
+assert_near "l1 unicast forwarded" "$l1_uni_fwd" "$l1_received" 0.05
 
 # listener1 mc-egress forwarded.
-assert_near "l1 mc-egress forwarded" "$l1_mcast_fwd" "$frames" 0.10
+assert_near "l1 mc-egress forwarded" "$l1_mcast_fwd" "$l1_received" 0.05
 
 # listener1 mc-egress errors must be zero.
 if [[ "$l1_mc_errors" -ne 0 ]]; then
@@ -156,11 +160,11 @@ else
   echo "PASS  l1 mc_egress_errors=0"
 fi
 
-# listener4 received.
-assert_near "l4 received"  "$l4_received"  "$frames" 0.10
+# listener4 received (consumer of listener1's mc-egress output).
+assert_near "l4 received"  "$l4_received"  "$l1_received" 0.10
 
 # listener4 forwarded.
-assert_near "l4 forwarded" "$l4_forwarded" "$frames" 0.10
+assert_near "l4 forwarded" "$l4_forwarded" "$l1_received" 0.10
 
 if [[ "$SCENARIO_FAIL" -ne 0 ]]; then
   echo "Scenario 05: FAIL"

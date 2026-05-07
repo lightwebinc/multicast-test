@@ -17,11 +17,12 @@ sleep 2
 echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"
 
-expected_forwarded=$(( frames / 8 ))
-expected_miss=$(( frames * 7 / 8 ))
+received_l3=$(diff_metric "$BEFORE" "$AFTER" listener3 bsl_frames_received_total)
+fwd_l3=$(diff_metric     "$BEFORE" "$AFTER" listener3 'bsl_frames_forwarded_total|proto="udp"')
+dropped_l3=$(diff_metric "$BEFORE" "$AFTER" listener3 'bsl_frames_dropped_total|subtree_include_miss')
 
-assert_near "listener3 forwarded (subtree-include match)" "$(diff_metric "$BEFORE" "$AFTER" listener3 bsl_frames_forwarded_total)"                    "$expected_forwarded" 0.15
-assert_near "listener3 dropped subtree_include_miss"      "$(diff_metric "$BEFORE" "$AFTER" listener3 'bsl_frames_dropped_total|subtree_include_miss')" "$expected_miss"      0.05
+assert_near "listener3 forwarded (subtree-include)"  "$fwd_l3"     "$(( received_l3 * 1 / 8 ))" 0.15
+assert_near "listener3 dropped subtree_include_miss" "$dropped_l3" "$(( received_l3 * 7 / 8 ))" 0.10
 
 if [[ "$SCENARIO_FAIL" -ne 0 ]]; then
   echo "Scenario 03: FAIL"

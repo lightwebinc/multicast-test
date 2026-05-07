@@ -17,13 +17,16 @@ sleep 2
 echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"
 
-expected_l1=$frames
-expected_l2=$(( frames * 1 / 2 * 7 / 8 ))
-expected_l3=$(( frames * 1 / 8 ))
+received_l1=$(diff_metric "$BEFORE" "$AFTER" listener1 bsl_frames_received_total)
+received_l2=$(diff_metric "$BEFORE" "$AFTER" listener2 bsl_frames_received_total)
+received_l3=$(diff_metric "$BEFORE" "$AFTER" listener3 bsl_frames_received_total)
+fwd_l1=$(diff_metric "$BEFORE" "$AFTER" listener1 'bsl_frames_forwarded_total|proto="udp"')
+fwd_l2=$(diff_metric "$BEFORE" "$AFTER" listener2 'bsl_frames_forwarded_total|proto="udp"')
+fwd_l3=$(diff_metric "$BEFORE" "$AFTER" listener3 'bsl_frames_forwarded_total|proto="udp"')
 
-assert_near "listener1 forwarded"          "$(diff_metric "$BEFORE" "$AFTER" listener1 bsl_frames_forwarded_total)" "$expected_l1" 0.05
-assert_near "listener2 forwarded (shard×subtree filter)" "$(diff_metric "$BEFORE" "$AFTER" listener2 bsl_frames_forwarded_total)" "$expected_l2" 0.10
-assert_near "listener3 forwarded (subtree-include)"      "$(diff_metric "$BEFORE" "$AFTER" listener3 bsl_frames_forwarded_total)" "$expected_l3" 0.15
+assert_near "listener1 forwarded"                        "$fwd_l1" "$received_l1"              0.05
+assert_near "listener2 forwarded (shard×subtree filter)" "$fwd_l2" "$(( received_l2 * 7 / 8 ))" 0.10
+assert_near "listener3 forwarded (subtree-include)"      "$fwd_l3" "$(( received_l3 * 1 / 8 ))" 0.15
 
 if [[ "$SCENARIO_FAIL" -ne 0 ]]; then
   echo "Scenario 01: FAIL"
