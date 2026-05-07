@@ -1,6 +1,6 @@
 # Retransmission Testing Guide
 
-This document describes end-to-end testing scenarios for the BRC-TBD-retransmission
+This document describes end-to-end testing scenarios for the BRC-126
 retransmission protocol, including NACK dispatch, ACK/MISS response handling,
 beacon discovery, and tier-based escalation.
 
