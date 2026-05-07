@@ -150,3 +150,47 @@ dur_to_seconds() {
 }
 
 SCENARIO_FAIL=0
+
+# --- Selective packet-loss helpers (for NACK/retransmit scenarios) -----------
+#
+# These inject a random per-packet drop rule inside each LISTENER VM on the
+# fabric interface (enp6s0), port 9001 (multicast frames). Retry endpoints are
+# NOT affected, so they accumulate frames that listeners miss — creating the
+# selective delivery needed for cache-hit / retransmit testing.
+#
+# The nftables table is isolated (inet bitcoin-listener-test) and is fully
+# removed on cleanup regardless of scenario outcome.
+#
+# Usage:
+#   apply_listener_loss 1%    # call before generator; 1% = 1 drop per 100
+#   trap remove_listener_loss EXIT
+
+_LOSS_VMS=()
+
+apply_listener_loss() {
+  local pct="${1:-1%}"
+  # Convert "N%" → threshold for "numgen random mod 1000 < T" (0.1% resolution).
+  local num="${pct%%%}"           # strip trailing %
+  local threshold=$(( num * 10 )) # 1% → 10, 2% → 20, etc.
+  _LOSS_VMS=()
+  for vm in "${LISTENERS[@]}"; do
+    lxc exec "$vm" -- bash -c "
+      nft add table inet bitcoin-listener-test 2>/dev/null || true
+      nft add chain inet bitcoin-listener-test input \
+        '{ type filter hook input priority -100; }' 2>/dev/null || true
+      nft flush chain inet bitcoin-listener-test input 2>/dev/null || true
+      nft add rule inet bitcoin-listener-test input \
+        iif \"enp6s0\" udp dport 9001 \
+        numgen random mod 1000 < ${threshold} drop
+    " 2>/dev/null && _LOSS_VMS+=("$vm") || \
+      echo "WARN  could not apply loss rule on $vm (nft unavailable?)"
+    echo "     loss=${pct} injected on $vm (enp6s0 port 9001)"
+  done
+}
+
+remove_listener_loss() {
+  for vm in "${_LOSS_VMS[@]+"${_LOSS_VMS[@]}"}"; do
+    lxc exec "$vm" -- nft delete table inet bitcoin-listener-test 2>/dev/null || true
+  done
+  _LOSS_VMS=()
+}

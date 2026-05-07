@@ -10,6 +10,10 @@ all:
   children:
     ingress_nodes:
       vars:
+        # Lab: skip clone+build by pushing a pre-built binary from controller.
+        # Build: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false \
+        #   -o /tmp/bitcoin-shard-proxy .  (in ~/repo/bitcoin-shard-proxy)
+        proxy_local_binary: "/tmp/bitcoin-shard-proxy"
         ansible_user: ubuntu
         ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
         egress_mode: ethernet

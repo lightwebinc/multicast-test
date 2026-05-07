@@ -117,7 +117,7 @@ restore_rl() {
   " || true
   echo "     $RETRY_VM: RL config restored"
 }
-trap restore_rl EXIT
+trap 'remove_listener_loss; restore_rl' EXIT
 
 # --- Health check ------------------------------------------------------------
 
@@ -145,6 +145,12 @@ done
 
 echo "==> Waiting 12s for beacon registry to converge..."
 sleep 12
+
+# --- Inject selective frame loss on listeners --------------------------------
+
+: "${NETEM_LOSS:=1%}"
+echo "==> Injecting selective frame loss on listeners ($NETEM_LOSS) to enable cache hits"
+apply_listener_loss "$NETEM_LOSS"
 
 # --- Snapshot before ---------------------------------------------------------
 
