@@ -18,10 +18,10 @@ else
 fi
 
 echo "==> [01] Enabling multicast snooping + querier on lxdbr1..."
-echo 1 > /sys/devices/virtual/net/lxdbr1/bridge/multicast_snooping
-echo 1 > /sys/devices/virtual/net/lxdbr1/bridge/multicast_querier
+echo 1 | sudo tee /sys/devices/virtual/net/lxdbr1/bridge/multicast_snooping > /dev/null
+echo 1 | sudo tee /sys/devices/virtual/net/lxdbr1/bridge/multicast_querier > /dev/null
 
 echo "==> [01] Tuning lxdbr1 bridge performance..."
-ip link set lxdbr1 txqueuelen 10000
+sudo ip link set lxdbr1 txqueuelen 10000
 
 echo "==> [01] Done."
