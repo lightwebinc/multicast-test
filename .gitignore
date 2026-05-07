@@ -1,3 +1,3 @@
 # Runtime artifacts from scenario runs — metrics snapshots and firewall reports.
 scenarios/**/*.tsv
-scenarios/00-firewall/report.txt
+scenarios/**/report.txt
