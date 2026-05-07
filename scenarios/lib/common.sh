@@ -181,7 +181,7 @@ apply_listener_loss() {
       nft flush chain inet bitcoin-listener-test input 2>/dev/null || true
       nft add rule inet bitcoin-listener-test input \
         iif \"enp6s0\" udp dport 9001 \
-        numgen random mod 1000 < ${threshold} drop
+        numgen random mod 1000 lt ${threshold} drop
     " 2>/dev/null && _LOSS_VMS+=("$vm") || \
       echo "WARN  could not apply loss rule on $vm (nft unavailable?)"
     echo "     loss=${pct} injected on $vm (enp6s0 port 9001)"
