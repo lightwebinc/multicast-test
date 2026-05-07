@@ -1,5 +1,5 @@
 listener1	bsl_frames_received_total	0
-listener1	bsl_frames_forwarded_total	0
+listener1	bsl_frames_forwarded_total|proto="udp"	0
 listener1	bsl_egress_errors_total	0
 listener1	bsl_mc_egress_errors_total	0
 listener1	bsl_frames_dropped_total|shard_filter	0
@@ -11,7 +11,7 @@ listener1	bsl_gaps_suppressed_total	0
 listener1	bsl_nacks_dispatched_total	0
 listener1	bsl_gaps_unrecovered_total	0
 listener2	bsl_frames_received_total	0
-listener2	bsl_frames_forwarded_total	0
+listener2	bsl_frames_forwarded_total|proto="udp"	0
 listener2	bsl_egress_errors_total	0
 listener2	bsl_mc_egress_errors_total	0
 listener2	bsl_frames_dropped_total|shard_filter	0
@@ -23,7 +23,7 @@ listener2	bsl_gaps_suppressed_total	0
 listener2	bsl_nacks_dispatched_total	0
 listener2	bsl_gaps_unrecovered_total	0
 listener3	bsl_frames_received_total	0
-listener3	bsl_frames_forwarded_total	0
+listener3	bsl_frames_forwarded_total|proto="udp"	0
 listener3	bsl_egress_errors_total	0
 listener3	bsl_mc_egress_errors_total	0
 listener3	bsl_frames_dropped_total|shard_filter	0
