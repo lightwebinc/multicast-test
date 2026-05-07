@@ -34,6 +34,10 @@ source "$SCENARIO_DIR/../lib/common.sh"
 : "${RL_IP_BURST:=3}"
 : "${RL_SEQUENCE_MAX:=2}"
 : "${RL_SEQUENCE_WINDOW:=10s}"
+: "${RL_CHAIN_RATE:=1000}"
+: "${RL_CHAIN_WINDOW:=10s}"
+: "${RL_GROUP_RATE:=1000}"
+: "${RL_GROUP_BURST:=500}"
 export PPS DURATION SEQ_GAP_EVERY SEQ_GAP_SIZE SEQ_GAP_DELAY
 
 RETRY1_VM=retry1; RETRY1_IP=10.10.10.34; RETRY1_METRICS_PORT=9400
@@ -51,7 +55,8 @@ R3_BEFORE="$SCENARIO_DIR/retry3.before.tsv"; R3_AFTER="$SCENARIO_DIR/retry3.afte
 
 RETRY_METRICS=(bre_nack_requests_total bre_retransmits_total
                bre_cache_hits_total bre_cache_misses_total
-               bre_rate_limit_drops_total)
+               bre_rate_limit_drops_total
+               bre_responses_sent_total)
 
 ROGUE_PID=""
 COMPROMISED_PID=""
@@ -68,6 +73,12 @@ snapshot_retry() {
     "$(metric_value "$ip:$port" bre_rate_limit_drops_total 'level="ip"')" >> "$out"
   printf '%s\t%s\t%s\n' "$vm" "bre_rate_limit_drops_total|level=sequence" \
     "$(metric_value "$ip:$port" bre_rate_limit_drops_total 'level="sequence"')" >> "$out"
+  printf '%s\t%s\t%s\n' "$vm" "bre_rate_limit_drops_total|level=chain" \
+    "$(metric_value "$ip:$port" bre_rate_limit_drops_total 'level="chain"')" >> "$out"
+  printf '%s\t%s\t%s\n' "$vm" "bre_rate_limit_drops_total|level=group" \
+    "$(metric_value "$ip:$port" bre_rate_limit_drops_total 'level="group"')" >> "$out"
+  printf '%s\t%s\t%s\n' "$vm" "bre_responses_sent_total|type=ack" \
+    "$(metric_value "$ip:$port" bre_responses_sent_total 'type="ack"')" >> "$out"
 }
 
 retry_diff() {
@@ -78,7 +89,7 @@ retry_diff() {
 }
 
 apply_tight_rl() {
-  echo "==> Applying tight RL config (IP rate=${RL_IP_RATE} burst=${RL_IP_BURST} seq_max=${RL_SEQUENCE_MAX} window=${RL_SEQUENCE_WINDOW})..."
+  echo "==> Applying tight RL config (IP rate=${RL_IP_RATE} burst=${RL_IP_BURST} seq_max=${RL_SEQUENCE_MAX} window=${RL_SEQUENCE_WINDOW} chain_rate=${RL_CHAIN_RATE} group_rate=${RL_GROUP_RATE})..."
   # NOTE: systemd Environment= drop-ins are overridden by EnvironmentFile= when
   # the file is read at service start. Modify config.env in-place instead.
   local env_file="/etc/bitcoin-retry-endpoint/config.env"
@@ -89,6 +100,10 @@ apply_tight_rl() {
       sed -i 's|^RL_IP_BURST=.*|RL_IP_BURST=${RL_IP_BURST}|'  ${env_file}
       sed -i 's|^RL_SEQUENCE_MAX=.*|RL_SEQUENCE_MAX=${RL_SEQUENCE_MAX}|'   ${env_file}
       sed -i 's|^RL_SEQUENCE_WINDOW=.*|RL_SEQUENCE_WINDOW=${RL_SEQUENCE_WINDOW}|' ${env_file}
+      sed -i 's|^RL_CHAIN_RATE=.*|RL_CHAIN_RATE=${RL_CHAIN_RATE}|'         ${env_file}
+      sed -i 's|^RL_CHAIN_WINDOW=.*|RL_CHAIN_WINDOW=${RL_CHAIN_WINDOW}|'   ${env_file}
+      sed -i 's|^RL_GROUP_RATE=.*|RL_GROUP_RATE=${RL_GROUP_RATE}|'         ${env_file}
+      sed -i 's|^RL_GROUP_BURST=.*|RL_GROUP_BURST=${RL_GROUP_BURST}|'      ${env_file}
       systemctl restart bitcoin-retry-endpoint
     "
     echo "     $vm: tight RL applied + restarted"
@@ -172,17 +187,22 @@ echo "    Attack 1 (rogue node):           source VM (fd20::10) → all 3 endpoi
 echo "    Attack 2 (compromised listener): listener1 VM (fd20::21) → all 3 endpoints, random LookupSeq"
 
 # NACK wire format (24 bytes):
-#   [0:4]  Magic    0xE3E1F3E8  (BSV mainnet magic)
-#   [4:6]  ProtoVer 0x02BF
-#   [6]    MsgType  0x10        (NACK)
-#   [7]    LookupType 0x01      (by CurSeq)
-#   [8:16] LookupSeq uint64 BE
-#   [16:24] Reserved 0x00
+#   [0:4]   Magic      0xE3E1F3E8  (BSV mainnet magic)
+#   [4:6]   ProtoVer   0x02BF
+#   [6]     MsgType    0x10        (NACK)
+#   [7]     LookupType 0x01        (by CurSeq)
+#   [8:16]  LookupSeq  uint64 BE
+#   [16:24] ChainID    uint64 BE   (0 = orphan/unattributed; non-zero = chain-attributed)
+#
+# Rogue flood: ChainID=0 (orphan). Tests IP limiter for arbitrary source IPs.
+# Compromised flood: random LookupSeq + ChainID=0. Tests IP limiter even
+#   when per-sequence window is never exhausted for any individual seq.
 
 rogue_script="
 import socket,struct,time
 TARGETS=[('${RETRY1_FABRIC}',${NACK_PORT}),('${RETRY2_FABRIC}',${NACK_PORT}),('${RETRY3_FABRIC}',${NACK_PORT})]
 sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
+# ChainID=0: orphan gap — bypasses chain limiter, hits IP limiter only
 pkt=struct.pack('>IHBBQQ',0xE3E1F3E8,0x02BF,0x10,0x01,0xDEADBEEFCAFEBABE,0)
 end=time.time()+${flood_secs}
 while time.time()<end:
@@ -196,6 +216,8 @@ compromised_script="
 import socket,struct,time,random
 TARGETS=[('${RETRY1_FABRIC}',${NACK_PORT}),('${RETRY2_FABRIC}',${NACK_PORT}),('${RETRY3_FABRIC}',${NACK_PORT})]
 sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
+# ChainID=0: orphan NACKs. Random LookupSeq proves per-IP limiter fires
+# even when no single sequence window is exhausted.
 end=time.time()+${flood_secs}
 while time.time()<end:
   pkt=struct.pack('>IHBBQQ',0xE3E1F3E8,0x02BF,0x10,0x01,random.randint(0,2**64-1),0)
@@ -267,6 +289,14 @@ r1_drops_seq=$(retry_diff "$R1_BEFORE" "$R1_AFTER" "bre_rate_limit_drops_total|l
 r2_drops_seq=$(retry_diff "$R2_BEFORE" "$R2_AFTER" "bre_rate_limit_drops_total|level=sequence")
 r3_drops_seq=$(retry_diff "$R3_BEFORE" "$R3_AFTER" "bre_rate_limit_drops_total|level=sequence")
 
+r1_drops_chain=$(retry_diff "$R1_BEFORE" "$R1_AFTER" "bre_rate_limit_drops_total|level=chain")
+r2_drops_chain=$(retry_diff "$R2_BEFORE" "$R2_AFTER" "bre_rate_limit_drops_total|level=chain")
+r3_drops_chain=$(retry_diff "$R3_BEFORE" "$R3_AFTER" "bre_rate_limit_drops_total|level=chain")
+
+r1_drops_group=$(retry_diff "$R1_BEFORE" "$R1_AFTER" "bre_rate_limit_drops_total|level=group")
+r2_drops_group=$(retry_diff "$R2_BEFORE" "$R2_AFTER" "bre_rate_limit_drops_total|level=group")
+r3_drops_group=$(retry_diff "$R3_BEFORE" "$R3_AFTER" "bre_rate_limit_drops_total|level=group")
+
 cat <<EOF
 
 -- Listener aggregate (l1+l2+l3) --
@@ -278,16 +308,22 @@ bsl_gaps_unrecovered_total = $gaps_unrecovered
 bre_nack_requests_total                       = $r1_nacks
 bre_rate_limit_drops_total{level="ip"}        = $r1_drops_ip   [rogue node fd20::10 + compromised listener fd20::21]
 bre_rate_limit_drops_total{level="sequence"}  = $r1_drops_seq
+bre_rate_limit_drops_total{level="chain"}     = $r1_drops_chain
+bre_rate_limit_drops_total{level="group"}     = $r1_drops_group
 
 -- retry2 (T0/P64) --
 bre_nack_requests_total                       = $r2_nacks
 bre_rate_limit_drops_total{level="ip"}        = $r2_drops_ip
 bre_rate_limit_drops_total{level="sequence"}  = $r2_drops_seq
+bre_rate_limit_drops_total{level="chain"}     = $r2_drops_chain
+bre_rate_limit_drops_total{level="group"}     = $r2_drops_group
 
 -- retry3 (T1/P128) --
 bre_nack_requests_total                       = $r3_nacks
 bre_rate_limit_drops_total{level="ip"}        = $r3_drops_ip
 bre_rate_limit_drops_total{level="sequence"}  = $r3_drops_seq
+bre_rate_limit_drops_total{level="chain"}     = $r3_drops_chain
+bre_rate_limit_drops_total{level="group"}     = $r3_drops_group
 EOF
 
 # --- Assertions --------------------------------------------------------------
