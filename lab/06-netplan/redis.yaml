@@ -1,0 +1,10 @@
+network:
+  version: 2
+  ethernets:
+    enp5s0:
+      addresses: [10.10.10.40/24]
+      routes:
+        - to: default
+          via: 10.10.10.1
+      nameservers:
+        addresses: [1.1.1.1, 8.8.8.8]

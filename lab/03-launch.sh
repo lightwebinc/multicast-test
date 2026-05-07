@@ -4,7 +4,7 @@
 set -euo pipefail
 exec </dev/null
 
-VMS=(source proxy listener1 listener2 listener3 listener4 retry1 retry2 retry3)
+VMS=(source proxy listener1 listener2 listener3 listener4 retry1 retry2 retry3 redis)
 
 wait_for_vm() {
   local vm="$1"
@@ -22,11 +22,16 @@ wait_for_vm() {
 }
 
 for vm in "${VMS[@]}"; do
-  echo "==> [03] Launching VM: $vm (ubuntu-small-mcast)..."
+  if [[ "$vm" == "redis" ]]; then
+    profile="ubuntu-small-single"
+  else
+    profile="ubuntu-small-mcast"
+  fi
+  echo "==> [03] Launching VM: $vm ($profile)..."
   if lxc info "$vm" &>/dev/null; then
     echo "     $vm already exists, skipping"
   else
-    lxc launch ubuntu:24.04 "$vm" --vm --profile ubuntu-small-mcast
+    lxc launch ubuntu:24.04 "$vm" --vm --profile "$profile"
   fi
 done
 

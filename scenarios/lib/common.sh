@@ -199,3 +199,38 @@ remove_listener_loss() {
   done
   _LOSS_VMS=()
 }
+
+# --- Retry endpoint multi-instance helpers --------------------------------
+
+RETRY_VMS=(retry1 retry2 retry3)
+RETRY_IPS=(10.10.10.34 10.10.10.35 10.10.10.36)
+: "${RETRY_METRICS_PORT:=9400}"
+
+# Snapshot metrics from all retry endpoints into a TSV:
+# <vm>\t<metric>\t<value>
+snapshot_all_retry() {
+  local out="$1"
+  : > "$out"
+  for i in "${!RETRY_VMS[@]}"; do
+    local vm="${RETRY_VMS[$i]}" ip="${RETRY_IPS[$i]}"
+    for m in bre_frames_received_total bre_frames_cached_total bre_frames_dropped_total \
+             bre_nack_requests_total bre_retransmits_total bre_retransmit_dedup_total \
+             bre_cache_hits_total bre_cache_misses_total \
+             bre_rate_limit_drops_total; do
+      printf '%s\t%s\t%s\n' "$vm" "$m" \
+        "$(metric_value "$ip:$RETRY_METRICS_PORT" "$m")" >> "$out"
+    done
+  done
+}
+
+# Sum a metric diff across all retry endpoints.
+retry_diff_all() {
+  local before="$1" after="$2" metric="$3" total=0
+  local b a
+  for vm in "${RETRY_VMS[@]}"; do
+    b=$(awk -v v="$vm" -v m="$metric" -F'\t' '$1==v && $2==m {print $3}' "$before")
+    a=$(awk -v v="$vm" -v m="$metric" -F'\t' '$1==v && $2==m {print $3}' "$after")
+    total=$(( total + ${a:-0} - ${b:-0} ))
+  done
+  echo "$total"
+}

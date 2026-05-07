@@ -36,6 +36,7 @@ lxdbr0) and `enp6s0` (egress, lxdbr1).
 | retry1    | 10.10.10.34   | fd20::24/64     | ubuntu-small-mcast | Retry endpoint T0/P128                | `enable_firewall=true` |
 | retry2    | 10.10.10.35   | fd20::25/64     | ubuntu-small-mcast | Retry endpoint T0/P64                 | `enable_firewall=true` |
 | retry3    | 10.10.10.36   | fd20::26/64     | ubuntu-small-mcast | Retry endpoint T1/P128                | `enable_firewall=true` |
+| redis     | 10.10.10.40   | —               | ubuntu-small-single | Redis dedup backend (mgmt-only)      | host-managed           |
 | metrics   | 10.10.10.142  | —               | pre-existing       | Prometheus + Grafana                  | host-managed           |
 
 Default gateway for all VMs: `10.10.10.1` (lxdbr0 host address).
@@ -59,17 +60,18 @@ Listener firewall allow-list:
 
 ```
        [mgmt bridge: lxdbr0 — 10.10.10.0/24 (host .1)]
-          |     |     |     |     |     |     |     |     |
-        source proxy l1    l2    l3    r1    r2    r3  metrics
+          |     |     |     |     |     |     |     |     |    |
+        source proxy l1    l2    l3    r1    r2    r3  metrics redis
           |     |     |     |     |     |     |     |
        [egress bridge: lxdbr1 — fd20::/64, IPv6 only, multicast snooping on]
 
- source ──► proxy ──► ff05::%enp6s0 ──► listener1/2/3 ──► 127.0.0.1:9100 sink
+ source ►► proxy ►► ff05::%enp6s0 ►► listener1/2/3 ►► 127.0.0.1:9100 sink
                              │                  │  NACK (escalating)
-                             ▼                  │  ① retry1 (T0/P128) → MISS
-                           retry1               │  ② retry2 (T0/P64)  → MISS
-                           retry2               │  ③ retry3 (T1/P128) → ACK
-                           retry3 ◄─────────────┘
+                             │                  │  ① retry1 (T0/P128) → MISS
+                             ▼                  │  ② retry2 (T0/P64)  → MISS
+                           retry1 ◄─────────────┘  ③ retry3 (T1/P128) → ACK
+                           retry2 ──SET NX──► redis:6379 (10.10.10.40, mgmt-only)
+                           retry3              shared dedup across retry1/2/3
                              └──► ff05::%enp6s0  (retransmit → listeners)
 ```
 

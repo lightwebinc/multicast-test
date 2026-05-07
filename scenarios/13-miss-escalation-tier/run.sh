@@ -163,6 +163,7 @@ r2_misses=$(retry_diff "$R2_BEFORE" "$R2_AFTER" bre_cache_misses_total)
 r3_cached=$(retry_diff "$R3_BEFORE" "$R3_AFTER" bre_frames_cached_total)
 r3_hits=$(retry_diff "$R3_BEFORE" "$R3_AFTER" bre_cache_hits_total)
 r3_retransmits=$(retry_diff "$R3_BEFORE" "$R3_AFTER" bre_retransmits_total)
+r3_dedup=$(retry_diff "$R3_BEFORE" "$R3_AFTER" bre_retransmit_dedup_total)
 
 cat <<EOF
 
@@ -186,6 +187,7 @@ bre_cache_misses_total     = $r2_misses
 bre_frames_cached_total    = $r3_cached
 bre_cache_hits_total       = $r3_hits
 bre_retransmits_total      = $r3_retransmits
+bre_retransmit_dedup_total = $r3_dedup
 EOF
 
 # --- Assertions -----------------------------------------------------------
@@ -261,6 +263,16 @@ if [[ "$r3_retransmits" -le 0 ]]; then
   SCENARIO_FAIL=1
 else
   echo "PASS  retry3 retransmitted $r3_retransmits frames"
+fi
+
+# retry3 dedup must fire: all 3 listeners escalate to retry3 for the same gaps;
+# the first NACK triggers SetNX (succeeds), subsequent NACKs for the same CurSeq
+# are suppressed. Dedup count ≈ (num_listeners - 1) × recovered_gaps.
+if [[ "$r3_dedup" -le 0 ]]; then
+  echo "FAIL  retry3 had no dedup fires (Redis not configured, or only one listener escalating?)"
+  SCENARIO_FAIL=1
+else
+  echo "PASS  retry3 deduped $r3_dedup redundant retransmits via Redis SetNX"
 fi
 
 # Almost all gaps must be resolved (retry3 served them). A small number may be

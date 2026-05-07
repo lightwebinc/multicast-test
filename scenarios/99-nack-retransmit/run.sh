@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scenario 99 — NACK / retransmit end-to-end with a single retry-endpoint (retry1).
+# Scenario 99 — NACK / retransmit end-to-end across all retry endpoints (retry1/2/3).
 #
 # Drives subtx-gen with gap injection. Expectations (with -seq-gap-delay 50ms,
 # i.e. transient gaps that the cache *can* recover):
@@ -10,6 +10,8 @@
 #   bsl_gaps_unrecovered_total    == 0
 #   bre_nack_requests_total       ≈ bsl_nacks_dispatched_total (across listeners)
 #   bre_retransmits_total         > 0
+#   bre_retransmit_dedup_total    > 0  (Redis SetNX dedup fires: 3 listeners NACK the
+#                                       same gap; only the first SetNX succeeds)
 #
 # Note: assertions are loose because RTTs/timing on the lxd fabric can lead to
 # small race-condition deltas around the gap window.
@@ -23,30 +25,10 @@ source "$SCENARIO_DIR/../lib/common.sh"
 : "${SEQ_GAP_DELAY:=50ms}"
 : "${PPS:=1000}"
 : "${DURATION:=15s}"
-: "${RETRY_VM:=retry1}"
-: "${RETRY_IP:=10.10.10.34}"
-: "${RETRY_METRICS_PORT:=9400}"
-
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
 AFTER="$SCENARIO_DIR/metrics.after.tsv"
 RETRY_BEFORE="$SCENARIO_DIR/retry.before.tsv"
 RETRY_AFTER="$SCENARIO_DIR/retry.after.tsv"
-
-retry_metric() {
-  local name="$1"
-  metric_value "${RETRY_IP}:${RETRY_METRICS_PORT}" "$name"
-}
-
-snapshot_retry() {
-  local out="$1"
-  : > "$out"
-  for m in bre_frames_received_total bre_frames_cached_total bre_frames_dropped_total \
-           bre_nack_requests_total bre_retransmits_total bre_retransmit_dedup_total \
-           bre_cache_hits_total bre_cache_misses_total \
-           bre_rate_limit_drops_total; do
-    printf '%s\t%s\t%s\n' "$RETRY_VM" "$m" "$(retry_metric "$m")" >> "$out"
-  done
-}
 
 echo "==> Injecting selective frame loss on listeners (1%) to create cache-able gaps"
 : "${NETEM_LOSS:=1%}"
@@ -55,7 +37,7 @@ trap 'remove_listener_loss' EXIT
 
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"
-snapshot_retry  "$RETRY_BEFORE"
+snapshot_all_retry "$RETRY_BEFORE"
 
 echo "==> Generator with gap injection"
 echo "    every=$SEQ_GAP_EVERY size=$SEQ_GAP_SIZE delay=$SEQ_GAP_DELAY pps=$PPS duration=$DURATION"
@@ -81,7 +63,7 @@ sleep 4
 
 echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"
-snapshot_retry  "$RETRY_AFTER"
+snapshot_all_retry "$RETRY_AFTER"
 
 # Aggregate listener counters (sum across listener1..3)
 sum_listener_metric() {
@@ -93,20 +75,14 @@ sum_listener_metric() {
   echo "$total"
 }
 
-retry_diff() {
-  local metric="$1" b a
-  b=$(awk -v m="$metric" -F'\t' '$2==m {print $3}' "$RETRY_BEFORE")
-  a=$(awk -v m="$metric" -F'\t' '$2==m {print $3}' "$RETRY_AFTER")
-  echo $(( ${a:-0} - ${b:-0} ))
-}
-
 gaps_detected=$(sum_listener_metric bsl_gaps_detected_total)
 nacks_dispatched=$(sum_listener_metric bsl_nacks_dispatched_total)
 gaps_suppressed=$(sum_listener_metric bsl_gaps_suppressed_total)
 gaps_unrecovered=$(sum_listener_metric bsl_gaps_unrecovered_total)
-nacks_received=$(retry_diff bre_nack_requests_total)
-retransmits=$(retry_diff bre_retransmits_total)
-frames_cached=$(retry_diff bre_frames_cached_total)
+nacks_received=$(retry_diff_all "$RETRY_BEFORE" "$RETRY_AFTER" bre_nack_requests_total)
+retransmits=$(retry_diff_all "$RETRY_BEFORE" "$RETRY_AFTER" bre_retransmits_total)
+frames_cached=$(retry_diff_all "$RETRY_BEFORE" "$RETRY_AFTER" bre_frames_cached_total)
+bre_dedup=$(retry_diff_all "$RETRY_BEFORE" "$RETRY_AFTER" bre_retransmit_dedup_total)
 
 cat <<EOF
 -- Listener aggregate (l1+l2+l3) --
@@ -115,10 +91,11 @@ bsl_nacks_dispatched_total   = $nacks_dispatched
 bsl_gaps_suppressed_total    = $gaps_suppressed
 bsl_gaps_unrecovered_total   = $gaps_unrecovered
 
--- Retry endpoint ($RETRY_VM) --
+-- Retry endpoints (retry1+retry2+retry3) --
 bre_frames_cached_total      = $frames_cached
 bre_nack_requests_total      = $nacks_received
 bre_retransmits_total        = $retransmits
+bre_retransmit_dedup_total   = $bre_dedup
 EOF
 
 # --- Assertions -----------------------------------------------------------
@@ -170,6 +147,15 @@ if [[ "$gaps_suppressed" -le 0 ]]; then
   echo "WARN  no gaps were suppressed — retransmits may not have arrived in window"
 else
   echo "PASS  $gaps_suppressed of $gaps_detected gaps suppressed (recovered)"
+fi
+
+# Dedup must fire: all 3 listeners NACK the same gaps; only the first SetNX
+# at the serving endpoint succeeds, the rest are suppressed.
+if [[ "$bre_dedup" -le 0 ]]; then
+  echo "FAIL  no cross-endpoint dedup observed (Redis not configured, or only one endpoint active?)"
+  SCENARIO_FAIL=1
+else
+  echo "PASS  $bre_dedup retransmits suppressed by Redis SetNX dedup"
 fi
 
 if [[ "$SCENARIO_FAIL" -ne 0 ]]; then

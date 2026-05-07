@@ -44,6 +44,8 @@ all:
           beacon_tier: 0
           beacon_preference: 128
           beacon_interval: "5s"      # fast beacon for lab discovery (group_vars/all: 60s)
+          redis_addr: "10.10.10.40:6379"  # Redis dedup backend (memory frame cache, shared dedup)
+          dedup_window: "60s"
           # Lab rate limits — loosened so the NACK-storm a single subtx-gen
           # run produces (≈10k NACKs/10s × 3 listeners × NACK_MAX_RETRIES) is
           # not throttled. Production deployments should keep role defaults.
@@ -70,6 +72,8 @@ all:
           beacon_tier: 0
           beacon_preference: 64
           beacon_interval: "5s"
+          redis_addr: "10.10.10.40:6379"
+          dedup_window: "60s"
           rl_ip_rate: 100000
           rl_ip_burst: 100
           rl_sequence_max: 1000000
@@ -88,8 +92,19 @@ all:
           beacon_tier: 1
           beacon_preference: 128
           beacon_interval: "5s"
+          redis_addr: "10.10.10.40:6379"
+          dedup_window: "60s"
           rl_ip_rate: 100000
           rl_ip_burst: 100
           rl_sequence_max: 1000000
           rl_sequence_window: "10s"
           manage_netplan: false
+
+    redis_nodes:
+      vars:
+        ansible_user: ubuntu
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GSSAPIAuthentication=no'
+        redis_bind_addr: "10.10.10.40"
+      hosts:
+        redis:
+          ansible_host: 10.10.10.40
