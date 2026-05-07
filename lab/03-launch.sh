@@ -35,9 +35,28 @@ for vm in "${VMS[@]}"; do
   fi
 done
 
+wait_for_agent() {
+  local vm="$1"
+  echo "     Waiting for $vm agent..."
+  for _ in $(seq 1 60); do
+    if lxc exec "$vm" -- true 2>/dev/null; then
+      echo "     $vm agent ready"
+      return 0
+    fi
+    sleep 3
+  done
+  echo "ERROR: $vm agent did not become ready in time" >&2
+  return 1
+}
+
 echo "==> [03] Waiting for all VMs to be RUNNING..."
 for vm in "${VMS[@]}"; do
   wait_for_vm "$vm"
+done
+
+echo "==> [03] Waiting for VM agents to be ready..."
+for vm in "${VMS[@]}"; do
+  wait_for_agent "$vm"
 done
 
 echo "==> [03] All VMs running:"
