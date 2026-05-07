@@ -1,10 +1,10 @@
-retry2	bre_nack_requests_total	0
+retry2	bre_nack_requests_total	129
 retry2	bre_retransmits_total	0
 retry2	bre_cache_hits_total	0
-retry2	bre_cache_misses_total	0
-retry2	bre_rate_limit_drops_total	0
-retry2	bre_responses_sent_total	0
-retry2	bre_rate_limit_drops_total|level=ip	0
+retry2	bre_cache_misses_total	22
+retry2	bre_rate_limit_drops_total	107
+retry2	bre_responses_sent_total	22
+retry2	bre_rate_limit_drops_total|level=ip	107
 retry2	bre_rate_limit_drops_total|level=sequence	0
 retry2	bre_rate_limit_drops_total|level=chain	0
 retry2	bre_rate_limit_drops_total|level=group	0

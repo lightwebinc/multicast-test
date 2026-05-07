@@ -1,4 +1,4 @@
-==> [07] Firewall verification — 2026-05-07T17:58:14Z
+==> [07] Firewall verification — 2026-05-07T19:29:28Z
 
 --- [listener1] nft list ruleset ---
     table inet filter {
@@ -39,14 +39,14 @@
     		ct state established,related accept
     		ct state invalid drop
     		iifname "lo" accept
-    		iifname "enp6s0" meta nfproto ipv4 counter packets 3035 bytes 858188 drop
+    		iifname "enp6s0" meta nfproto ipv4 counter packets 43 bytes 13016 drop
     		icmpv6 type { packet-too-big, time-exceeded, parameter-problem, echo-request, echo-reply, mld-listener-query, mld-listener-report, mld-listener-done, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, mld2-listener-report } accept
     		iifname != "enp6s0" ip protocol icmp icmp type { echo-reply, destination-unreachable, echo-request } accept
     		iifname "enp6s0" ip6 daddr ff00::/8 udp dport { 9001, 9300 } accept
     		iifname "enp6s0" ip6 saddr @retry_ep_v6 meta l4proto udp accept
     		iifname != "enp6s0" ip saddr @mgmt_allow_v4 tcp dport { 22, 9200 } accept
     		iifname != "enp6s0" ip6 saddr @mgmt_allow_v6 tcp dport { 22, 9200 } accept
-    		counter packets 178 bytes 55019 drop
+    		counter packets 10 bytes 2672 drop
     	}
     
     	chain output {
@@ -61,7 +61,7 @@
     		oifname != "enp6s0" ip daddr 127.0.0.1 udp dport 9100 accept
     		oifname != "enp6s0" udp dport { 53, 123 } accept
     		oifname != "enp6s0" tcp dport { 53, 80, 443 } accept
-    		counter packets 1602 bytes 169373 drop
+    		counter packets 40 bytes 3522 drop
     	}
     
     	chain forward {
@@ -109,14 +109,14 @@
     		ct state established,related accept
     		ct state invalid drop
     		iifname "lo" accept
-    		iifname "enp6s0" meta nfproto ipv4 counter packets 330 bytes 97280 drop
+    		iifname "enp6s0" meta nfproto ipv4 counter packets 43 bytes 13016 drop
     		icmpv6 type { packet-too-big, time-exceeded, parameter-problem, echo-request, echo-reply, mld-listener-query, mld-listener-report, mld-listener-done, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, mld2-listener-report } accept
     		iifname != "enp6s0" ip protocol icmp icmp type { echo-reply, destination-unreachable, echo-request } accept
     		iifname "enp6s0" ip6 daddr ff00::/8 udp dport { 9001, 9300 } accept
     		iifname "enp6s0" ip6 saddr @retry_ep_v6 meta l4proto udp accept
     		iifname != "enp6s0" ip saddr @mgmt_allow_v4 tcp dport { 22, 9200 } accept
     		iifname != "enp6s0" ip6 saddr @mgmt_allow_v6 tcp dport { 22, 9200 } accept
-    		counter packets 37 bytes 10079 drop
+    		counter packets 10 bytes 2672 drop
     	}
     
     	chain output {
@@ -130,7 +130,7 @@
     		oifname != "enp6s0" ip daddr 127.0.0.1 udp dport 9100 accept
     		oifname != "enp6s0" udp dport { 53, 123 } accept
     		oifname != "enp6s0" tcp dport { 53, 80, 443 } accept
-    		counter packets 296 bytes 28343 drop
+    		counter packets 40 bytes 3522 drop
     	}
     
     	chain forward {
@@ -178,14 +178,14 @@
     		ct state established,related accept
     		ct state invalid drop
     		iifname "lo" accept
-    		iifname "enp6s0" meta nfproto ipv4 counter packets 329 bytes 96956 drop
+    		iifname "enp6s0" meta nfproto ipv4 counter packets 43 bytes 13016 drop
     		icmpv6 type { packet-too-big, time-exceeded, parameter-problem, echo-request, echo-reply, mld-listener-query, mld-listener-report, mld-listener-done, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, mld2-listener-report } accept
     		iifname != "enp6s0" ip protocol icmp icmp type { echo-reply, destination-unreachable, echo-request } accept
     		iifname "enp6s0" ip6 daddr ff00::/8 udp dport { 9001, 9300 } accept
     		iifname "enp6s0" ip6 saddr @retry_ep_v6 meta l4proto udp accept
     		iifname != "enp6s0" ip saddr @mgmt_allow_v4 tcp dport { 22, 9200 } accept
     		iifname != "enp6s0" ip6 saddr @mgmt_allow_v6 tcp dport { 22, 9200 } accept
-    		counter packets 38 bytes 10431 drop
+    		counter packets 10 bytes 2672 drop
     	}
     
     	chain output {
@@ -199,7 +199,7 @@
     		oifname != "enp6s0" ip daddr 127.0.0.1 udp dport 9100 accept
     		oifname != "enp6s0" udp dport { 53, 123 } accept
     		oifname != "enp6s0" tcp dport { 53, 80, 443 } accept
-    		counter packets 271 bytes 26580 drop
+    		counter packets 40 bytes 3522 drop
     	}
     
     	chain forward {
