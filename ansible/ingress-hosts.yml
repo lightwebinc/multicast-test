@@ -15,7 +15,7 @@ all:
         #   -o /tmp/bitcoin-shard-proxy .  (in ~/repo/bitcoin-shard-proxy)
         proxy_local_binary: "/tmp/bitcoin-shard-proxy"
         ansible_user: ubuntu
-        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GSSAPIAuthentication=no'
         egress_mode: ethernet
         shard_bits: 2
         mc_scope: site

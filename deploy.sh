@@ -18,6 +18,7 @@ bash "$LAB/03-launch.sh";   echo ""
 bash "$LAB/04-sudo.sh";     echo ""
 bash "$LAB/05-packages.sh"; echo ""
 bash "$LAB/06-netplan.sh";  echo ""
+bash "$LAB/06b-restart.sh"; echo ""
 
 echo "==> Enabling bridge MLD querier (required for snooping to suppress flooding)..."
 if [ ! -f /etc/systemd/system/lxd-bridge-mcast-querier.service ]; then

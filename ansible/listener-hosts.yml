@@ -18,7 +18,7 @@ all:
         #   -o /tmp/bitcoin-shard-listener .  (in ~/repo/bitcoin-shard-listener)
         listener_local_binary: "/tmp/bitcoin-shard-listener"
         ansible_user: ubuntu
-        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GSSAPIAuthentication=no'
         ingress_mode: ethernet
         shard_bits: 2
         mc_scope: site

@@ -17,7 +17,7 @@ all:
         #   -o /tmp/bitcoin-retry-endpoint .  (in ~/repo/bitcoin-retry-endpoint)
         retry_local_binary: "/tmp/bitcoin-retry-endpoint"
         ansible_user: ubuntu
-        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GSSAPIAuthentication=no'
         ingress_mode: ethernet
         shard_bits: 2
         mc_scope: site
