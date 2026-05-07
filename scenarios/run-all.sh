@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run all scenario tests sequentially, collect results, and print a structured
-# summary suitable for copy-pasting to a model for troubleshooting.
+# summary.
 #
 # Usage:
 #   bash scenarios/run-all.sh               # skip 04-extended-dashboard (24h soak)
@@ -131,15 +131,11 @@ for n in "${FAIL_LIST[@]}"; do
 done
 echo ""
 
-# ---- failure detail for model prompting ------------------------------------
-# Each failed scenario gets its full captured output printed inside a
-# clearly-delimited block so it can be pasted directly into a model prompt.
-
-echo "${BOLD}=================================================${RESET}"
-echo "${BOLD} FAILURE DETAIL  (paste into model for diagnosis)${RESET}"
-echo "${BOLD}=================================================${RESET}"
+echo "${BOLD}==============================${RESET}"
+echo "${BOLD} FAILURE DETAIL for diagnosis${RESET}"
+echo "${BOLD}==============================${RESET}"
 echo ""
-echo "Lab: lax LXD — proxy=fd20::2:9000, listeners=fd20::21-23:9200,"
+echo "Lab: LXD — proxy=fd20::2:9000, listeners=fd20::21-23:9200,"
 echo "     retry endpoints=fd20::24-26:9300"
 echo ""
 
