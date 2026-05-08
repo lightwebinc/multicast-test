@@ -59,7 +59,9 @@ mapfile -t SCENARIO_DIRS < <(
 
 # ---- run loop --------------------------------------------------------------
 
-declare -a PASS_LIST FAIL_LIST SKIP_LIST
+PASS_LIST=()
+FAIL_LIST=()
+SKIP_LIST=()
 TOTAL=0
 
 echo "${BOLD}=================================================${RESET}"

@@ -1,4 +1,4 @@
-==> [07] Firewall verification — 2026-05-08T00:20:28Z
+==> [07] Firewall verification — 2026-05-08T02:18:52Z
 
 --- [listener1] nft list ruleset ---
     table inet filter {
@@ -39,14 +39,14 @@
     		ct state established,related accept
     		ct state invalid drop
     		iifname "lo" accept
-    		iifname "enp6s0" meta nfproto ipv4 counter packets 318 bytes 92820 drop
+    		iifname "enp6s0" meta nfproto ipv4 counter packets 818 bytes 238024 drop
     		icmpv6 type { packet-too-big, time-exceeded, parameter-problem, echo-request, echo-reply, mld-listener-query, mld-listener-report, mld-listener-done, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, mld2-listener-report } accept
     		iifname != "enp6s0" ip protocol icmp icmp type { echo-reply, destination-unreachable, echo-request } accept
     		iifname "enp6s0" ip6 daddr ff00::/8 udp dport { 9001, 9300 } accept
     		iifname "enp6s0" ip6 saddr @retry_ep_v6 meta l4proto udp accept
     		iifname != "enp6s0" ip saddr @mgmt_allow_v4 tcp dport { 22, 9200 } accept
     		iifname != "enp6s0" ip6 saddr @mgmt_allow_v6 tcp dport { 22, 9200 } accept
-    		counter packets 22 bytes 5243 drop
+    		counter packets 60 bytes 11201 drop
     	}
     
     	chain output {
@@ -61,7 +61,7 @@
     		oifname != "enp6s0" ip daddr 127.0.0.1 udp dport 9100 accept
     		oifname != "enp6s0" udp dport { 53, 123 } accept
     		oifname != "enp6s0" tcp dport { 53, 80, 443 } accept
-    		counter packets 103 bytes 10774 drop
+    		counter packets 240 bytes 26368 drop
     	}
     
     	chain forward {
@@ -109,14 +109,14 @@
     		ct state established,related accept
     		ct state invalid drop
     		iifname "lo" accept
-    		iifname "enp6s0" meta nfproto ipv4 counter packets 318 bytes 92820 drop
+    		iifname "enp6s0" meta nfproto ipv4 counter packets 818 bytes 238024 drop
     		icmpv6 type { packet-too-big, time-exceeded, parameter-problem, echo-request, echo-reply, mld-listener-query, mld-listener-report, mld-listener-done, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, mld2-listener-report } accept
     		iifname != "enp6s0" ip protocol icmp icmp type { echo-reply, destination-unreachable, echo-request } accept
     		iifname "enp6s0" ip6 daddr ff00::/8 udp dport { 9001, 9300 } accept
     		iifname "enp6s0" ip6 saddr @retry_ep_v6 meta l4proto udp accept
     		iifname != "enp6s0" ip saddr @mgmt_allow_v4 tcp dport { 22, 9200 } accept
     		iifname != "enp6s0" ip6 saddr @mgmt_allow_v6 tcp dport { 22, 9200 } accept
-    		counter packets 22 bytes 5243 drop
+    		counter packets 60 bytes 11201 drop
     	}
     
     	chain output {
@@ -130,7 +130,7 @@
     		oifname != "enp6s0" ip daddr 127.0.0.1 udp dport 9100 accept
     		oifname != "enp6s0" udp dport { 53, 123 } accept
     		oifname != "enp6s0" tcp dport { 53, 80, 443 } accept
-    		counter packets 103 bytes 10774 drop
+    		counter packets 372 bytes 38327 drop
     	}
     
     	chain forward {
@@ -178,14 +178,14 @@
     		ct state established,related accept
     		ct state invalid drop
     		iifname "lo" accept
-    		iifname "enp6s0" meta nfproto ipv4 counter packets 318 bytes 92820 drop
+    		iifname "enp6s0" meta nfproto ipv4 counter packets 818 bytes 238024 drop
     		icmpv6 type { packet-too-big, time-exceeded, parameter-problem, echo-request, echo-reply, mld-listener-query, mld-listener-report, mld-listener-done, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, mld2-listener-report } accept
     		iifname != "enp6s0" ip protocol icmp icmp type { echo-reply, destination-unreachable, echo-request } accept
     		iifname "enp6s0" ip6 daddr ff00::/8 udp dport { 9001, 9300 } accept
     		iifname "enp6s0" ip6 saddr @retry_ep_v6 meta l4proto udp accept
     		iifname != "enp6s0" ip saddr @mgmt_allow_v4 tcp dport { 22, 9200 } accept
     		iifname != "enp6s0" ip6 saddr @mgmt_allow_v6 tcp dport { 22, 9200 } accept
-    		counter packets 22 bytes 5243 drop
+    		counter packets 60 bytes 11201 drop
     	}
     
     	chain output {
@@ -199,7 +199,7 @@
     		oifname != "enp6s0" ip daddr 127.0.0.1 udp dport 9100 accept
     		oifname != "enp6s0" udp dport { 53, 123 } accept
     		oifname != "enp6s0" tcp dport { 53, 80, 443 } accept
-    		counter packets 114 bytes 11710 drop
+    		counter packets 251 bytes 27304 drop
     	}
     
     	chain forward {
@@ -216,3 +216,9 @@ PASS  http://10.10.10.32:9200/metrics returned 200
 PASS  http://10.10.10.33:9200/metrics returned 200
 PASS  tcp://10.10.10.31:9001 refused/timeout as expected
 PASS  tcp://10.10.10.32:9001 refused/timeout as expected
+PASS  tcp://10.10.10.33:9001 refused/timeout as expected
+PASS  source → http://10.10.10.31:9200/metrics (in-CIDR peer, expected success)
+PASS  source → http://10.10.10.32:9200/metrics (in-CIDR peer, expected success)
+PASS  source → http://10.10.10.33:9200/metrics (in-CIDR peer, expected success)
+
+==> [07] Report written to /home/light/repo/bitcoin-multicast-test/scenarios/00-firewall/report.txt

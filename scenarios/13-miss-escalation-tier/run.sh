@@ -279,8 +279,11 @@ fi
 # unrecovered due to LXD bridge UDP loss: if the ACK from retry3 is dropped on all
 # 3 of its round-robin slots (positions 2, 5, 8 with MaxRetries=9), the gap is
 # marked unrecovered. With ~15% bridge loss, P(3 drops) ≈ 0.3% per gap-listener.
-# Limit: 1% of detected gaps (floor 10). Natural noise ≈ 0.4%; real failures ≥ 10%.
-unrecovered_limit=$(( gaps_detected / 100 ))
+# Limit: 4% of detected gaps (floor 10).
+# - Natural noise (standalone):   <1%   (1-7 unrecovered, 0.4% of ~1640 detected)
+# - Run-all noise (beacon/phantom): ~3%  (27-53 unrecovered in clean run-all)
+# - Real escalation failure:      >10%  (249/1629=15.3% when escalation is broken)
+unrecovered_limit=$(( gaps_detected * 4 / 100 ))
 [[ "$unrecovered_limit" -lt 10 ]] && unrecovered_limit=10
 if [[ "$gaps_unrecovered" -gt "$unrecovered_limit" ]]; then
   echo "FAIL  $gaps_unrecovered gaps unrecovered (limit $unrecovered_limit) — escalation to retry3 broken?"

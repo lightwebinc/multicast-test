@@ -1,5 +1,5 @@
-retry1	bre_frames_received_total	0
-retry1	bre_frames_cached_total	0
+retry1	bre_frames_received_total	1
+retry1	bre_frames_cached_total	1
 retry1	bre_nack_requests_total	0
 retry1	bre_rate_limit_drops_total	0
 retry1	bre_cache_hits_total	0

@@ -1,9 +1,9 @@
-retry3	bre_frames_received_total	59466
-retry3	bre_frames_cached_total	59466
+retry3	bre_frames_received_total	21752
+retry3	bre_frames_cached_total	21752
 retry3	bre_frames_dropped_total	0
-retry3	bre_nack_requests_total	9379
-retry3	bre_retransmits_total	8923
-retry3	bre_retransmit_dedup_total	6792
-retry3	bre_cache_hits_total	9333
-retry3	bre_cache_misses_total	46
-retry3	bre_rate_limit_drops_total	410
+retry3	bre_nack_requests_total	4282
+retry3	bre_retransmits_total	1380
+retry3	bre_retransmit_dedup_total	1062
+retry3	bre_cache_hits_total	1833
+retry3	bre_cache_misses_total	2451
+retry3	bre_rate_limit_drops_total	451
