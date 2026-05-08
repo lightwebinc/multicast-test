@@ -45,7 +45,7 @@ all:
           beacon_preference: 128
           beacon_interval: "5s"      # fast beacon for lab discovery (group_vars/all: 60s)
           redis_addr: "10.10.10.40:6379"  # Redis dedup backend (memory frame cache, shared dedup)
-          dedup_window: "60s"
+          dedup_window: "2s"
           # Lab rate limits — loosened so the NACK-storm a single subtx-gen
           # run produces (≈10k NACKs/10s × 3 listeners × NACK_MAX_RETRIES) is
           # not throttled. Production deployments should keep role defaults.
@@ -70,10 +70,9 @@ all:
           mgmt_cidrs_v6: ["fd20::/64"]
           nack_addr: "fd20::25"       # explicit bind addr — avoids SLAAC source selection
           beacon_tier: 0
-          beacon_preference: 64
-          beacon_interval: "5s"
+          dedup_window: "2s"
+          cache_backend: memory
           redis_addr: "10.10.10.40:6379"
-          dedup_window: "60s"
           rl_ip_rate: 100000
           rl_ip_burst: 100
           rl_sequence_max: 1000000
@@ -85,7 +84,7 @@ all:
           mc_iface: enp6s0
           egress_iface: enp6s0
           ingress_iface: enp6s0
-          num_workers: 1
+          num_workers: 2
           mgmt_cidrs_v4: ["10.10.10.0/24"]
           mgmt_cidrs_v6: ["fd20::/64"]
           nack_addr: "fd20::26"       # explicit bind addr — avoids SLAAC source selection
@@ -93,7 +92,7 @@ all:
           beacon_preference: 128
           beacon_interval: "5s"
           redis_addr: "10.10.10.40:6379"
-          dedup_window: "60s"
+          dedup_window: "2s"
           rl_ip_rate: 100000
           rl_ip_burst: 100
           rl_sequence_max: 1000000

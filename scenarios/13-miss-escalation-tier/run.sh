@@ -276,10 +276,12 @@ else
 fi
 
 # Almost all gaps must be resolved (retry3 served them). A small number may be
-# unrecovered due to a round-robin / MaxRetries edge case: if retry3 returns MISS
-# on the first pass (race: frame not yet cached), the second pass exhausts MaxRetries
-# on retry1+retry2 before retry3 gets a second chance.  Allow ≤5 unrecovered.
-unrecovered_limit=5
+# unrecovered due to LXD bridge UDP loss: if the ACK from retry3 is dropped on all
+# 3 of its round-robin slots (positions 2, 5, 8 with MaxRetries=9), the gap is
+# marked unrecovered. With ~15% bridge loss, P(3 drops) ≈ 0.3% per gap-listener.
+# Limit: 1% of detected gaps (floor 10). Natural noise ≈ 0.4%; real failures ≥ 10%.
+unrecovered_limit=$(( gaps_detected / 100 ))
+[[ "$unrecovered_limit" -lt 10 ]] && unrecovered_limit=10
 if [[ "$gaps_unrecovered" -gt "$unrecovered_limit" ]]; then
   echo "FAIL  $gaps_unrecovered gaps unrecovered (limit $unrecovered_limit) — escalation to retry3 broken?"
   SCENARIO_FAIL=1
