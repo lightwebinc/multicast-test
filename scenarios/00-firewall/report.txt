@@ -1,4 +1,4 @@
-==> [07] Firewall verification — 2026-05-08T15:23:04Z
+==> [07] Firewall verification — 2026-05-08T15:27:17Z
 
 --- [listener1] nft list ruleset ---
     table inet filter {
