@@ -20,6 +20,7 @@ target **1000 pps for 10 s** (10 000 frames).
 | `14-multi-endpoint-ratelimit/`  | Rogue + compromised-listener NACK flood; RL fires on all 3 endpoints      | all                   | bitcoin-retry-endpoint |
 | `15-chain-ratelimit/`           | Fixed non-zero ChainID flood; chain RL fires; ChainID=0 bypasses (orphan) | all                   | bitcoin-retry-endpoint |
 | `16-group-ratelimit/`           | Dense gap injection; group RL fires post-lookup; ACK still sent on throttle | all                 | bitcoin-retry-endpoint |
+| `20-subtree-group-announce/`    | BRC-127 dynamic group filtering via SubtreeAnnounce                       | listener3             | —                      |
 | `99-nack-retransmit/`           | NACK / deferred retransmit (aggregate)                                    | all                   | bitcoin-retry-endpoint |
 
 ## How to add a scenario
