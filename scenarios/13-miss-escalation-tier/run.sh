@@ -60,7 +60,34 @@ for spec in "$RETRY1_IP:$RETRY1_METRICS_PORT" "$RETRY2_IP:$RETRY2_METRICS_PORT" 
   echo "     $spec: healthy"
 done
 
-# --- Flush caches on retry1 and retry2 by restart ------------------------
+# --- Flush caches on retry1/retry2; clear stale gap state on listeners --------
+# Listeners are restarted FIRST so they are running when retry1/retry2 restart
+# and emit their immediate startup beacon. This ensures all three endpoints land
+# in the listener registry within one 5s beacon cycle.
+# Without listener restart, background NACKs from prior gaps escalate to retry3
+# (retry1/retry2 blocked) and can overwhelm it during run-all.
+echo "==> Restarting listeners to clear stale gap-tracker state..."
+for lvm in listener1 listener2 listener3; do
+  lxc exec "$lvm" -- systemctl restart bitcoin-shard-listener
+done
+
+echo "==> Waiting for listeners to be ready..."
+for lvm_ip in "listener1:10.10.10.31" "listener2:10.10.10.32" "listener3:10.10.10.33"; do
+  lvm="${lvm_ip%%:*}"; lip="${lvm_ip##*:}"
+  for i in $(seq 1 20); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "http://$lip:9200/healthz" || echo 000)
+    if [[ "$code" == "200" ]]; then
+      echo "     $lvm: ready"
+      break
+    fi
+    if [[ "$i" -eq 20 ]]; then
+      echo "FAIL  $lvm did not become ready within 60s"
+      exit 1
+    fi
+    sleep 3
+  done
+done
+
 echo "==> Restarting retry1 and retry2 to flush in-memory caches..."
 lxc exec "$RETRY1_VM" -- systemctl restart bitcoin-retry-endpoint
 lxc exec "$RETRY2_VM" -- systemctl restart bitcoin-retry-endpoint
@@ -280,8 +307,8 @@ fi
 # 3 of its round-robin slots (positions 2, 5, 8 with MaxRetries=9), the gap is
 # marked unrecovered. With ~15% bridge loss, P(3 drops) ≈ 0.3% per gap-listener.
 # Limit: 4% of detected gaps (floor 10).
-# - Natural noise (standalone):   <1%   (1-7 unrecovered, 0.4% of ~1640 detected)
-# - Run-all noise (beacon/phantom): ~3%  (27-53 unrecovered in clean run-all)
+# - Natural noise (standalone):   <1%   (1-7 unrecovered, 0.4% of ~1566 detected)
+# - Run-all noise (with restart):  <1%   (listeners restarted → no stale gap state)
 # - Real escalation failure:      >10%  (249/1629=15.3% when escalation is broken)
 unrecovered_limit=$(( gaps_detected * 4 / 100 ))
 [[ "$unrecovered_limit" -lt 10 ]] && unrecovered_limit=10
