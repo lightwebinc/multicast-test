@@ -1270,6 +1270,54 @@
       ],
       "title": "Socket Errors (egress / ingress)",
       "type": "timeseries"
+    },
+    {
+      "id": 100,
+      "type": "row",
+      "title": "Control Plane / TCP Ingress",
+      "gridPos": { "x": 0, "y": 73, "w": 24, "h": 1 }
+    },
+    {
+      "id": 101,
+      "type": "timeseries",
+      "title": "Control frames forwarded (rate by ctrl_group)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 0, "y": 74, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (ctrl_group) (rate(bsp_control_frames_forwarded_total[1m]))",
+          "legendFormat": "{{ctrl_group}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "id": 102,
+      "type": "timeseries",
+      "title": "TCP connections accepted (rate)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 12, "y": 74, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(bsp_tcp_connections_total[1m])",
+          "legendFormat": "connections/s"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "id": 103,
+      "type": "timeseries",
+      "title": "TCP bytes received (throughput)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 0, "y": 82, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(bsp_tcp_bytes_received_total[1m])",
+          "legendFormat": "bytes/s"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" } }
     }
   ],
   "refresh": "5s",

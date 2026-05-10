@@ -385,6 +385,122 @@
           ]
         }
       }
+    },
+    {
+      "id": 60,
+      "type": "row",
+      "title": "Subtree Group Announce (BRC-127)",
+      "gridPos": { "x": 0, "y": 91, "w": 24, "h": 1 }
+    },
+    {
+      "id": 61,
+      "type": "timeseries",
+      "title": "Announces received (rate)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 0, "y": 92, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(bsl_subtree_announces_received_total{instance=~\"$instance\"}[1m]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "id": 62,
+      "type": "timeseries",
+      "title": "Announces rejected (rate by reason)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 12, "y": 92, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (instance, reason) (rate(bsl_subtree_announces_rejected_total{instance=~\"$instance\"}[1m]))",
+          "legendFormat": "{{instance}} {{reason}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "id": 63,
+      "type": "timeseries",
+      "title": "Registry live entries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 0, "y": 100, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "bsl_subtree_group_entries{instance=~\"$instance\"}",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 64,
+      "type": "timeseries",
+      "title": "Registry evictions (rate)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 12, "y": 100, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(bsl_subtree_group_evictions_total{instance=~\"$instance\"}[1m]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "id": 70,
+      "type": "row",
+      "title": "Beacon Discovery",
+      "gridPos": { "x": 0, "y": 109, "w": 24, "h": 1 }
+    },
+    {
+      "id": 71,
+      "type": "timeseries",
+      "title": "ADVERT beacons received (rate)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 0, "y": 110, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(bsl_beacon_adverts_received_total{instance=~\"$instance\"}[1m]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "id": 72,
+      "type": "stat",
+      "title": "Beacon registry endpoints",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 12, "y": 110, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "bsl_beacon_registry_endpoints{instance=~\"$instance\"}",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 80,
+      "type": "row",
+      "title": "Multicast Egress Errors",
+      "gridPos": { "x": 0, "y": 119, "w": 24, "h": 1 }
+    },
+    {
+      "id": 81,
+      "type": "timeseries",
+      "title": "MC egress errors (rate)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 0, "y": 120, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(bsl_mc_egress_errors_total{instance=~\"$instance\"}[1m]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
     }
   ]
 }

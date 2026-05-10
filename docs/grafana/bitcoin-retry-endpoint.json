@@ -136,6 +136,35 @@
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 37}, "id": 42,
       "targets": [{"expr": "process_resident_memory_bytes{job=\"bitcoin-retry-endpoint\", instance=~\"$instance\"}", "refId": "A", "legendFormat": "{{instance}}"}],
       "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
+    },
+    {
+      "type": "row", "title": "NACK Responses",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 46}, "id": 50, "collapsed": false
+    },
+    {
+      "type": "timeseries", "title": "Responses sent (rate by type)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 47}, "id": 51,
+      "targets": [{"expr": "sum by (instance, type) (rate(bre_responses_sent_total{instance=~\"$instance\"}[1m]))", "refId": "A", "legendFormat": "{{instance}} {{type}}"}],
+      "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []}
+    },
+    {
+      "type": "timeseries", "title": "Response send errors (rate)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 47}, "id": 52,
+      "targets": [{"expr": "sum by (instance) (rate(bre_response_send_errors_total{instance=~\"$instance\"}[1m]))", "refId": "A", "legendFormat": "{{instance}}"}],
+      "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []}
+    },
+    {
+      "type": "row", "title": "Beacon",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 56}, "id": 60, "collapsed": false
+    },
+    {
+      "type": "timeseries", "title": "ADVERT beacons sent (rate)",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 57}, "id": 61,
+      "targets": [{"expr": "sum by (instance) (rate(bre_beacon_adverts_sent_total{instance=~\"$instance\"}[1m]))", "refId": "A", "legendFormat": "{{instance}}"}],
+      "fieldConfig": {"defaults": {"unit": "pps"}, "overrides": []}
     }
   ]
 }
