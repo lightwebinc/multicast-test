@@ -18,7 +18,7 @@ LOG_DIR="/tmp/scenario-run-${RUN_ID}"
 mkdir -p "$LOG_DIR"
 
 # Scenarios to skip unconditionally (long-running / not assertions-based).
-SKIP_ALWAYS=("04-extended-dashboard")
+SKIP_ALWAYS=("04-extended-dashboard" "21-subtree-group-ramp")
 
 # ---- helpers ---------------------------------------------------------------
 

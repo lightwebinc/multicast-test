@@ -21,6 +21,7 @@ target **1000 pps for 10 s** (10 000 frames).
 | `15-chain-ratelimit/`           | Fixed non-zero ChainID flood; chain RL fires; ChainID=0 bypasses (orphan) | all                   | bitcoin-retry-endpoint |
 | `16-group-ratelimit/`           | Dense gap injection; group RL fires post-lookup; ACK still sent on throttle | all                 | bitcoin-retry-endpoint |
 | `20-subtree-group-announce/`    | BRC-127 dynamic group filtering via SubtreeAnnounce                       | listener3             | —                      |
+| `21-subtree-group-ramp/`        | BRC-127+124 membership ramp over time: dashboard time-series + delivery assertions | listener3      | —                      |
 | `99-nack-retransmit/`           | NACK / deferred retransmit (aggregate)                                    | all                   | bitcoin-retry-endpoint |
 
 ## How to add a scenario
