@@ -72,7 +72,10 @@ all:
           num_workers: 1
           mgmt_cidrs_v4: ["10.10.10.0/24"]
           mgmt_cidrs_v6: ["fd20::/64"]
-          subtree_include: "07015348bf979f23c167d39727aa4d9928fb77c8e51d34ea1e7f27840f956dbb"
+          # BRC-127: dynamic group filtering (replaces static subtree_include).
+          # Group ID below is a well-known test constant used by scenario 20.
+          subtree_groups: "bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf"
+          announce_scope: "site"
           retry_endpoints: "[fd20::24]:9300,[fd20::25]:9300,[fd20::26]:9300"
           nack_max_retries: 9
 
