@@ -7,10 +7,10 @@
 #   - BRC-124 frames (all 8 subtrees) are sent continuously throughout
 #
 # Three-phase structure:
-#   Initial silence  (T=0–75s):    0 subtrees in group  → ~100% drops
-#   Ramp             (T=75–600s):  1→8 subtrees         → 12.5%→100% forwarded
-#   Stable           (T=600–720s): 8 subtrees           → ~100% forwarded
-#   Drain            (T=720–870s): announcements stop   → TTL evictions fire
+#   Initial silence  (T=0–1h):    0 subtrees in group  → ~100% drops
+#   Ramp             (T=1h–8h):   1→8 subtrees         → 12.5%→100% forwarded
+#   Stable           (T=8h–24h):  8 subtrees           → ~100% forwarded
+#   Drain            (T=24h+):    announcements stop   → TTL evictions fire
 #
 # Assertions:
 #   1. Control plane: subtree_announces_received_total > 0
@@ -24,7 +24,7 @@
 #   - listener3 will be configured inline (restored on EXIT).
 #   - subtx-gen on source VM rebuilt from current source (supports phased mode).
 #
-# Run time: ~15 minutes.  Excluded from run-all.sh by default (SKIP_ALWAYS).
+# Run time: ~24.5 hours.  Excluded from run-all.sh by default (SKIP_ALWAYS).
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCENARIO_DIR/../lib/common.sh"
@@ -41,19 +41,19 @@ TEST_GROUP_ID="bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf"
 : "${PROXY_TCP_ADDR:=[fd20::2]:9002}"
 
 # Timing parameters (overrideable).
-: "${GEN_DURATION:=12m}"          # total generator run time
-: "${ANNOUNCE_PHASE_SIZE:=1}"     # subtrees to add per phase tick
-: "${ANNOUNCE_PHASE_INTERVAL:=75s}" # how often to add the next subtree
-: "${ANNOUNCE_INTERVAL:=12s}"     # re-announce period (TTL refresh)
-: "${ANNOUNCE_TTL:=90}"           # seconds; entries expire 90s after last announce
-: "${DRAIN_WAIT:=150}"            # seconds to wait post-generator for TTL expiry
+: "${GEN_DURATION:=24h}"           # total generator run time
+: "${ANNOUNCE_PHASE_SIZE:=1}"      # subtrees to add per phase tick
+: "${ANNOUNCE_PHASE_INTERVAL:=1h}" # how often to add the next subtree (8 subtrees over 8h)
+: "${ANNOUNCE_INTERVAL:=5m}"       # re-announce period (TTL refresh)
+: "${ANNOUNCE_TTL:=900}"           # seconds (15 min); entries expire 15 min after last announce
+: "${DRAIN_WAIT:=1800}"            # seconds (30 min); 2× TTL for safety margin
 
 # Derived snapshot timing:
-#   EARLY snapshot at T≈70s  (before first phase tick at T=75s  → 0 subtrees)
-#   MID   snapshot at T≈555s (30s after all 8 added at T=7×75=525s → stable)
-#   wait for generator exit  (T=720s)
-EARLY_SLEEP=70
-MID_SLEEP=485   # 70 + 485 = 555 elapsed from generator start
+#   EARLY snapshot at T=30min (before first phase tick at T=1h → 0 subtrees)
+#   MID   snapshot at T=9h    (1h after all 8 subtrees added at T=8h → stable)
+#   wait for generator exit   (T=24h)
+EARLY_SLEEP=1800          # 30 min
+MID_SLEEP=30600           # 8.5h more → total 1800+30600=32400s=9h from generator start
 
 # ---------------------------------------------------------------------------
 # Optional inline service reconfiguration (skipped when SKIP_RECONFIG=1).

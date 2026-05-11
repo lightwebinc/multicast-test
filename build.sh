@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# Build all three lab binaries from local source and stage them in /tmp.
+# Build all four lab binaries from local source and stage them in /tmp.
 #
-# ansible/run-deploy.sh already builds as part of a full deploy cycle.
+# ansible/run-deploy.sh already builds the three service binaries as part of
+# a full deploy cycle.  subtx-gen is NOT built by Ansible — this script also
+# builds and pushes it to the `source` LXD VM.
+#
 # Use this script to verify clean compilation independently, or to pre-stage
 # binaries before running:  SKIP_LOCAL_BUILD=1 bash ansible/run-deploy.sh
 #
@@ -31,6 +34,15 @@ build_one() {
   printf "    ok  %s  (%s)\n" "$out" "$(du -sh "$out" | cut -f1)"
 }
 
+push_source_vm() {
+  local bin="$1"
+  local dest="$2"
+  echo "==> Pushing $(basename "$bin") to source VM ..."
+  lxc file push "$bin" "$dest"
+  lxc exec source -- chmod +x "/usr/local/bin/$(basename "$bin")"
+  printf "    ok  source:/usr/local/bin/%s\n" "$(basename "$bin")"
+}
+
 echo "================================================="
 echo " bitcoin-multicast-test — build all binaries"
 echo "================================================="
@@ -39,6 +51,11 @@ echo ""
 build_one "bitcoin-shard-proxy"    "$REPO_ROOT/bitcoin-shard-proxy"    /tmp/bitcoin-shard-proxy
 build_one "bitcoin-shard-listener" "$REPO_ROOT/bitcoin-shard-listener" /tmp/bitcoin-shard-listener
 build_one "bitcoin-retry-endpoint" "$REPO_ROOT/bitcoin-retry-endpoint" /tmp/bitcoin-retry-endpoint
+build_one "subtx-gen" "$REPO_ROOT/bitcoin-subtx-generator/cmd/subtx-gen" /tmp/subtx-gen
 
 echo ""
-echo "All binaries staged in /tmp — ready for: bash ansible/run-deploy.sh"
+echo "==> Pushing subtx-gen to source VM"
+push_source_vm /tmp/subtx-gen source/usr/local/bin/subtx-gen
+
+echo ""
+echo "Service binaries staged in /tmp — ready for: bash ansible/run-deploy.sh"

@@ -1,28 +1,29 @@
 # Scenario 21 — Subtree Group Membership Ramp
 
-**Run time**: ~15 minutes (excluded from `run-all.sh` by default).
+**Run time**: ~24.5 hours (excluded from `run-all.sh` by default).
 
 ## Purpose
 
 Exercises the BRC-127 + BRC-124 integration over time to populate dashboard
 time-series. Unlike scenario 20 (which announces all subtrees at once),
-scenario 21 adds one subtree to the group every 75 seconds, producing a
-visible ramp in `bsl_subtree_group_entries`, forwarding rate, and drop rate.
-After the generator exits the 90-second TTL expires and `bsl_subtree_group_evictions_total`
+scenario 21 adds one subtree to the group every hour, producing an 8-hour
+visible ramp in `bsl_subtree_group_entries`, forwarding rate, and drop rate,
+followed by a 16-hour stable window at full coverage.
+After the generator exits the 15-minute TTL expires and `bsl_subtree_group_evictions_total`
 spikes, returning the registry to empty.
 
 ## What is tested
 
 | Assertion | Mechanism |
 |---|---|
-| Negative delivery | During the initial 75s (0 subtrees), all BRC-124 frames are dropped (`subtree_include_miss ≈ received`) |
+| Negative delivery | During the initial 30min window (0 subtrees), all BRC-124 frames are dropped (`subtree_include_miss ≈ received`) |
 | Positive delivery | During the stable phase (all 8 subtrees), all BRC-124 frames are forwarded (`forwarded ≈ received`) |
 | Control plane | `bsl_subtree_announces_received_total > 0` |
 | TTL eviction | `bsl_subtree_group_evictions_total > 0` after drain; live gauge returns to 0 |
 
 ## Dashboard metrics
 
-- `bsl_subtree_group_entries` — gauge ramps 0 → 8 over ~10 min, drops to 0 after drain
+- `bsl_subtree_group_entries` — gauge ramps 0 → 8 over ~8 hours, drops to 0 after drain
 - `bsl_subtree_announces_received_total` — monotonically rising with each re-announce tick
 - `bsl_subtree_group_evictions_total` — spikes at end when TTL expires
 - `bsl_frames_dropped_total{reason="subtree_include_miss"}` — high early, falls as subtrees join
@@ -53,9 +54,9 @@ SKIP_RECONFIG=1 bash ~/repo/bitcoin-multicast-test/scenarios/21-subtree-group-ra
 
 | Variable | Default | Notes |
 |---|---|---|
-| `GEN_DURATION` | `12m` | Total generator run time |
+| `GEN_DURATION` | `24h` | Total generator run time |
 | `ANNOUNCE_PHASE_SIZE` | `1` | Subtrees added per tick |
-| `ANNOUNCE_PHASE_INTERVAL` | `75s` | Seconds between additions (8×75=600s ramp) |
-| `ANNOUNCE_INTERVAL` | `12s` | TTL refresh period |
-| `ANNOUNCE_TTL` | `90` | Entry TTL in seconds |
-| `DRAIN_WAIT` | `150` | Seconds to wait post-generator for evictions |
+| `ANNOUNCE_PHASE_INTERVAL` | `1h` | Interval between additions (8h ramp: 1 subtree/hour) |
+| `ANNOUNCE_INTERVAL` | `5m` | TTL refresh period |
+| `ANNOUNCE_TTL` | `900` | Entry TTL in seconds (15 min) |
+| `DRAIN_WAIT` | `1800` | Seconds to wait post-generator for evictions (30 min) |
