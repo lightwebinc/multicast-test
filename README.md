@@ -1,6 +1,6 @@
 # bitcoin-multicast-test
 
-LXD-based end-to-end test lab for the Bitcoin sharding pipeline. The lab
+Linux LXD-based end-to-end test lab for the Bitcoin sharding pipeline. The lab
 validates
 [`bitcoin-shard-proxy`](https://github.com/lightwebinc/bitcoin-shard-proxy),
 [`bitcoin-shard-listener`](https://github.com/lightwebinc/bitcoin-shard-listener),
@@ -48,7 +48,7 @@ bash deploy.sh           # provisions everything from scratch
 
 | VM          | mgmt (enp5s0) | egress (enp6s0) | Role                                                                      |
 | ----------- | ------------- | --------------- | ------------------------------------------------------------------------- |
-| `source`    | 10.10.10.10   | fd20::10/64     | runs `subtx-gen` to emit BRC-124/v2 frames                                |
+| `source`    | 10.10.10.10   | fd20::10/64     | runs `subtx-gen` to emit BRC-124 frames                                   |
 | `proxy`     | 10.10.10.20   | fd20::2/64      | `bitcoin-shard-proxy` ingress                                             |
 | `listener1` | 10.10.10.31   | fd20::21/64     | all shards, all subtrees; mc-egress re-emits ff05→ff02                    |
 | `listener2` | 10.10.10.32   | fd20::22/64     | shards 0,1 + subtree_exclude                                              |
