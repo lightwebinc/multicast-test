@@ -19,6 +19,7 @@ set -euo pipefail
 : "${PPS:=1000}"
 : "${DURATION:=10s}"
 : "${PAYLOAD_SIZE:=256}"
+: "${PAYLOAD_FORMAT:=brc124}"  # brc124 | brc128 | mixed (subtx-gen -payload-format)
 
 LISTENERS=(listener1 listener2 listener3)
 LISTENER_IPS=(10.10.10.31 10.10.10.32 10.10.10.33)
@@ -123,7 +124,7 @@ assert_near() {
 run_generator() {
   local theoretical=$(( PPS * $(dur_to_seconds "$DURATION") ))
   local gen_output
-  echo "-- generator: pps=$PPS duration=$DURATION -> ~$theoretical frames --" >&2
+  echo "-- generator: pps=$PPS duration=$DURATION payload=$PAYLOAD_FORMAT -> ~$theoretical frames --" >&2
   gen_output=$(lxc exec "$SOURCE_VM" -- subtx-gen \
     -addr "$PROXY_ADDR" \
     -shard-bits "$SHARD_BITS" \
@@ -132,6 +133,7 @@ run_generator() {
     -pps "$PPS" \
     -duration "$DURATION" \
     -payload-size "$PAYLOAD_SIZE" \
+    -payload-format "$PAYLOAD_FORMAT" \
     -log-interval 2s 2>&1)
   echo "$gen_output" >&2
   # Return the actual sent count so tolerance checks measure delivery ratio

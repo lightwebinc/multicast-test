@@ -13,6 +13,9 @@ target **1000 pps for 10 s** (10 000 frames).
 | `03-functional-subtree-filter/` | Single subtree-include                                                    | listener3             | —                      |
 | `04-extended-dashboard/`        | 24h+ 1000 pps for dashboard population                                    | all                   | —                      |
 | `05-mc-egress-bridge/`          | MC egress domain bridge: listener1 re-emits ff05→ff02; listener4 receives | listener1 + listener4 | —                      |
+| `06-functional-brc128/`         | BRC-128 (BRC-30 EF) payloads, all shards — header parser is payload-agnostic | all                   | —                      |
+| `07-functional-brc128-mixed/`   | Mixed BRC-124 + BRC-128 payloads on the same multicast group              | all                   | —                      |
+| `08-nack-retransmit-brc128/`    | NACK/retransmit pipeline with BRC-128 payloads                            | all                   | bitcoin-retry-endpoint |
 | `10-single-endpoint-ack/`       | Low-PPS per-gap ACK recovery                                              | all                   | bitcoin-retry-endpoint |
 | `11-permanent-gap-miss/`        | Cache-empty MISS → unrecovered gaps                                       | all                   | bitcoin-retry-endpoint |
 | `12-burst-gap-ratelimit/`       | Multi-frame bursts → rate limiter fires                                   | all                   | bitcoin-retry-endpoint |
@@ -31,6 +34,19 @@ target **1000 pps for 10 s** (10 000 frames).
    deltas, run the generator, assert pass/fail, exit non-zero on failure.
 3. Reference the shared helpers in `scenarios/lib/` rather than duplicating
    curl/jq code.
+
+## Payload format (BRC-124 vs BRC-128)
+
+`scenarios/lib/common.sh` exposes `PAYLOAD_FORMAT` (default `brc124`).
+Override to `brc128` or `mixed` to drive `subtx-gen -payload-format`,
+which switches the payload between BRC-12 raw transactions and BRC-30
+Extended Format (EF) transactions. The frame header is identical in both
+cases (BRC-124 92-byte v2), so proxy/listener/retry behaviour is
+unchanged — scenarios 06/07/08 exercise this property end-to-end.
+
+```bash
+PAYLOAD_FORMAT=brc128 bash scenarios/01-functional-all-shards/run.sh
+```
 
 ## Rotating the pinned subtree IDs
 
