@@ -111,6 +111,7 @@ apply_tight_rl() {
 }
 
 restore_rl() {
+  remove_listener_loss
   echo "==> Cleanup: stopping flood background jobs..."
   [[ -n "$ROGUE_PID" ]]      && kill "$ROGUE_PID"      2>/dev/null || true
   [[ -n "$COMPROMISED_PID" ]] && kill "$COMPROMISED_PID" 2>/dev/null || true
@@ -171,6 +172,9 @@ done
 echo "==> Waiting 12s for beacon registry to converge (2 × beacon_interval=5s)..."
 sleep 12
 
+echo "==> Injecting selective frame loss on listeners (1%) to create legitimate gap traffic"
+apply_listener_loss "1%"
+
 # --- Snapshot before ---------------------------------------------------------
 
 echo "==> Snapshot metrics (before)"
@@ -203,7 +207,7 @@ import socket,struct,time
 TARGETS=[('${RETRY1_FABRIC}',${NACK_PORT}),('${RETRY2_FABRIC}',${NACK_PORT}),('${RETRY3_FABRIC}',${NACK_PORT})]
 sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
 # ChainID=0: orphan gap — bypasses chain limiter, hits IP limiter only
-pkt=struct.pack('>IHBBQQ',0xE3E1F3E8,0x02BF,0x10,0x01,0xDEADBEEFCAFEBABE,0)
+pkt=struct.pack('>IHBBQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,0xDEADBEEFCAFEBABE,0,b'\x00'*32)
 end=time.time()+${flood_secs}
 while time.time()<end:
   [sock.sendto(pkt,a) for a in TARGETS]
@@ -220,7 +224,7 @@ sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
 # even when no single sequence window is exhausted.
 end=time.time()+${flood_secs}
 while time.time()<end:
-  pkt=struct.pack('>IHBBQQ',0xE3E1F3E8,0x02BF,0x10,0x01,random.randint(0,2**64-1),0)
+  pkt=struct.pack('>IHBBQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,random.randint(0,2**64-1),0,b'\x00'*32)
   [sock.sendto(pkt,a) for a in TARGETS]
 "
 lxc exec listener1 -- python3 -c "$compromised_script" &

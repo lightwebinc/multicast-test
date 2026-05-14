@@ -97,6 +97,7 @@ apply_tight_rl() {
 }
 
 restore_rl() {
+  remove_listener_loss
   echo "==> Cleanup: stopping flood background jobs..."
   [[ -n "$CHAIN_FLOOD_PID" ]]  && kill "$CHAIN_FLOOD_PID"  2>/dev/null || true
   [[ -n "$ORPHAN_FLOOD_PID" ]] && kill "$ORPHAN_FLOOD_PID" 2>/dev/null || true
@@ -145,6 +146,9 @@ done
 echo "==> Waiting 12s for beacon registry to converge..."
 sleep 12
 
+echo "==> Injecting selective frame loss on listeners (1%) to create legitimate gap traffic"
+apply_listener_loss "1%"
+
 # --- Snapshot before ---------------------------------------------------------
 
 echo "==> Snapshot metrics (before)"
@@ -171,7 +175,7 @@ import socket,struct,time
 TARGET=('${RETRY_FABRIC}',${NACK_PORT})
 sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
 # Fixed ChainID — exhausts per-chain sliding window immediately.
-pkt=struct.pack('>IHBBQQ',0xE3E1F3E8,0x02BF,0x10,0x01,0xCAFEBABEDEAD0001,0xDEADBEEF12345678)
+pkt=struct.pack('>IHBBQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,0xCAFEBABEDEAD0001,0xDEADBEEF12345678,b'\x00'*32)
 end=time.time()+${flood_secs}
 while time.time()<end:
   sock.sendto(pkt,TARGET)
@@ -186,7 +190,7 @@ import socket,struct,time
 TARGET=('${RETRY_FABRIC}',${NACK_PORT})
 sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
 # ChainID=0: orphan gap, bypasses chain limiter entirely.
-pkt=struct.pack('>IHBBQQ',0xE3E1F3E8,0x02BF,0x10,0x01,0xCAFEBABEDEAD0002,0)
+pkt=struct.pack('>IHBBQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,0xCAFEBABEDEAD0002,0,b'\x00'*32)
 end=time.time()+${flood_secs}
 # Deliberately slow: stay well under IP limit so IP limiter stays cold.
 import time as t

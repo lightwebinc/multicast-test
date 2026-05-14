@@ -40,6 +40,10 @@ snapshot_retry() {
   done
 }
 
+echo "==> Injecting selective frame loss on listeners (5%) to create burst gap load"
+apply_listener_loss "5%"
+trap 'remove_listener_loss' EXIT
+
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"
 snapshot_retry  "$RETRY_BEFORE"

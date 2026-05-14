@@ -68,7 +68,7 @@ unblock_retry_ingress() {
 }
 
 # Always clean up the iptables rules, even on failure.
-trap unblock_retry_ingress EXIT
+trap 'remove_listener_loss; unblock_retry_ingress' EXIT
 
 # --- Phase 1: restart all retry endpoints to flush caches, then block ingress ------
 echo "==> Restarting all retry endpoint services to flush in-memory caches"
@@ -85,6 +85,9 @@ if ! retry_metric bre_frames_received_total >/dev/null 2>&1; then
 fi
 
 block_retry_ingress
+
+echo "==> Injecting selective frame loss on listeners (2%) to create detectable gaps"
+apply_listener_loss "2%"
 
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"
