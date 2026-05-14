@@ -78,9 +78,9 @@ Listener firewall allow-list:
 ## Multicast groups
 
 Scope: site-local (`ff05::/16`). With `shard_bits=2` the proxy fans out
-across four groups `ff05::0..3`. Listeners join groups according to
+across four groups `ff05::b:0..3`. Listeners join groups according to
 their `shard_include` filter — listener1 and listener3 join all four,
-listener2 joins only `ff05::0` and `ff05::1`.
+listener2 joins only `ff05::b:0` and `ff05::b:1`.
 
 **Egress domain (scenario 05):** listener1 re-emits received frames onto
 `ff02::0..3` (link-local scope) via `-mc-egress-scope=link`. listener4 joins

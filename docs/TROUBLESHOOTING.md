@@ -49,7 +49,7 @@ of the two shard groups. Verify with:
 lxc exec listener2 -- ip maddr show dev enp6s0 | grep ff05
 ```
 
-Expect two `ff05::0` / `ff05::1` entries.
+Expect two `ff05::b:0` / `ff05::b:1` entries.
 
 ### Pinned subtree IDs don't match what the generator emits
 
@@ -219,15 +219,15 @@ lxc exec metrics -- curl -s 'http://localhost:9090/api/v1/query?query=bsp_packet
 ```bash
 # Step 1: Run the full verification script
 bash 08-verify.sh
-# Expected: MDB has tap entries for ff05::2 (recv2) and ff05::1+ff05::3 (recv3)
+# Expected: MDB has tap entries for ff05::b:2 (recv2) and ff05::b:1+ff05::b:3 (recv3)
 # Expected: multicast_snooping=1, multicast_querier=1
 # Expected: lxd-bridge-mcast-querier.service active
 
 # Step 2: Confirm correct MDB entries exist (MUST have all 3 receivers)
 bridge mdb show dev lxdbr1 | grep ff05
-# recv1 tap: ff05::, ff05::1, ff05::2, ff05::3
-# recv2 tap: ff05::2
-# recv3 tap: ff05::1, ff05::3
+# recv1 tap: ff05::, ff05::b:1, ff05::b:2, ff05::b:3
+# recv2 tap: ff05::b:2
+# recv3 tap: ff05::b:1, ff05::b:3
 
 # Step 3: Test live delivery using RX counters (more reliable than tcpdump timing)
 R2=$(lxc exec recv2 -- ip -s link show enp6s0 | awk '/RX:/{getline; print $2}')

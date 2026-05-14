@@ -6,7 +6,7 @@ End-to-end verification of the BRC-127 protocol:
 
 1. **Proxy TCP ingress** — `bitcoin-shard-proxy` receives 64-byte `SubtreeAnnounce`
    datagrams from the source VM over TCP and forwards them to the BRC-127 control
-   multicast group (`ff05::ff:fffc:9001`).
+   multicast group (`ff05::b:fffc:9001`).
 
 2. **Listener dynamic registry** — `bitcoin-shard-listener` (listener3) joins the
    control group, decodes `SubtreeAnnounce` frames, and populates its in-memory

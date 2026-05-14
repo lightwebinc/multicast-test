@@ -11,7 +11,7 @@ The `proxy` VM runs [bitcoin-shard-proxy](https://github.com/lightwebinc/bitcoin
 | Service    | `bitcoin-shard-proxy.service` (systemd, enabled)             |
 | Listen     | `[::]:9000` UDP — BRC-124/BRC-128 (or legacy BRC-12) frames in |
 | Egress     | `enp6s0` → `ff05::/16` (site-local multicast)                |
-| Shard bits | `2` (4 groups: `ff05::0`–`ff05::3`)                          |
+| Shard bits | `2` (4 groups: `ff05::b:0`–`ff05::b:3`)                          |
 | Metrics    | `http://10.10.10.20:9100/metrics`                            |
 | Health     | `http://10.10.10.20:9100/healthz`                            |
 | Readiness  | `http://10.10.10.20:9100/readyz`                             |

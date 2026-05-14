@@ -1,6 +1,6 @@
 # Scenario 05 — Multicast Egress Bridge (Group Re-mapping)
 
-listener1 receives frames on the ingress domain (`ff05::0-3`, site-local) and
+listener1 receives frames on the ingress domain (`ff05::b:0-3`, site-local) and
 re-emits them onto a remapped egress domain (`ff02::0-3`, link-local) using
 `-mc-egress-enabled -mc-egress-scope=link`. listener4 joins only the link-local
 groups and acts as the terminal downstream consumer.

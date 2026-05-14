@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Scenario 05 — Multicast Egress Bridge (Group Re-mapping)
 #
-# Verifies listener1 re-emits frames from ff05::0-3 (site-local) onto
+# Verifies listener1 re-emits frames from ff05::b:0-3 (site-local) onto
 # ff02::0-3 (link-local) and that listener4 receives and forwards them.
 #
 # Preconditions:

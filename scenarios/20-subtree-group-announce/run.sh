@@ -2,7 +2,7 @@
 # Scenario 20 — BRC-127 Subtree Group Announcement Dynamic Filtering
 #
 # End-to-end test of the BRC-127 control plane:
-#   source VM → TCP SubtreeAnnounce → proxy → ff05::ff:fffc:9001 (multicast) →
+#   source VM → TCP SubtreeAnnounce → proxy → ff05::b:fffc:9001 (multicast) →
 #   listener3 registry → group-based forwarding of all 8 subtrees.
 #
 # Prerequisites:
@@ -88,7 +88,7 @@ if [[ "$SKIP_RECONFIG" -ne 1 ]]; then
     fi
     systemctl restart bitcoin-shard-listener
   "
-  sleep 5  # allow listener3 to join ff05::ff:fffc:9001 and start eviction loop
+  sleep 5  # allow listener3 to join ff05::b:fffc:9001 and start eviction loop
 fi
 
 echo "==> Snapshot metrics (before)"
