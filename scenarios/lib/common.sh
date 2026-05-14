@@ -20,6 +20,7 @@ set -euo pipefail
 : "${DURATION:=10s}"
 : "${PAYLOAD_SIZE:=256}"
 : "${PAYLOAD_FORMAT:=brc124}"  # brc124 | brc128 | mixed (subtx-gen -payload-format)
+: "${CORRUPT_TXID_RATE:=0}"    # percentage of frames to corrupt TxID (0-100)
 
 LISTENERS=(listener1 listener2 listener3)
 LISTENER_IPS=(10.10.10.31 10.10.10.32 10.10.10.33)
@@ -64,6 +65,7 @@ snapshot_metrics() {
              'bsl_frames_dropped_total|subtree_exclude' \
              'bsl_frames_dropped_total|subtree_include_miss' \
              'bsl_frames_dropped_total|bad_frame' \
+             bsl_frames_invalid_payload_total \
              bsl_gaps_detected_total bsl_gaps_suppressed_total \
              bsl_nacks_dispatched_total bsl_gaps_unrecovered_total \
              bsl_subtree_announces_received_total bsl_subtree_group_evictions_total; do
@@ -87,10 +89,15 @@ snapshot_metrics() {
 # diff_metric <before.tsv> <after.tsv> <host> <metric-with-optional-filter>
 diff_metric() {
   local before="$1" after="$2" host="$3" metric="$4"
-  local b a
+  local b a delta
   b=$(awk -v h="$host" -v m="$metric" -F'\t' '$1==h && $2==m {print $3}' "$before")
   a=$(awk -v h="$host" -v m="$metric" -F'\t' '$1==h && $2==m {print $3}' "$after")
-  echo $(( ${a:-0} - ${b:-0} ))
+  delta=$(( ${a:-0} - ${b:-0} ))
+  # Handle 64-bit unsigned counter wrap-around (Prometheus counters)
+  if (( delta < 0 )); then
+    delta=$(( delta + 18446744073709551616 ))  # 2^64
+  fi
+  echo "$delta"
 }
 
 # assert_near <label> <got> <expected> <tolerance_fraction>
@@ -124,7 +131,7 @@ assert_near() {
 run_generator() {
   local theoretical=$(( PPS * $(dur_to_seconds "$DURATION") ))
   local gen_output
-  echo "-- generator: pps=$PPS duration=$DURATION payload=$PAYLOAD_FORMAT -> ~$theoretical frames --" >&2
+  echo "-- generator: pps=$PPS duration=$DURATION payload=$PAYLOAD_FORMAT corrupt-txid-rate=$CORRUPT_TXID_RATE -> ~$theoretical frames --" >&2
   gen_output=$(lxc exec "$SOURCE_VM" -- subtx-gen \
     -addr "$PROXY_ADDR" \
     -shard-bits "$SHARD_BITS" \
@@ -134,6 +141,7 @@ run_generator() {
     -duration "$DURATION" \
     -payload-size "$PAYLOAD_SIZE" \
     -payload-format "$PAYLOAD_FORMAT" \
+    -corrupt-txid-rate "$CORRUPT_TXID_RATE" \
     -log-interval 2s 2>&1)
   echo "$gen_output" >&2
   # Return the actual sent count so tolerance checks measure delivery ratio
