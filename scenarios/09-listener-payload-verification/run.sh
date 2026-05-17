@@ -35,10 +35,10 @@ restore_verify_payload_hash() {
 trap 'restore_verify_payload_hash' EXIT
 
 # --- Test --------------------------------------------------------------------
+enable_verify_payload_hash
+
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"
-
-enable_verify_payload_hash
 
 # Run generator with 50% TxID corruption rate
 echo "==> Running subtx-gen with 50% TxID corruption..."

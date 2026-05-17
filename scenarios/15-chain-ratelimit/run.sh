@@ -157,16 +157,18 @@ snapshot_retry   "$R1_BEFORE"
 
 # --- Launch flood jobs -------------------------------------------------------
 
-# NACK wire format (24 bytes):
+# NACK wire format (64 bytes):
 #   [0:4]   Magic      0xE3E1F3E8
 #   [4:6]   ProtoVer   0x02BF
 #   [6]     MsgType    0x10  (NACK)
-#   [7]     LookupType 0x01  (by CurSeq)
-#   [8:16]  LookupSeq  uint64 BE
-#   [16:24] ChainID    uint64 BE (non-zero = chain-attributed)
+#   [7]     Flags      0x01
+#   [8:16]  HashKey    uint64 BE (non-zero = attributed flow; 0 = orphan, bypasses chain RL)
+#   [16:24] StartSeq   uint64 BE
+#   [24:32] EndSeq     uint64 BE (= StartSeq for single-frame request)
+#   [32:64] SubtreeID  32-byte zero
 
 flood_secs=$(( $(dur_to_seconds "$DURATION") + 25 ))
-echo "==> Launching chain flood (fixed ChainID=0xDEADBEEF12345678, flood_secs=$flood_secs)..."
+echo "==> Launching chain flood (fixed HashKey=0xCAFEBABEDEAD0001, flood_secs=$flood_secs)..."
 
 # Attack: one chain-attributed NACK flood. RL_CHAIN_RATE=3 means only 3 NACKs
 # per RL_CHAIN_WINDOW are admitted for this (srcIP, chainID) pair.
@@ -174,8 +176,9 @@ chain_flood_script="
 import socket,struct,time
 TARGET=('${RETRY_FABRIC}',${NACK_PORT})
 sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
-# Fixed ChainID — exhausts per-chain sliding window immediately.
-pkt=struct.pack('>IHBBQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,0xCAFEBABEDEAD0001,0xDEADBEEF12345678,b'\x00'*32)
+# Fixed non-zero HashKey — exhausts per-chain sliding window immediately.
+SEQ=0xDEADBEEF12345678
+pkt=struct.pack('>IHBBQQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,0xCAFEBABEDEAD0001,SEQ,SEQ,b'\x00'*32)
 end=time.time()+${flood_secs}
 while time.time()<end:
   sock.sendto(pkt,TARGET)
@@ -189,8 +192,9 @@ orphan_flood_script="
 import socket,struct,time
 TARGET=('${RETRY_FABRIC}',${NACK_PORT})
 sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
-# ChainID=0: orphan gap, bypasses chain limiter entirely.
-pkt=struct.pack('>IHBBQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,0xCAFEBABEDEAD0002,0,b'\x00'*32)
+# HashKey=0: orphan gap, bypasses chain limiter entirely (AllowChain skips check).
+SEQ=0xCAFEBABEDEAD0002
+pkt=struct.pack('>IHBBQQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,0,SEQ,SEQ,b'\x00'*32)
 end=time.time()+${flood_secs}
 # Deliberately slow: stay well under IP limit so IP limiter stays cold.
 import time as t

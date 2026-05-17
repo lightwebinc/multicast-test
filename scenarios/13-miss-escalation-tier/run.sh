@@ -112,6 +112,7 @@ done
 # --- Block multicast ingress on retry1 and retry2 ------------------------
 # Cleanup trap: always remove the blocking rules, even on failure.
 cleanup() {
+  remove_listener_loss
   echo "==> Cleanup: removing ip6tables ingress blocks on retry1 and retry2..."
   lxc exec "$RETRY1_VM" -- ip6tables -D INPUT -i enp6s0 -p udp --dport 9001 -j DROP 2>/dev/null || true
   lxc exec "$RETRY2_VM" -- ip6tables -D INPUT -i enp6s0 -p udp --dport 9001 -j DROP 2>/dev/null || true
@@ -129,6 +130,9 @@ echo "     retry3 continues ingesting multicast normally (cache warm)"
 # the registry with correct tier/preference ordering from all three endpoints.
 echo "==> Waiting 12s for beacon discovery to converge on all listeners..."
 sleep 12
+
+echo "==> Injecting selective frame loss on listeners (1%) to create gaps"
+apply_listener_loss "1%"
 
 # --- Snapshot before ------------------------------------------------------
 echo "==> Snapshot metrics (before)"

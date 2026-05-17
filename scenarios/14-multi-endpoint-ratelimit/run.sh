@@ -190,24 +190,27 @@ echo "==> Launching background NACK floods (flood_secs=$flood_secs)..."
 echo "    Attack 1 (rogue node):           source VM (fd20::10) → all 3 endpoints, fixed LookupSeq"
 echo "    Attack 2 (compromised listener): listener1 VM (fd20::21) → all 3 endpoints, random LookupSeq"
 
-# NACK wire format (24 bytes):
+# NACK wire format (64 bytes):
 #   [0:4]   Magic      0xE3E1F3E8  (BSV mainnet magic)
 #   [4:6]   ProtoVer   0x02BF
 #   [6]     MsgType    0x10        (NACK)
-#   [7]     LookupType 0x01        (by CurSeq)
-#   [8:16]  LookupSeq  uint64 BE
-#   [16:24] ChainID    uint64 BE   (0 = orphan/unattributed; non-zero = chain-attributed)
+#   [7]     Flags      0x01
+#   [8:16]  HashKey    uint64 BE   (flow identifier)
+#   [16:24] StartSeq   uint64 BE
+#   [24:32] EndSeq     uint64 BE   (= StartSeq for single-frame request)
+#   [32:64] SubtreeID  32-byte zero
 #
-# Rogue flood: ChainID=0 (orphan). Tests IP limiter for arbitrary source IPs.
-# Compromised flood: random LookupSeq + ChainID=0. Tests IP limiter even
-#   when per-sequence window is never exhausted for any individual seq.
+# Rogue flood: fixed HashKey/Seq. Tests IP limiter for arbitrary source IPs.
+# Compromised flood: random HashKey/Seq. Tests IP limiter even
+#   when no single sequence window is exhausted for any individual seq.
 
 rogue_script="
 import socket,struct,time
 TARGETS=[('${RETRY1_FABRIC}',${NACK_PORT}),('${RETRY2_FABRIC}',${NACK_PORT}),('${RETRY3_FABRIC}',${NACK_PORT})]
 sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
 # ChainID=0: orphan gap — bypasses chain limiter, hits IP limiter only
-pkt=struct.pack('>IHBBQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,0xDEADBEEFCAFEBABE,0,b'\x00'*32)
+SEQ=0xDEADBEEFCAFEBABE
+pkt=struct.pack('>IHBBQQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,SEQ,SEQ,SEQ,b'\x00'*32)
 end=time.time()+${flood_secs}
 while time.time()<end:
   [sock.sendto(pkt,a) for a in TARGETS]
@@ -224,7 +227,8 @@ sock=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
 # even when no single sequence window is exhausted.
 end=time.time()+${flood_secs}
 while time.time()<end:
-  pkt=struct.pack('>IHBBQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,random.randint(0,2**64-1),0,b'\x00'*32)
+  seq=random.randint(0,2**64-1)
+  pkt=struct.pack('>IHBBQQQ32s',0xE3E1F3E8,0x02BF,0x10,0x01,seq,seq,seq,b'\x00'*32)
   [sock.sendto(pkt,a) for a in TARGETS]
 "
 lxc exec listener1 -- python3 -c "$compromised_script" &
