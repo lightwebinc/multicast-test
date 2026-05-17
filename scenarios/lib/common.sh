@@ -66,6 +66,8 @@ snapshot_metrics() {
              'bsl_frames_dropped_total|subtree_include_miss' \
              'bsl_frames_dropped_total|bad_frame' \
              bsl_frames_invalid_payload_total \
+             bsl_reassembly_started_total bsl_reassembly_completed_total \
+             bsl_reassembly_abandoned_total bsl_reassembly_hash_mismatch_total \
              bsl_gaps_detected_total bsl_gaps_suppressed_total \
              bsl_nacks_dispatched_total bsl_gaps_unrecovered_total \
              bsl_subtree_announces_received_total bsl_subtree_group_evictions_total; do
