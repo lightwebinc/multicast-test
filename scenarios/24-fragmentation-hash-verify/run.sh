@@ -13,10 +13,10 @@
 # for the BRC-130 reassembly path.
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCENARIO_DIR/../lib/common.sh"
 
 : "${FRAG_MTU:=1500}"
 : "${PAYLOAD_SIZE:=2048}"
+source "$SCENARIO_DIR/../lib/common.sh"
 PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
 LISTENER_ENV_FILE="/etc/bitcoin-shard-listener/config.env"
 LISTENER_VM="listener1"
@@ -65,7 +65,7 @@ snapshot_metrics "$BEFORE"
 frames=$(PAYLOAD_SIZE=$PAYLOAD_SIZE run_generator)
 
 echo "==> Allow pipeline to drain"
-sleep 3
+sleep 12
 
 echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"

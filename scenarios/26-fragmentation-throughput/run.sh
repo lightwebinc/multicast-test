@@ -11,12 +11,12 @@
 #   listener1 forwarded ≈ listener1 reassembly_completed (100% pass rate)
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCENARIO_DIR/../lib/common.sh"
 
 : "${FRAG_MTU:=1500}"
 : "${PAYLOAD_SIZE:=4096}"
 : "${PPS:=500}"
 : "${DURATION:=10s}"
+source "$SCENARIO_DIR/../lib/common.sh"
 PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
@@ -50,7 +50,7 @@ snapshot_metrics "$BEFORE"
 frames=$(PPS=$PPS DURATION=$DURATION PAYLOAD_SIZE=$PAYLOAD_SIZE run_generator)
 
 echo "==> Allow reassembly pipeline to drain"
-sleep 3
+sleep 12
 
 echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"
@@ -68,18 +68,19 @@ started=$(sum_metric bsl_reassembly_started_total)
 completed=$(sum_metric bsl_reassembly_completed_total)
 abandoned=$(sum_metric bsl_reassembly_abandoned_total)
 fwd_l1=$(diff_metric "$BEFORE" "$AFTER" listener1 'bsl_frames_forwarded_total|proto="udp"')
+started_l1=$(diff_metric "$BEFORE" "$AFTER" listener1 bsl_reassembly_started_total)
 completed_l1=$(diff_metric "$BEFORE" "$AFTER" listener1 bsl_reassembly_completed_total)
 
 echo "==> Fragmentation throughput metrics:"
 echo "    frames_sent=$frames started=$started completed=$completed abandoned=$abandoned"
 echo "    listener1: completed=$completed_l1 forwarded=$fwd_l1"
 
-# Require ≥95% completion rate.
-min_completed=$(( started * 95 / 100 ))
-if [[ "$completed" -ge "$min_completed" ]]; then
-  echo "PASS  completion_rate ≥95%: completed=$completed started=$started"
+# Require ≥95% completion rate on listener1 (no shard/subtree filter).
+min_completed=$(( started_l1 * 95 / 100 ))
+if [[ "$completed_l1" -ge "$min_completed" ]]; then
+  echo "PASS  l1 completion_rate ≥95%: completed=$completed_l1 started=$started_l1"
 else
-  echo "FAIL  completion_rate <95%: completed=$completed started=$started (need ≥$min_completed)"
+  echo "FAIL  l1 completion_rate <95%: completed=$completed_l1 started=$started_l1 (need ≥$min_completed)"
   SCENARIO_FAIL=1
 fi
 

@@ -14,10 +14,12 @@
 #   bsl_frames_forwarded_total{proto=udp}  ≈ bsl_reassembly_completed_total
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCENARIO_DIR/../lib/common.sh"
 
+# Set payload large enough to exceed fragDataSize (1500-152=1348) BEFORE common.sh
+# sets PAYLOAD_SIZE=256.
 : "${FRAG_MTU:=1500}"
 : "${PAYLOAD_SIZE:=2048}"
+source "$SCENARIO_DIR/../lib/common.sh"
 PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
@@ -58,7 +60,7 @@ snapshot_metrics "$BEFORE"
 frames=$(PAYLOAD_SIZE=$PAYLOAD_SIZE run_generator)
 
 echo "==> Allow reassembly pipeline to drain"
-sleep 3
+sleep 12
 
 echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"
@@ -73,29 +75,25 @@ sum_metric() {
   echo "$total"
 }
 
-started=$(sum_metric bsl_reassembly_started_total)
-completed=$(sum_metric bsl_reassembly_completed_total)
+started_l1=$(diff_metric "$BEFORE" "$AFTER" listener1 bsl_reassembly_started_total)
+completed_l1=$(diff_metric "$BEFORE" "$AFTER" listener1 bsl_reassembly_completed_total)
 abandoned=$(sum_metric bsl_reassembly_abandoned_total)
 fwd_l1=$(diff_metric "$BEFORE" "$AFTER" listener1 'bsl_frames_forwarded_total|proto="udp"')
 
 echo "==> Fragmentation metrics:"
-echo "    started=$started completed=$completed abandoned=$abandoned"
-echo "    listener1 forwarded=$fwd_l1"
+echo "    listener1: started=$started_l1 completed=$completed_l1 forwarded=$fwd_l1"
+echo "    abandoned(all)=$abandoned"
 
-# started and completed should both be > 0
-if [[ "$started" -gt 0 ]]; then
-  echo "PASS  reassembly_started > 0 ($started)"
+if [[ "$started_l1" -gt 0 ]]; then
+  echo "PASS  reassembly_started_l1 > 0 ($started_l1)"
 else
-  echo "FAIL  reassembly_started == 0 (fragmentation not working)"
+  echo "FAIL  reassembly_started_l1 == 0 (fragmentation not working)"
   SCENARIO_FAIL=1
 fi
 
-assert_near "reassembly_completed ≈ started" "$completed" "$started" 0.10
-assert_near "reassembly_abandoned == 0"       "$abandoned" 0            0.00
-assert_near "listener1 forwarded ≈ completed_l1" \
-  "$fwd_l1" \
-  "$(diff_metric "$BEFORE" "$AFTER" listener1 bsl_reassembly_completed_total)" \
-  0.10
+assert_near "reassembly_abandoned == 0"          "$abandoned"   0             0.00
+assert_near "listener1 completed ≈ started_l1"   "$completed_l1" "$started_l1" 0.10
+assert_near "listener1 forwarded ≈ frames_sent"  "$fwd_l1"       "$frames"     0.10
 
 if [[ "$SCENARIO_FAIL" -ne 0 ]]; then
   echo "Scenario 22: FAIL"

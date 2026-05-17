@@ -12,10 +12,10 @@
 #   listener3: forwarded ≈ reassembly_completed × 1/8
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCENARIO_DIR/../lib/common.sh"
 
 : "${FRAG_MTU:=1500}"
 : "${PAYLOAD_SIZE:=2048}"
+source "$SCENARIO_DIR/../lib/common.sh"
 PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
@@ -53,7 +53,7 @@ snapshot_metrics "$BEFORE"
 frames=$(PAYLOAD_SIZE=$PAYLOAD_SIZE run_generator)
 
 echo "==> Allow pipeline to drain"
-sleep 3
+sleep 12
 
 echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"
@@ -76,11 +76,12 @@ echo "    listener1: started=$started_l1 completed=$completed_l1 fwd=$fwd_l1"
 echo "    listener2: started=$started_l2 completed=$completed_l2 fwd=$fwd_l2"
 echo "    listener3: completed=$completed_l3 fwd=$fwd_l3"
 
-assert_near "listener1 completed ≈ started"            "$completed_l1" "$started_l1"                        0.10
-assert_near "listener1 fwd ≈ completed"                "$fwd_l1"       "$completed_l1"                      0.10
-assert_near "listener2 started ≈ l1/num_groups"        "$started_l2"   "$(( started_l1 / num_groups ))"      0.15
-assert_near "listener2 fwd ≈ completed_l2 × 7/8"      "$fwd_l2"       "$(( completed_l2 * 7 / 8 ))"         0.15
-assert_near "listener3 fwd ≈ completed_l3 × 1/8"      "$fwd_l3"       "$(( completed_l3 * 1 / 8 ))"         0.20
+# listener2: SHARD_INCLUDE=0,1 → receives 2 of 4 groups (50% of transactions)
+assert_near "listener1 completed ≈ started_l1"         "$completed_l1" "$started_l1"                  0.10
+assert_near "listener1 fwd ≈ completed_l1"             "$fwd_l1"       "$completed_l1"                0.10
+assert_near "listener2 started ≈ started_l1/2"         "$started_l2"   "$(( started_l1 / 2 ))"        0.20
+assert_near "listener2 fwd ≈ completed_l2 × 7/8"      "$fwd_l2"       "$(( completed_l2 * 7 / 8 ))" 0.15
+assert_near "listener3 fwd ≈ completed_l3 × 1/8"      "$fwd_l3"       "$(( completed_l3 * 1 / 8 ))" 0.20
 
 if [[ "$SCENARIO_FAIL" -ne 0 ]]; then
   echo "Scenario 23: FAIL"

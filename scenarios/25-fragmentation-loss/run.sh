@@ -12,10 +12,10 @@
 #   bsl_reassembly_completed_total  < bsl_reassembly_started_total
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCENARIO_DIR/../lib/common.sh"
 
 : "${FRAG_MTU:=1500}"
 : "${PAYLOAD_SIZE:=2048}"
+source "$SCENARIO_DIR/../lib/common.sh"
 : "${FRAGMENT_LOSS:=60%}"
 # Shorter TTL makes the test faster (abandonment fires sooner).
 # listener1's NACK_GAP_TTL would normally cover this; here we rely on
