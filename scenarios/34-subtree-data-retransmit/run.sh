@@ -18,14 +18,16 @@
 #   - Proxy TCP ingress enabled (TCP_LISTEN_PORT=9002).
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCENARIO_DIR/../lib/common.sh"
 
 : "${PROXY_TCP_ADDR:=[fd20::2]:9002}"
 : "${FRAME_COUNT:=60}"
 : "${NODES:=8}"
+: "${SUBTREE_COUNT:=8}"
 : "${MSG_TYPE:=hashes}"
 : "${LOSS_PCT:=10}"
 : "${INTERVAL:=80ms}"
+
+source "$SCENARIO_DIR/../lib/common.sh"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
 AFTER="$SCENARIO_DIR/metrics.after.tsv"
@@ -106,11 +108,12 @@ snapshot_all_retry "$RETRY_BEFORE"
 
 echo "==> Sending $FRAME_COUNT BRC-132 frames via TCP → $PROXY_TCP_ADDR"
 lxc exec "$SOURCE_VM" -- send-subtree-data \
-  -addr      "$PROXY_TCP_ADDR" \
-  -frames    "$FRAME_COUNT" \
-  -msg-type  "$MSG_TYPE" \
-  -nodes     "$NODES" \
-  -interval  "$INTERVAL"
+  -addr           "$PROXY_TCP_ADDR" \
+  -frames         "$FRAME_COUNT" \
+  -msg-type       "$MSG_TYPE" \
+  -nodes          "$NODES" \
+  -subtree-count  "$SUBTREE_COUNT" \
+  -interval       "$INTERVAL"
 
 echo "==> Remove loss rules"
 remove_listener_loss

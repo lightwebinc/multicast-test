@@ -13,7 +13,6 @@
 #   bsl_frames_forwarded_total{proto="udp"}             ≥ completed
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCENARIO_DIR/../lib/common.sh"
 
 : "${PROXY_TCP_ADDR:=[fd20::2]:9002}"
 : "${FRAG_MTU:=1500}"
@@ -21,6 +20,8 @@ source "$SCENARIO_DIR/../lib/common.sh"
 : "${PAYLOAD_SIZE:=8192}"   # 7 fragments each at FRAG_MTU=1500
 : "${MSG_TYPE:=hashes}"
 : "${INTERVAL:=100ms}"
+
+source "$SCENARIO_DIR/../lib/common.sh"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
 AFTER="$SCENARIO_DIR/metrics.after.tsv"
