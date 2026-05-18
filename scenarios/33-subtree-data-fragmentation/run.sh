@@ -60,25 +60,18 @@ trap restore_proxy EXIT
 echo "==> Enabling proxy TCP + fragmentation"
 enable_tcp_and_frag
 
-echo "==> Verifying listeners have SUBTREE_DATA_ENABLED=true"
+echo "==> Ensuring listeners have SUBTREE_DATA_ENABLED=true and resetting state"
 for vm in "${LISTENERS[@]}"; do
-  enabled=$(lxc exec "$vm" -- bash -c "
-    grep -q 'SUBTREE_DATA_ENABLED=true' /etc/bitcoin-shard-listener/config.env \
-      && echo yes || echo no
-  " 2>/dev/null || echo no)
-  if [[ "$enabled" != "yes" ]]; then
-    echo "WARN  $vm: SUBTREE_DATA_ENABLED not set; enabling now"
-    lxc exec "$vm" -- bash -c "
-      if grep -q '^SUBTREE_DATA_ENABLED=' /etc/bitcoin-shard-listener/config.env; then
-        sed -i 's/^SUBTREE_DATA_ENABLED=.*/SUBTREE_DATA_ENABLED=true/' /etc/bitcoin-shard-listener/config.env
-      else
-        echo 'SUBTREE_DATA_ENABLED=true' >> /etc/bitcoin-shard-listener/config.env
-      fi
-      systemctl restart bitcoin-shard-listener
-    "
-    sleep 3
-  fi
+  lxc exec "$vm" -- bash -c "
+    if grep -q '^SUBTREE_DATA_ENABLED=' /etc/bitcoin-shard-listener/config.env; then
+      sed -i 's/^SUBTREE_DATA_ENABLED=.*/SUBTREE_DATA_ENABLED=true/' /etc/bitcoin-shard-listener/config.env
+    else
+      echo 'SUBTREE_DATA_ENABLED=true' >> /etc/bitcoin-shard-listener/config.env
+    fi
+    systemctl restart bitcoin-shard-listener
+  "
 done
+sleep 3
 
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"
