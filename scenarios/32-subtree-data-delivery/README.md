@@ -8,12 +8,12 @@ every frame.
 
 ## Expectations
 
-| Metric | Condition |
-|--------|-----------|
+| Metric                                        | Condition                               |
+| --------------------------------------------- | --------------------------------------- |
 | `bsl_frames_received_total{version="brc132"}` | ≈ FRAME_COUNT on every enabled listener |
-| `bsl_frames_forwarded_total{proto="udp"}` | ≥ received |
-| `bsl_gaps_detected_total{flow="brc132"}` | == 0 (no loss injected) |
-| `bsl_reassembly_started_total` | == 0 (payload fits in one datagram) |
+| `bsl_frames_forwarded_total{proto="udp"}`     | ≥ received                              |
+| `bsl_gaps_detected_total{flow="brc132"}`      | == 0 (no loss injected)                 |
+| `bsl_reassembly_started_total`                | == 0 (payload fits in one datagram)     |
 
 ## Prerequisites
 

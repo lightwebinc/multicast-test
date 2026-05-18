@@ -8,13 +8,13 @@ cache V5 frames by `HashKey ∥ SeqNum`. Listeners detect SeqNum gaps on the
 
 ## Expectations
 
-| Metric | Condition |
-|--------|-----------|
-| `bsl_gaps_detected_total{flow="brc132"}` | > 0 (loss produces gaps) |
-| `bsl_nacks_dispatched_total{flow="brc132"}` | > 0 |
-| `bsl_gaps_unrecovered_total{flow="brc132"}` | ≈ 0 (retransmit fills them) |
+| Metric                                        | Condition                      |
+| --------------------------------------------- | ------------------------------ |
+| `bsl_gaps_detected_total{flow="brc132"}`      | > 0 (loss produces gaps)       |
+| `bsl_nacks_dispatched_total{flow="brc132"}`   | > 0                            |
+| `bsl_gaps_unrecovered_total{flow="brc132"}`   | ≈ 0 (retransmit fills them)    |
 | `bsl_frames_received_total{version="brc132"}` | ≈ FRAME_COUNT on each listener |
-| `bre_retransmits_total` (retry endpoints) | > 0 |
+| `bre_retransmits_total` (retry endpoints)     | > 0                            |
 
 ## Prerequisites
 
