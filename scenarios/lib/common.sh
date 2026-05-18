@@ -74,7 +74,12 @@ snapshot_metrics() {
              'bsl_gaps_unrecovered_total|flow="brc131"' \
              'bsl_nacks_dispatched_total|flow="brc131"' \
              bsl_subtree_announces_received_total bsl_subtree_group_evictions_total \
-             'bsl_frames_received_total|version="brc131"'; do
+             'bsl_frames_received_total|version="brc131"' \
+             'bsl_frames_received_total|version="brc132"' \
+             'bsl_frames_received_total|version="brc132_reassembled"' \
+             'bsl_gaps_detected_total|flow="brc132"' \
+             'bsl_gaps_unrecovered_total|flow="brc132"' \
+             'bsl_nacks_dispatched_total|flow="brc132"'; do
       local name="${m%%|*}"
       local filter=""
       if [[ "$m" == *'|'* ]]; then

@@ -27,6 +27,9 @@ target **1000 pps for 10 s** (10 000 frames).
 | `21-subtree-group-ramp/`        | BRC-127+124 membership ramp over time: dashboard time-series + delivery assertions | listener3      | —                      |
 | `30-block-announce-delivery/`   | BRC-131 block announce + coinbase frames delivered to all listeners via FF0E::B:FFFE | all           | —                      |
 | `31-block-announce-retransmit/` | BRC-131 with 10% loss; NACK recovery via retry endpoints' control-group cache | all             | bitcoin-retry-endpoint |
+| `32-subtree-data-delivery/`     | BRC-132 inline SubtreeData frames delivered via FF0X::B:FFFB to all listeners | all             | —                      |
+| `33-subtree-data-fragmentation/`| BRC-132 large payload (8 KB) fragmented into BRC-130; listeners reassemble via SubtreeDataCallback | all | —           |
+| `34-subtree-data-retransmit/`   | BRC-132 with 10% loss; NACK recovery via retry endpoints caching V5 frames on 0xFFFB | all   | bitcoin-retry-endpoint |
 | `99-nack-retransmit/`           | NACK / deferred retransmit (aggregate)                                    | all                   | bitcoin-retry-endpoint |
 
 ## How to add a scenario
