@@ -45,13 +45,16 @@ echo "==> Deploying Ansible playbooks (proxy + listeners)"
 bash "$SCRIPT_DIR/ansible/run-deploy.sh"
 echo ""
 
-echo "==> Building and installing subtx-gen on source VM"
+echo "==> Building and installing source VM binaries"
 (
-  SUBTX_SRC="$(dirname "$SCRIPT_DIR")/bitcoin-subtx-generator/cmd/subtx-gen"
-  GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false -o /tmp/subtx-gen "$SUBTX_SRC"
-  lxc file push /tmp/subtx-gen source/usr/local/bin/subtx-gen
-  lxc exec source -- chmod +x /usr/local/bin/subtx-gen
-  echo "    ok  source:/usr/local/bin/subtx-gen"
+  SUBTX_ROOT="$(dirname "$SCRIPT_DIR")/bitcoin-subtx-generator"
+  GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false -o /tmp/subtx-gen            "$SUBTX_ROOT/cmd/subtx-gen"
+  GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false -o /tmp/send-block-announce  "$SUBTX_ROOT/cmd/send-block-announce"
+  for bin in subtx-gen send-block-announce; do
+    lxc file push /tmp/$bin source/usr/local/bin/$bin
+    lxc exec source -- chmod +x /usr/local/bin/$bin
+    echo "    ok  source:/usr/local/bin/$bin"
+  done
 )
 echo ""
 

@@ -51,11 +51,13 @@ echo ""
 build_one "bitcoin-shard-proxy"    "$REPO_ROOT/bitcoin-shard-proxy"    /tmp/bitcoin-shard-proxy
 build_one "bitcoin-shard-listener" "$REPO_ROOT/bitcoin-shard-listener" /tmp/bitcoin-shard-listener
 build_one "bitcoin-retry-endpoint" "$REPO_ROOT/bitcoin-retry-endpoint" /tmp/bitcoin-retry-endpoint
-build_one "subtx-gen" "$REPO_ROOT/bitcoin-subtx-generator/cmd/subtx-gen" /tmp/subtx-gen
+build_one "subtx-gen"            "$REPO_ROOT/bitcoin-subtx-generator/cmd/subtx-gen"            /tmp/subtx-gen
+build_one "send-block-announce"  "$REPO_ROOT/bitcoin-subtx-generator/cmd/send-block-announce"  /tmp/send-block-announce
 
 echo ""
-echo "==> Pushing subtx-gen to source VM"
-push_source_vm /tmp/subtx-gen source/usr/local/bin/subtx-gen
+echo "==> Pushing source VM binaries"
+push_source_vm /tmp/subtx-gen           source/usr/local/bin/subtx-gen
+push_source_vm /tmp/send-block-announce source/usr/local/bin/send-block-announce
 
 echo ""
 echo "Service binaries staged in /tmp — ready for: bash ansible/run-deploy.sh"

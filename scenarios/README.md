@@ -25,6 +25,8 @@ target **1000 pps for 10 s** (10 000 frames).
 | `16-group-ratelimit/`           | Dense gap injection; group RL fires post-lookup; ACK still sent on throttle | all                 | bitcoin-retry-endpoint |
 | `20-subtree-group-announce/`    | BRC-127 dynamic group filtering via SubtreeAnnounce                       | listener3             | —                      |
 | `21-subtree-group-ramp/`        | BRC-127+124 membership ramp over time: dashboard time-series + delivery assertions | listener3      | —                      |
+| `30-block-announce-delivery/`   | BRC-131 block announce + coinbase frames delivered to all listeners via FF0E::B:FFFE | all           | —                      |
+| `31-block-announce-retransmit/` | BRC-131 with 10% loss; NACK recovery via retry endpoints' control-group cache | all             | bitcoin-retry-endpoint |
 | `99-nack-retransmit/`           | NACK / deferred retransmit (aggregate)                                    | all                   | bitcoin-retry-endpoint |
 
 ## How to add a scenario

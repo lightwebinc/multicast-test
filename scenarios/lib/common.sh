@@ -70,7 +70,11 @@ snapshot_metrics() {
              bsl_reassembly_abandoned_total bsl_reassembly_hash_mismatch_total \
              bsl_gaps_detected_total bsl_gaps_suppressed_total \
              bsl_nacks_dispatched_total bsl_gaps_unrecovered_total \
-             bsl_subtree_announces_received_total bsl_subtree_group_evictions_total; do
+             'bsl_gaps_detected_total|flow="brc131"' \
+             'bsl_gaps_unrecovered_total|flow="brc131"' \
+             'bsl_nacks_dispatched_total|flow="brc131"' \
+             bsl_subtree_announces_received_total bsl_subtree_group_evictions_total \
+             'bsl_frames_received_total|version="brc131"'; do
       local name="${m%%|*}"
       local filter=""
       if [[ "$m" == *'|'* ]]; then
