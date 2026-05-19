@@ -22,7 +22,7 @@ Ansible playbook using the inventory committed to
 
 ## Filter policy per host
 
-Pinned with seed `lax-lab-2026`, pool size 8:
+Pinned with seed `multicast-lab-bsv`, pool size 8:
 
 | VM        | `shard_include` | `subtree_include`               | `subtree_exclude`               | `mc_egress_enabled`    | `mc_scope` |
 | --------- | --------------- | ------------------------------- | ------------------------------- | ---------------------- | ---------- |
@@ -34,7 +34,7 @@ Pinned with seed `lax-lab-2026`, pool size 8:
 Regenerate the pool with:
 
 ```bash
-subtx-gen -subtrees 8 -subtree-seed 'lax-lab-2026' -print-subtrees
+subtx-gen -subtrees 8 -subtree-seed 'multicast-lab-bsv' -print-subtrees
 ```
 
 ## Deploy / upgrade

@@ -61,7 +61,7 @@ the seed used to generate the pinned IDs in the inventory. Regenerate
 and compare:
 
 ```bash
-lxc exec source -- subtx-gen -subtrees 8 -subtree-seed 'lax-lab-2026' -print-subtrees
+lxc exec source -- subtx-gen -subtrees 8 -subtree-seed 'multicast-lab-bsv' -print-subtrees
 grep subtree_ ansible/listener-hosts.yml
 ```
 

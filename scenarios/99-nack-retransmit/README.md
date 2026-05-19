@@ -23,7 +23,7 @@ Drive `subtx-gen` with gap injection:
 ```bash
 lxc exec source -- subtx-gen \
   -addr '[fd20::2]:9000' \
-  -shard-bits 2 -subtrees 8 -subtree-seed 'lax-lab-2026' \
+  -shard-bits 2 -subtrees 8 -subtree-seed 'multicast-lab-bsv' \
   -pps 1000 -duration 30s \
   -seq-gap-every 500 \
   -seq-gap-size 1 \

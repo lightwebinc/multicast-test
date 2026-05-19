@@ -4,7 +4,7 @@
   "schemaVersion": 39,
   "version": 1,
   "editable": true,
-  "tags": ["bitcoin", "listener", "lax-lab"],
+  "tags": ["bitcoin", "listener", "multicast-lab"],
   "timezone": "",
   "refresh": "10s",
   "time": { "from": "now-15m", "to": "now" },

@@ -15,7 +15,7 @@ set -euo pipefail
 : "${METRICS_PORT:=9200}"
 : "${SHARD_BITS:=2}"
 : "${SUBTREES:=8}"
-: "${SUBTREE_SEED:=lax-lab-2026}"
+: "${SUBTREE_SEED:=multicast-lab-bsv}"
 : "${PPS:=1000}"
 : "${DURATION:=10s}"
 : "${PAYLOAD_SIZE:=256}"

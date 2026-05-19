@@ -2,7 +2,7 @@
   "title": "bitcoin-retry-endpoint",
   "uid": "bitcoin-retry-endpoint",
   "schemaVersion": 39,
-  "tags": ["bitcoin", "retry-endpoint", "lax-lab"],
+  "tags": ["bitcoin", "retry-endpoint", "multicast-lab"],
   "timezone": "browser",
   "editable": true,
   "graphTooltip": 1,

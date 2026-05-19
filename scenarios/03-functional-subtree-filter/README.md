@@ -2,7 +2,7 @@
 
 Same stream. Asserts listener3 forwards only frames whose `SubtreeID`
 equals the pinned `subtree_include` (pool index 5 under seed
-`lax-lab-2026`). All other frames are dropped as `subtree_include_miss`.
+`multicast-lab-bsv`). All other frames are dropped as `subtree_include_miss`.
 
 ## Expected
 

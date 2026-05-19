@@ -56,10 +56,10 @@ PAYLOAD_FORMAT=brc128 bash scenarios/01-functional-all-shards/run.sh
 ## Rotating the pinned subtree IDs
 
 The listener inventory (`ansible/listener-hosts.yml`) pins two 32-byte
-hashes selected from the subtx-gen pool seeded with `lax-lab-2026`.
+hashes selected from the subtx-gen pool seeded with `multicast-lab-bsv`.
 
 ```bash
-subtx-gen -subtrees 8 -subtree-seed 'lax-lab-2026' -print-subtrees
+subtx-gen -subtrees 8 -subtree-seed 'multicast-lab-bsv' -print-subtrees
 ```
 
 Listener 2 excludes index 2; listener 3 includes only index 5. To rotate,

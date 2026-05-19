@@ -3,7 +3,7 @@
 # Invoke via:  cd ~/repo/bitcoin-retransmission/ansible &&
 #              ansible-playbook -i ~/repo/bitcoin-multicast-test/ansible/retry-hosts.yml site.yml
 #
-# retry1..3 are the retry endpoints on the lax LXD lab.
+# retry1..3 are the retry endpoints on the multicast-lab LXD lab.
 # MISS escalation order: retry1 (T0/P128) → retry2 (T0/P64) → retry3 (T1/P128).
 # Host-level vars (ingress_iface, egress_iface, mc_iface, mgmt_cidrs_*) override
 # group_vars/all.yml in the bitcoin-retransmission role.

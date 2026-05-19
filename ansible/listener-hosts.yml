@@ -5,7 +5,7 @@
 #
 # Pinned subtree IDs (reproducibility):
 #   Generated with:
-#     subtx-gen -subtrees 8 -subtree-seed 'lax-lab-2026' -print-subtrees
+#     subtx-gen -subtrees 8 -subtree-seed 'multicast-lab-bsv' -print-subtrees
 #   Listener 2 excludes index 2; Listener 3 includes only index 5.
 #   To rotate, regenerate the pool and update the hex strings below.
 

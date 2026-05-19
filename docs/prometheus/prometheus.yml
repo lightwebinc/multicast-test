@@ -1,11 +1,11 @@
-# Canonical Prometheus scrape config for the lax multicast-test lab.
+# Canonical Prometheus scrape config for the multicast-lab.
 # Pushed onto the `metrics` VM (10.10.10.142) by lab/09-metrics-update.sh.
 
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: lax-lab
+    cluster: multicast-lab
 
 scrape_configs:
   - job_name: prometheus

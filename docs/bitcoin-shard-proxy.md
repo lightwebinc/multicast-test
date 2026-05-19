@@ -71,7 +71,7 @@ lxc exec proxy -- curl -s http://localhost:9100/readyz
 # 1000 pps for 10 s with 8 random subtree IDs (seed pinned in ansible/listener-hosts.yml).
 lxc exec source -- subtx-gen \
   -addr '[fd20::2]:9000' \
-  -shard-bits 2 -subtrees 8 -subtree-seed 'lax-lab-2026' \
+  -shard-bits 2 -subtrees 8 -subtree-seed 'multicast-lab-bsv' \
   -pps 1000 -duration 10s
 
 # Confirm forwarded packet counter incremented
