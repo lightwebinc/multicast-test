@@ -32,7 +32,7 @@ Requires `retry1` to be reachable from listener1..3 on `10.10.10.34:9300`
 > `gaps_detected` and `nacks_dispatched` are **not** 1:1. Most transient
 > gaps (caused by out-of-order multicast delivery) close naturally before
 > the NACK timer fires, and the listener dedups in-flight NACKs per
-> `(groupIdx, PrevSeq)`. The assertion checks that the NACK path is
+> `(groupIdx, HashKey)`. The assertion checks that the NACK path is
 > exercised, not that every gap produces a NACK.
 
 ## Tunables (env)

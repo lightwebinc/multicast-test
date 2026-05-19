@@ -3,7 +3,7 @@
 #
 # Same shape as scenario 99 (gap injection + NACK + retransmit + dedup),
 # but the generator emits BRC-30 Extended Format payloads. The retry
-# endpoint caches by CurSeq (a header field), so cache/NACK behaviour is
+# endpoint caches by SeqNum (a header field), so cache/NACK behaviour is
 # payload-agnostic. This scenario locks in that property.
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

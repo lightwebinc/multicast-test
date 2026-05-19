@@ -41,7 +41,7 @@ High IP and group limits ensure only the chain tier fires.
 [0:4]   Magic      0xE3E1F3E8
 [4:6]   ProtoVer   0x02BF
 [6]     MsgType    0x10  (NACK)
-[7]     LookupType 0x01  (by CurSeq)
+[7]     LookupType 0x01  (by SeqNum)
 [8:16]  LookupSeq  uint64 BE
 [16:24] ChainID    uint64 BE   ← new field; 0 = orphan (bypasses chain limiter)
 ```

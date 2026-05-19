@@ -3,12 +3,12 @@
 #
 # Tests the NACK→MISS→unrecovered path by blocking the retry endpoint's
 # multicast ingress so its cache is empty. Natural multicast delivery issues
-# (reorder/loss on the LXD bridge) create PrevSeq/CurSeq gaps at the
+# (reorder/loss on the LXD bridge) create HashKey/SeqNum gaps at the
 # listeners; the retry endpoint responds MISS because it never cached any
 # frames; after MaxRetries the gap is evicted as unrecovered.
 #
 # Why gap injection doesn't work for this:
-#   The proxy stamps PrevSeq/CurSeq with its own per-(sender,group) monotonic
+#   The proxy stamps HashKey/SeqNum with its own per-(sender,group,subtree) monotonic
 #   counter on every frame it receives. Application-level gaps from subtx-gen
 #   are overwritten — the proxy's chain is always gapless. Actual gaps are only
 #   created by multicast delivery loss between proxy and listener.

@@ -20,16 +20,16 @@ source -- mc --> proxy -- mc --> listener1..3 (NACK --> retry1)
 The test restarts the retry endpoint to flush its in-memory cache, then blocks
 multicast ingress (port 9001) via `ip6tables` so no new frames are cached.
 The generator runs normally; natural multicast delivery issues (reorder/loss
-on the LXD bridge) create PrevSeq/CurSeq gaps at the listeners. The retry
+on the LXD bridge) create HashKey/SeqNum gaps at the listeners. The retry
 endpoint's NACK server (port 9300) is still reachable, but every lookup is a
 cache miss. After MaxRetries, the gaps are evicted as unrecovered.
 
 ### Why gap injection (`-seq-gap-delay`) doesn't help here
 
-The proxy stamps PrevSeq/CurSeq with its own per-(sender,group) monotonic
+The proxy stamps HashKey/SeqNum with its own per-(sender,group,subtree) monotonic
 counter on every frame it receives. Application-level sequence gaps from
 subtx-gen are overwritten -- the proxy's chain is always gapless. Actual
-PrevSeq/CurSeq gaps are only created by multicast delivery loss between the
+HashKey/SeqNum gaps are only created by multicast delivery loss between the
 proxy and a listener.
 
 ## Assertions

@@ -32,8 +32,8 @@ so the escalation order is: retry1 → retry2 → retry3.
   NACK is fired to the next endpoint in the sorted snapshot.
 
 - **Gap creation**: Natural multicast delivery loss on the LXD bridge
-  (at 1000 pps) creates PrevSeq/CurSeq chain breaks at the listeners.
-  The proxy stamps PrevSeq/CurSeq monotonically, so subtx-gen's
+  (at 1000 pps) creates HashKey/SeqNum chain breaks at the listeners.
+  The proxy stamps HashKey/SeqNum monotonically, so subtx-gen's
   `--seq-gap-*` flags do NOT create chain gaps — all gaps come from
   delivery loss only.
 
@@ -72,10 +72,10 @@ Two bugs were found and fixed in `bitcoin-shard-listener/nack/nack.go` while
 debugging this scenario:
 
 1. **Phantom gaps from retransmitted frames** — `Observe()` created a new gap
-   entry even for out-of-order retransmits (`prevSeq < lastCurSeq`), inflating
+   entry even for out-of-order retransmits (`seqNum < lastSeqNum`), inflating
    `bsl_gaps_detected_total` by ~10× and causing cascading false unrecovered gaps.
-   Fix: skip gap detection when `prevSeq <= lastCurSeq`; only advance
-   `lastCurSeq` forward (never regress on retransmit or duplicate).
+   Fix: skip gap detection when `seqNum <= lastSeqNum`; only advance
+   `lastSeqNum` forward (never regress on retransmit or duplicate).
 
 2. **Sweep re-dispatch of in-flight gaps** — `sweepOnce()` did not stamp
    `nextAttempt` before copying the `gapEntry` to the `nackQueue`, so the same

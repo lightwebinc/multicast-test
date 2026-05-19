@@ -132,7 +132,7 @@ relative to `bsl_gaps_detected_total`, so most gaps appear unrecovered.
 
 **Root cause:** Phantom gaps from retransmitted frames. Before the 2026-05-05
 fix to `nack/nack.go`, `Observe()` created a new gap entry for every
-out-of-order or retransmitted frame (`prevSeq < lastCurSeq`). Each retransmit
+out-of-order or retransmitted frame (`seqNum < lastSeqNum`). Each retransmit
 from a retry endpoint triggered dozens of false gaps.
 
 **Fix:** Already applied to `bitcoin-shard-listener/nack/nack.go`. Rebuild and
