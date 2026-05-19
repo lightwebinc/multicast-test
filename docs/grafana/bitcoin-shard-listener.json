@@ -501,6 +501,93 @@
         }
       ],
       "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "id": 90,
+      "type": "row",
+      "title": "Block Header Egress (SPV)",
+      "gridPos": { "x": 0, "y": 128, "w": 24, "h": 1 }
+    },
+    {
+      "id": 91,
+      "type": "timeseries",
+      "title": "Headers forwarded (rate by instance)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 0, "y": 129, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(bsl_header_forwarded_total{instance=~\"$instance\"}[1m]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps" } }
+    },
+    {
+      "id": 92,
+      "type": "stat",
+      "title": "Headers forwarded (last 15m)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 12, "y": 129, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (instance) (increase(bsl_header_forwarded_total{instance=~\"$instance\"}[15m]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 93,
+      "type": "timeseries",
+      "title": "Header egress errors (rate)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 0, "y": 137, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(bsl_header_egress_errors_total{instance=~\"$instance\"}[1m]))",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 94,
+      "type": "timeseries",
+      "title": "Header egress success rate %",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "x": 12, "y": 137, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(bsl_header_forwarded_total{instance=~\"$instance\"}[1m])) / (sum(rate(bsl_header_forwarded_total{instance=~\"$instance\"}[1m])) + sum(rate(bsl_header_egress_errors_total{instance=~\"$instance\"}[1m]))) * 100",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 90 },
+              { "color": "green", "value": 99 }
+            ]
+          }
+        }
+      }
     }
   ]
 }
