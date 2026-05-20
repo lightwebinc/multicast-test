@@ -31,8 +31,6 @@ AFTER="$SCENARIO_DIR/metrics.after.tsv"
 
 PROXY_TCP_WAS_ZERO=0
 L1_HEADER_WAS_OFF=1
-SOCAT_LXC_PID=0
-
 restore_all() {
   # Restore listener1 config: remove header egress vars and restart.
   if [[ "$L1_HEADER_WAS_OFF" -eq 1 ]]; then
@@ -52,9 +50,8 @@ restore_all() {
       systemctl restart bitcoin-shard-proxy
     " || true
   fi
-  # Stop the host-side lxc exec that is holding the socat session alive.
-  kill "$SOCAT_LXC_PID" 2>/dev/null || true
-  wait "$SOCAT_LXC_PID" 2>/dev/null || true
+  # Stop socat inside the container if still running.
+  lxc exec listener1 -- pkill -f "socat.*${HEADER_SINK_PORT}" 2>/dev/null || true
 }
 trap restore_all EXIT
 
@@ -94,16 +91,14 @@ fi
 
 # --- Setup: start a UDP sink on listener1 to count datagrams ------------------
 
-# Run socat as a background lxc exec from the HOST. The lxc exec session stays
-# alive until we kill SOCAT_LXC_PID, so socat is not subject to container bash
-# session teardown. Each 172-byte stripped BRC-131 datagram is appended to
+# Run socat as a daemon inside the container. nohup + background (&) lets the
+# lxc exec process exit immediately; socat keeps running as an orphan adopted
+# by container init. Each 172-byte stripped BRC-131 datagram is appended to
 # SINK_OUT; we count datagrams by dividing total bytes by 172.
 SINK_OUT="/tmp/header-egress-sink-$$"
 lxc exec listener1 -- rm -f "$SINK_OUT" 2>/dev/null || true
-lxc exec listener1 -- socat -u \
-  "UDP4-LISTEN:${HEADER_SINK_PORT},reuseaddr,fork" \
-  "OPEN:${SINK_OUT},creat,append" &
-SOCAT_LXC_PID=$!
+lxc exec listener1 -- bash -c \
+  "nohup socat -u 'UDP4-LISTEN:${HEADER_SINK_PORT},reuseaddr,fork' 'OPEN:${SINK_OUT},creat,append' >/dev/null 2>&1 &"
 sleep 1
 
 # --- Test run -----------------------------------------------------------------
@@ -142,10 +137,9 @@ assert_near "listener1 header_forwarded == $BLOCK_COUNT" \
 assert_near "listener1 header_egress_errors == 0" \
   "$hdr_err" 0 0.00
 
-# Stop the sink before counting so the file is fully flushed.
-kill "$SOCAT_LXC_PID" 2>/dev/null || true
-wait "$SOCAT_LXC_PID" 2>/dev/null || true
-SOCAT_LXC_PID=0
+# Stop the sink inside the container so the file is fully flushed.
+lxc exec listener1 -- pkill -f "socat.*${HEADER_SINK_PORT}" 2>/dev/null || true
+sleep 0.3
 
 # Count datagrams: each stripped BRC-131 frame is exactly 172 bytes
 # (92-byte header + 80-byte block header payload).

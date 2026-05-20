@@ -62,7 +62,7 @@ all:
           mgmt_cidrs_v4: ["10.10.10.0/24"]
           mgmt_cidrs_v6: ["fd20::/64"]
           shard_include: "0,1"
-          subtree_exclude: "836021c2a5ae8e281101f1031d3cf2a483e483cf387380169fb523b5b0700a42"
+          subtree_exclude: "336827e99b2caf22fcdda437828644c51cf39ff7a840a7cd16ae75310a34392a"
           retry_endpoints: "[fd20::24]:9300,[fd20::25]:9300,[fd20::26]:9300"
           nack_max_retries: 9
 
@@ -72,7 +72,7 @@ all:
           num_workers: 1
           mgmt_cidrs_v4: ["10.10.10.0/24"]
           mgmt_cidrs_v6: ["fd20::/64"]
-          subtree_include: "07015348bf979f23c167d39727aa4d9928fb77c8e51d34ea1e7f27840f956dbb"
+          subtree_include: "4a3e3eedc730fc42c786f83e8244f54f54e833922d71cfb1b1cc5e53147c5ece"
           retry_endpoints: "[fd20::24]:9300,[fd20::25]:9300,[fd20::26]:9300"
           nack_max_retries: 9
 
