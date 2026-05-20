@@ -80,6 +80,10 @@ snapshot_metrics() {
              'bsl_gaps_detected_total|flow="brc132"' \
              'bsl_gaps_unrecovered_total|flow="brc132"' \
              'bsl_nacks_dispatched_total|flow="brc132"' \
+             'bsl_frames_received_total|version="brc134"' \
+             'bsl_gaps_detected_total|flow="brc134"' \
+             'bsl_gaps_unrecovered_total|flow="brc134"' \
+             'bsl_nacks_dispatched_total|flow="brc134"' \
              bsl_header_forwarded_total \
              bsl_header_egress_errors_total; do
       local name="${m%%|*}"
