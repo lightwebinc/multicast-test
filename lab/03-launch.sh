@@ -62,6 +62,36 @@ done
 echo "==> [03] All VMs running:"
 lxc list
 
+# --- BGP router VMs (opt-in: LAUNCH_BGP=1) ---
+if [[ "${LAUNCH_BGP:-}" == "1" ]]; then
+  declare -A BGP_PROFILES=( [router1]=ubuntu-bgp-r1 [router2]=ubuntu-bgp-r2 )
+
+  for vm in router1 router2; do
+    profile="${BGP_PROFILES[$vm]}"
+    echo "==> [03] Launching BGP VM: $vm ($profile)..."
+    if lxc info "$vm" &>/dev/null; then
+      echo "     $vm already exists, skipping"
+    else
+      lxc launch ubuntu:24.04 "$vm" --vm --profile "$profile"
+    fi
+  done
+
+  echo "==> [03] Adding lxdbr3 NIC to proxy (for iBGP peering)..."
+  if lxc config device show proxy | grep -q eth2; then
+    echo "     proxy eth2 already exists, skipping"
+  else
+    lxc config device add proxy eth2 nic network=lxdbr3 name=eth2
+  fi
+
+  echo "==> [03] Waiting for BGP VMs..."
+  for vm in router1 router2; do
+    wait_for_vm "$vm"
+  done
+  for vm in router1 router2; do
+    wait_for_agent "$vm"
+  done
+fi
+
 echo "==> [03] Tuning lxdbr1 tap interfaces (txqlen + mrouter)..."
 for iface in $(ls /sys/devices/virtual/net/lxdbr1/brif/ 2>/dev/null); do
   sudo ip link set "$iface" txqueuelen 10000

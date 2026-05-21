@@ -1,0 +1,6 @@
+---
+- name: Configure BGP routers (FRR)
+  hosts: bgp_routers
+  become: true
+  roles:
+    - bgp-router

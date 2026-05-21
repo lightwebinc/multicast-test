@@ -1,0 +1,22 @@
+network:
+  version: 2
+  ethernets:
+    enp5s0:
+      addresses: [10.10.10.53/24]
+      routes:
+        - to: default
+          via: 10.10.10.1
+      nameservers:
+        addresses: [1.1.1.1, 8.8.8.8]
+    enp6s0:
+      addresses:
+        - 203.0.113.2/30
+        - 2001:db8:b::2/64
+    enp7s0:
+      addresses:
+        - 198.51.100.17/28
+        - 2001:db8:d::1/64
+    lo:
+      addresses:
+        - 198.51.100.3/32
+        - 2001:db8:a::3/128

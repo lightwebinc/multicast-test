@@ -15,4 +15,20 @@ for vm in source proxy listener1 listener2 listener3 listener4 retry1 retry2 ret
   lxc exec "$vm" -- netplan apply
 done
 
+# --- BGP router VMs (opt-in: LAUNCH_BGP=1) ---
+if [[ "${LAUNCH_BGP:-}" == "1" ]]; then
+  for vm in router1 router2; do
+    echo "     $vm: pushing 99-lab.yaml..."
+    lxc file push "$NETPLAN_DIR/$vm.yaml" "$vm/etc/netplan/99-lab.yaml"
+    lxc exec "$vm" -- chmod 600 /etc/netplan/99-lab.yaml
+    echo "     $vm: applying netplan..."
+    lxc exec "$vm" -- netplan apply
+  done
+
+  echo "     proxy: pushing BGP peering netplan overlay..."
+  lxc file push "$NETPLAN_DIR/proxy-bgp.yaml" proxy/etc/netplan/98-bgp.yaml
+  lxc exec proxy -- chmod 600 /etc/netplan/98-bgp.yaml
+  lxc exec proxy -- netplan apply
+fi
+
 echo "==> [06] Done."

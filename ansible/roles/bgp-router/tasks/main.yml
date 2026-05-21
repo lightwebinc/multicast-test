@@ -1,0 +1,31 @@
+---
+- name: Install FRR
+  ansible.builtin.apt:
+    name: frr
+    state: present
+    update_cache: true
+
+- name: Enable bgpd and zebra daemons
+  ansible.builtin.lineinfile:
+    path: /etc/frr/daemons
+    regexp: "^{{ item }}="
+    line: "{{ item }}=yes"
+  loop:
+    - bgpd
+    - zebra
+  notify: restart frr
+
+- name: Deploy frr.conf
+  ansible.builtin.template:
+    src: frr.conf.j2
+    dest: /etc/frr/frr.conf
+    owner: frr
+    group: frr
+    mode: "0640"
+  notify: restart frr
+
+- name: Ensure FRR is enabled and running
+  ansible.builtin.systemd:
+    name: frr
+    enabled: true
+    state: started

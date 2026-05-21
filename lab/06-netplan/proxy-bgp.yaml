@@ -1,0 +1,7 @@
+network:
+  version: 2
+  ethernets:
+    enp7s0:
+      addresses:
+        - 198.51.100.18/28
+        - 2001:db8:d::2/64

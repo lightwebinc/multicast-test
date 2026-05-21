@@ -27,4 +27,31 @@ else
   lxc profile device add ubuntu-small-single root disk path=/ pool=vmpool size=15GiB
 fi
 
+echo "==> [02] Creating LXD profile: ubuntu-bgp-r1 (mgmt + lxdbr2)..."
+if lxc profile show ubuntu-bgp-r1 &>/dev/null; then
+  echo "     ubuntu-bgp-r1 already exists, skipping"
+else
+  lxc profile create ubuntu-bgp-r1
+  lxc profile set ubuntu-bgp-r1 limits.cpu=2
+  lxc profile set ubuntu-bgp-r1 limits.memory=2GiB
+
+  lxc profile device add ubuntu-bgp-r1 eth0 nic network=lxdbr0 name=eth0
+  lxc profile device add ubuntu-bgp-r1 eth1 nic network=lxdbr2 name=eth1
+  lxc profile device add ubuntu-bgp-r1 root disk path=/ pool=vmpool size=15GiB
+fi
+
+echo "==> [02] Creating LXD profile: ubuntu-bgp-r2 (mgmt + lxdbr2 + lxdbr3)..."
+if lxc profile show ubuntu-bgp-r2 &>/dev/null; then
+  echo "     ubuntu-bgp-r2 already exists, skipping"
+else
+  lxc profile create ubuntu-bgp-r2
+  lxc profile set ubuntu-bgp-r2 limits.cpu=2
+  lxc profile set ubuntu-bgp-r2 limits.memory=2GiB
+
+  lxc profile device add ubuntu-bgp-r2 eth0 nic network=lxdbr0 name=eth0
+  lxc profile device add ubuntu-bgp-r2 eth1 nic network=lxdbr2 name=eth1
+  lxc profile device add ubuntu-bgp-r2 eth2 nic network=lxdbr3 name=eth2
+  lxc profile device add ubuntu-bgp-r2 root disk path=/ pool=vmpool size=15GiB
+fi
+
 echo "==> [02] Done."

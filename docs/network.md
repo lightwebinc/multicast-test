@@ -6,6 +6,8 @@
 | ------ | ---------------- | --------------------------------------------- |
 | lxdbr0 | 10.10.10.0/24    | Management — SSH, LXD agent, package installs |
 | lxdbr1 | fd20::/64 (IPv6) | Egress fabric — multicast traffic only        |
+| lxdbr2 | 203.0.113.0/30 + 2001:db8:b::/64 | BGP p2p eBGP link (router1 ↔ router2) |
+| lxdbr3 | 198.51.100.16/28 + 2001:db8:d::/64 | BGP iBGP peering LAN (router2 + proxies) |
 
 Multicast snooping is enabled on `lxdbr1` via sysfs:
 
@@ -38,6 +40,8 @@ lxdbr0) and `enp6s0` (egress, lxdbr1).
 | retry3    | 10.10.10.36   | fd20::26/64     | ubuntu-small-mcast | Retry endpoint T1/P128                | `enable_firewall=true` |
 | redis     | 10.10.10.40   | —               | ubuntu-small-single | Redis dedup backend (mgmt-only)      | host-managed           |
 | metrics   | 10.10.10.142  | —               | pre-existing       | Prometheus + Grafana                  | host-managed           |
+| router1   | 10.10.10.51   | —               | ubuntu-bgp-r1      | BGP upstream router (AS 65000)        | open                   |
+| router2   | 10.10.10.53   | —               | ubuntu-bgp-r2      | BGP PE router (AS 65001)              | open                   |
 
 Default gateway for all VMs: `10.10.10.1` (lxdbr0 host address).
 
@@ -48,10 +52,12 @@ Listener firewall allow-list:
 
 ## LXD profiles
 
-| Profile             | NICs        | Notes                          |
-| ------------------- | ----------- | ------------------------------ |
-| ubuntu-small-mcast  | eth0 + eth1 | 2 vCPU, 2 GiB RAM, 15 GiB disk |
-| ubuntu-small-single | eth0 only   | Same resources; reference only |
+| Profile             | NICs              | Notes                          |
+| ------------------- | ----------------- | ------------------------------ |
+| ubuntu-small-mcast  | eth0 + eth1       | 2 vCPU, 2 GiB RAM, 15 GiB disk |
+| ubuntu-small-single | eth0 only         | Same resources; reference only |
+| ubuntu-bgp-r1       | eth0 + eth1       | eth1→lxdbr2 (eBGP p2p)        |
+| ubuntu-bgp-r2       | eth0 + eth1 + eth2| eth1→lxdbr2, eth2→lxdbr3       |
 
 `eth0` attaches to `lxdbr0`; `eth1` attaches to `lxdbr1`. Inside Ubuntu
 24.04 VMs these appear as `enp5s0` and `enp6s0` respectively.

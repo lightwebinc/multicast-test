@@ -1,0 +1,71 @@
+! FRR configuration — managed by Ansible
+! Router: {{ inventory_hostname }} (AS {{ bgp_local_as }})
+frr defaults traditional
+hostname {{ inventory_hostname }}
+log syslog informational
+ipv6 forwarding
+service integrated-vtysh-config
+
+ip forwarding
+
+router bgp {{ bgp_local_as }}
+ bgp router-id {{ bgp_router_id }}
+ no bgp ebgp-requires-policy
+ bgp bestpath as-path multipath-relax
+!
+{% if bgp_ebgp_peers is defined %}
+{% for peer in bgp_ebgp_peers %}
+ ! eBGP peer: {{ peer.description | default(peer.peer_ip) }}
+ neighbor {{ peer.peer_ip }} remote-as {{ peer.peer_as }}
+ neighbor {{ peer.peer_ip }} description {{ peer.description | default('') }}
+{% endfor %}
+{% endif %}
+{% if bgp_ibgp_peers is defined %}
+{% for peer in bgp_ibgp_peers %}
+ ! iBGP peer: {{ peer.description | default(peer.peer_ip) }}
+ neighbor {{ peer.peer_ip }} remote-as {{ bgp_local_as }}
+ neighbor {{ peer.peer_ip }} description {{ peer.description | default('') }}
+{% if ':' not in peer.peer_ip %}
+ neighbor {{ peer.peer_ip }} update-source {{ bgp_router_id }}
+{% endif %}
+{% endfor %}
+{% endif %}
+!
+ address-family ipv4 unicast
+{% if bgp_ebgp_peers is defined %}
+{% for peer in bgp_ebgp_peers %}
+  neighbor {{ peer.peer_ip }} activate
+{% endfor %}
+{% endif %}
+{% if bgp_ibgp_peers is defined %}
+{% for peer in bgp_ibgp_peers %}
+{% if ':' not in peer.peer_ip %}
+  neighbor {{ peer.peer_ip }} activate
+  neighbor {{ peer.peer_ip }} next-hop-self
+{% else %}
+  no neighbor {{ peer.peer_ip }} activate
+{% endif %}
+{% endfor %}
+{% endif %}
+ exit-address-family
+!
+ address-family ipv6 unicast
+{% if bgp_ebgp_peers is defined %}
+{% for peer in bgp_ebgp_peers %}
+  neighbor {{ peer.peer_ip }} activate
+{% endfor %}
+{% endif %}
+{% if bgp_ibgp_peers is defined %}
+{% for peer in bgp_ibgp_peers %}
+{% if ':' in peer.peer_ip %}
+  neighbor {{ peer.peer_ip }} activate
+  neighbor {{ peer.peer_ip }} next-hop-self
+{% else %}
+  no neighbor {{ peer.peer_ip }} activate
+{% endif %}
+{% endfor %}
+{% endif %}
+ exit-address-family
+!
+line vty
+!
