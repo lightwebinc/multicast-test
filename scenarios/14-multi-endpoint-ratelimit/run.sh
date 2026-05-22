@@ -115,13 +115,9 @@ restore_rl() {
   echo "==> Cleanup: stopping flood background jobs..."
   [[ -n "$ROGUE_PID" ]]      && kill "$ROGUE_PID"      2>/dev/null || true
   [[ -n "$COMPROMISED_PID" ]] && kill "$COMPROMISED_PID" 2>/dev/null || true
-  # Remove temporary flood nft rules.
+  # Reload nftables from disk to remove temporary flood rules.
   for _fvm in listener4 listener1; do
-    lxc exec "$_fvm" -- bash -c \
-      'for h in $(nft -a list chain inet bitcoin-listener output 2>/dev/null \
-         | grep "scenario14-flood" | grep -oP "handle \K[0-9]+"); do
-         nft delete rule inet bitcoin-listener output handle "$h"
-       done' 2>/dev/null || true
+    lxc exec "$_fvm" -- nft -f /etc/nftables.d/60-bitcoin-listener.nft 2>/dev/null || true
   done
   echo "==> Cleanup: restoring original config.env and restarting endpoints..."
   local env_file="/etc/bitcoin-retry-endpoint/config.env"
@@ -202,9 +198,8 @@ snapshot_retry "$RETRY3_VM" "$RETRY3_IP" "$RETRY3_METRICS_PORT" "$R3_BEFORE"
 echo "==> Adding temporary nft rules for flood source VMs..."
 for _fvm in listener4 listener1; do
   for _rip in "$RETRY1_FABRIC" "$RETRY2_FABRIC" "$RETRY3_FABRIC"; do
-    lxc exec "$_fvm" -- nft add rule inet bitcoin-listener output \
-      oifname "enp6s0" ip6 daddr "$_rip" udp dport "$NACK_PORT" accept \
-      comment "scenario14-flood" 2>/dev/null || true
+    lxc exec "$_fvm" -- nft insert rule inet bitcoin-listener output \
+      oifname enp6s0 ip6 daddr "$_rip" udp dport "$NACK_PORT" accept 2>/dev/null || true
   done
 done
 
