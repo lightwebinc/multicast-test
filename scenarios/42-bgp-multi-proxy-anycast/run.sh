@@ -77,13 +77,13 @@ fi
 
 echo "--- Checking traffic distribution across proxies ---"
 # Snapshot proxy metrics before
-p1_before=$(curl -s --max-time 3 "http://$PROXY1_METRICS/metrics" | awk '/^bsp_bytes_received_total/ && !/^#/ {print $NF}' | head -1)
-p2_before=$(curl -s --max-time 3 "http://$PROXY2_METRICS/metrics" | awk '/^bsp_bytes_received_total/ && !/^#/ {print $NF}' | head -1)
+p1_before=$(curl -s --max-time 3 "http://$PROXY1_METRICS/metrics" | awk '/^bsp_bytes_received_total/ && !/^#/ {v+=$NF} END{printf "%.0f",v}')
+p2_before=$(curl -s --max-time 3 "http://$PROXY2_METRICS/metrics" | awk '/^bsp_bytes_received_total/ && !/^#/ {v+=$NF} END{printf "%.0f",v}')
 : "${p1_before:=0}"; : "${p2_before:=0}"
 
 # Send a burst of frames from source
 echo "     Sending test traffic via VIP..."
-lxc exec "$SOURCE_VM" -- subtx-gen \
+gen_out=$(lxc exec "$SOURCE_VM" -- subtx-gen \
   -addr "$PROXY_ADDR" \
   -shard-bits "$SHARD_BITS" \
   -subtrees "$SUBTREES" \
@@ -91,12 +91,13 @@ lxc exec "$SOURCE_VM" -- subtx-gen \
   -pps 500 \
   -duration 5s \
   -payload-size "$PAYLOAD_SIZE" \
-  -log-interval 5s >/dev/null 2>&1 || true
+  -log-interval 5s 2>&1) || true
+echo "     gen: $(echo "$gen_out" | grep -oP 'sent=\K[0-9]+' | tail -1) frames sent"
 sleep 2
 
 # Snapshot proxy metrics after
-p1_after=$(curl -s --max-time 3 "http://$PROXY1_METRICS/metrics" | awk '/^bsp_bytes_received_total/ && !/^#/ {print $NF}' | head -1)
-p2_after=$(curl -s --max-time 3 "http://$PROXY2_METRICS/metrics" | awk '/^bsp_bytes_received_total/ && !/^#/ {print $NF}' | head -1)
+p1_after=$(curl -s --max-time 3 "http://$PROXY1_METRICS/metrics" | awk '/^bsp_bytes_received_total/ && !/^#/ {v+=$NF} END{printf "%.0f",v}')
+p2_after=$(curl -s --max-time 3 "http://$PROXY2_METRICS/metrics" | awk '/^bsp_bytes_received_total/ && !/^#/ {v+=$NF} END{printf "%.0f",v}')
 : "${p1_after:=0}"; : "${p2_after:=0}"
 
 p1_before_i=$(printf '%.0f' "$p1_before" 2>/dev/null || echo 0)

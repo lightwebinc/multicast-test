@@ -215,10 +215,26 @@ apply_listener_loss() {
       nft flush chain inet bitcoin-listener-test input 2>/dev/null || true
       nft add rule inet bitcoin-listener-test input \
         iif \"enp6s0\" udp dport 9001 \
-        numgen random mod 1000 lt ${threshold} drop
+        numgen random mod 1000 lt ${threshold} counter drop
     " 2>/dev/null && _LOSS_VMS+=("$vm") || \
       echo "WARN  could not apply loss rule on $vm (nft unavailable?)"
+    # Verify the rule is actually in place.
+    local rule_count
+    rule_count=$(lxc exec "$vm" -- nft list chain inet bitcoin-listener-test input 2>/dev/null \
+      | grep -c "counter" || true)
+    if [[ "${rule_count:-0}" -lt 1 ]]; then
+      echo "WARN  loss rule NOT confirmed on $vm"
+    fi
     echo "     loss=${pct} injected on $vm (enp6s0 port 9001)"
+  done
+}
+
+check_listener_loss_counters() {
+  for vm in "${_LOSS_VMS[@]+"${_LOSS_VMS[@]}"}"; do
+    local cnt
+    cnt=$(lxc exec "$vm" -- nft list chain inet bitcoin-listener-test input 2>/dev/null \
+      | grep -oP 'packets \K[0-9]+' || echo "0")
+    echo "     [nft] $vm dropped $cnt packets"
   done
 }
 

@@ -44,9 +44,18 @@ echo "==> Injecting selective frame loss on listeners (5%) to create burst gap l
 apply_listener_loss "5%"
 trap 'remove_listener_loss' EXIT
 
+# Stabilise: let any in-flight NACK activity from previous scenarios drain.
+sleep 3
+
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"
 snapshot_retry  "$RETRY_BEFORE"
+
+# Verify nft loss rule is still in place and reset counters.
+for vm in "${LISTENERS[@]}"; do
+  _rule=$(lxc exec "$vm" -- nft list chain inet bitcoin-listener-test input 2>/dev/null | grep -c "drop" || echo 0)
+  echo "     [diag] $vm nft_drop_rules=$_rule"
+done
 
 echo "==> Generator with burst gap injection"
 echo "    pps=$PPS duration=$DURATION every=$SEQ_GAP_EVERY size=$SEQ_GAP_SIZE delay=$SEQ_GAP_DELAY"
@@ -72,6 +81,19 @@ sleep 5
 echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"
 snapshot_retry  "$RETRY_AFTER"
+
+# Diagnostics: nftables drop counters + direct Prometheus gap check.
+check_listener_loss_counters
+for _lip in "${LISTENER_IPS[@]}"; do
+  _g=$(curl -s --max-time 2 "http://$_lip:$METRICS_PORT/metrics" \
+       | awk '/^bsl_gaps_detected_total\{/ && !/^#/ {v+=$NF} END{printf "%.0f",v}')
+  echo "     [diag] $_lip gaps_total_now=${_g:-0}"
+done
+for h in "${LISTENERS[@]}"; do
+  _bv=$(awk -v h="$h" -v m="bsl_gaps_detected_total" -F'\t' '$1==h && $2==m {print $3}' "$BEFORE")
+  _av=$(awk -v h="$h" -v m="bsl_gaps_detected_total" -F'\t' '$1==h && $2==m {print $3}' "$AFTER")
+  echo "     [diag] $h gaps_tsv before=${_bv:-?} after=${_av:-?} delta=$(( ${_av:-0} - ${_bv:-0} ))"
+done
 
 sum_listener_metric() {
   local metric="$1" total=0 d

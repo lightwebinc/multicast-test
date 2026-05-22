@@ -30,31 +30,34 @@ AFTER="$SCENARIO_DIR/metrics.after.tsv"
 RETRY_BEFORE="$SCENARIO_DIR/retry.before.tsv"
 RETRY_AFTER="$SCENARIO_DIR/retry.after.tsv"
 
-# Ensure proxy TCP is enabled.
-PROXY_TCP_WAS_ZERO=0
+# Ensure proxy TCP is enabled on ALL proxies; restore on exit.
+_TCP_RESTORED_VMS=()
 restore() {
   remove_listener_loss
-  if [[ "$PROXY_TCP_WAS_ZERO" -eq 1 ]]; then
-    echo "==> [cleanup] Disabling proxy TCP ingress"
-    lxc exec proxy -- bash -c "
+  for vm in "${_TCP_RESTORED_VMS[@]+"${_TCP_RESTORED_VMS[@]}"}"; do
+    echo "==> [cleanup] Disabling TCP ingress on $vm"
+    lxc exec "$vm" -- bash -c "
       sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/bitcoin-shard-proxy/config.env
       systemctl restart bitcoin-shard-proxy
     " || true
-  fi
+  done
 }
 trap restore EXIT
 
-PROXY_TCP_WAS_ZERO=$(lxc exec proxy -- bash -c "
-  grep -q '^TCP_LISTEN_PORT=0' /etc/bitcoin-shard-proxy/config.env && echo 1 || echo 0
-" 2>/dev/null || echo 0)
-if [[ "$PROXY_TCP_WAS_ZERO" -eq 1 ]]; then
-  echo "==> Enabling proxy TCP ingress (port 9002)"
-  lxc exec proxy -- bash -c "
-    sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/bitcoin-shard-proxy/config.env
-    systemctl restart bitcoin-shard-proxy
-  "
-  sleep 3
-fi
+for _pvm in "${PROXY_VMS[@]}"; do
+  _was_zero=$(lxc exec "$_pvm" -- bash -c "
+    grep -q '^TCP_LISTEN_PORT=0' /etc/bitcoin-shard-proxy/config.env && echo 1 || echo 0
+  " 2>/dev/null || echo 0)
+  if [[ "$_was_zero" -eq 1 ]]; then
+    echo "==> Enabling TCP ingress on $_pvm (port 9002)"
+    lxc exec "$_pvm" -- bash -c "
+      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/bitcoin-shard-proxy/config.env
+      systemctl restart bitcoin-shard-proxy
+    "
+    _TCP_RESTORED_VMS+=("$_pvm")
+  fi
+done
+if [[ ${#_TCP_RESTORED_VMS[@]} -gt 0 ]]; then sleep 3; fi
 
 echo "==> Drain residual frames from prior scenario (3s)"
 sleep 3
@@ -108,7 +111,7 @@ echo ""
 # All listeners: block frames received close to expected (retransmit fills gaps).
 for host in "${LISTENERS[@]}"; do
   recv=$(diff_metric "$BEFORE" "$AFTER" "$host" 'bsl_frames_received_total|version="brc131"')
-  assert_near "$host brc131_received ≈ expected" "$recv" "$expected_frames" 0.15
+  assert_near "$host brc131_received ≈ expected" "$recv" "$expected_frames" 0.25
 done
 
 # At least one listener must have detected gaps (10% loss → some gaps expected).

@@ -26,34 +26,36 @@ source "$SCENARIO_DIR/../lib/common.sh"
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
 AFTER="$SCENARIO_DIR/metrics.after.tsv"
 
-PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
-
 enable_tcp_and_frag() {
-  lxc exec proxy -- bash -c "
-    cp ${PROXY_ENV_FILE} ${PROXY_ENV_FILE}.bak
-    if grep -q '^TCP_LISTEN_PORT=' ${PROXY_ENV_FILE}; then
-      sed -i 's|^TCP_LISTEN_PORT=.*|TCP_LISTEN_PORT=9002|' ${PROXY_ENV_FILE}
-    else
-      echo 'TCP_LISTEN_PORT=9002' >> ${PROXY_ENV_FILE}
-    fi
-    if grep -q '^FRAG_MTU=' ${PROXY_ENV_FILE}; then
-      sed -i 's|^FRAG_MTU=.*|FRAG_MTU=${FRAG_MTU}|' ${PROXY_ENV_FILE}
-    else
-      echo 'FRAG_MTU=${FRAG_MTU}' >> ${PROXY_ENV_FILE}
-    fi
-    systemctl restart bitcoin-shard-proxy
-  "
+  for vm in "${PROXY_VMS[@]}"; do
+    lxc exec "$vm" -- bash -c "
+      cp ${PROXY_ENV_FILE} ${PROXY_ENV_FILE}.bak
+      if grep -q '^TCP_LISTEN_PORT=' ${PROXY_ENV_FILE}; then
+        sed -i 's|^TCP_LISTEN_PORT=.*|TCP_LISTEN_PORT=9002|' ${PROXY_ENV_FILE}
+      else
+        echo 'TCP_LISTEN_PORT=9002' >> ${PROXY_ENV_FILE}
+      fi
+      if grep -q '^FRAG_MTU=' ${PROXY_ENV_FILE}; then
+        sed -i 's|^FRAG_MTU=.*|FRAG_MTU=${FRAG_MTU}|' ${PROXY_ENV_FILE}
+      else
+        echo 'FRAG_MTU=${FRAG_MTU}' >> ${PROXY_ENV_FILE}
+      fi
+      systemctl restart bitcoin-shard-proxy
+    "
+    echo "     $vm restarted with TCP_LISTEN_PORT=9002 FRAG_MTU=$FRAG_MTU"
+  done
   sleep 3
-  echo "     proxy restarted with TCP_LISTEN_PORT=9002 FRAG_MTU=$FRAG_MTU"
 }
 
 restore_proxy() {
-  lxc exec proxy -- bash -c "
-    if [ -f ${PROXY_ENV_FILE}.bak ]; then
-      mv ${PROXY_ENV_FILE}.bak ${PROXY_ENV_FILE}
-      systemctl restart bitcoin-shard-proxy
-    fi
-  " || true
+  for vm in "${PROXY_VMS[@]}"; do
+    lxc exec "$vm" -- bash -c "
+      if [ -f ${PROXY_ENV_FILE}.bak ]; then
+        mv ${PROXY_ENV_FILE}.bak ${PROXY_ENV_FILE}
+        systemctl restart bitcoin-shard-proxy
+      fi
+    " || true
+  done
 }
 trap restore_proxy EXIT
 

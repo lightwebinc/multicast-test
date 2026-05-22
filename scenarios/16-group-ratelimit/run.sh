@@ -119,11 +119,15 @@ restore_rl() {
 }
 trap 'remove_listener_loss; restore_rl' EXIT
 
-# --- Health check ------------------------------------------------------------
+# --- Health check (retry — prior scenario may have just restarted the service) --
 
 echo "==> Checking endpoint health..."
-code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
-  "http://${RETRY_IP}:${RETRY_METRICS_PORT}/healthz" || echo 000)
+for _hc in $(seq 1 6); do
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
+    "http://${RETRY_IP}:${RETRY_METRICS_PORT}/healthz" 2>/dev/null) || code="000"
+  [[ "$code" == "200" ]] && break
+  sleep 2
+done
 if [[ "$code" != "200" ]]; then
   echo "FAIL  http://${RETRY_IP}:${RETRY_METRICS_PORT}/healthz returned $code"
   exit 1

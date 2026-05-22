@@ -135,7 +135,11 @@ echo "==> Checking endpoint health..."
 for spec in "$RETRY1_IP:$RETRY1_METRICS_PORT" \
             "$RETRY2_IP:$RETRY2_METRICS_PORT" \
             "$RETRY3_IP:$RETRY3_METRICS_PORT"; do
-  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://$spec/healthz" || echo 000)
+  for _hc in $(seq 1 6); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://$spec/healthz" 2>/dev/null) || code="000"
+    [[ "$code" == "200" ]] && break
+    sleep 2
+  done
   if [[ "$code" != "200" ]]; then
     echo "FAIL  http://$spec/healthz returned $code — endpoint not ready"
     exit 1
