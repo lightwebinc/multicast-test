@@ -27,10 +27,13 @@ done
 echo "==> [06b] Waiting for SSH to be ready on all VMs..."
 for vm in "${VMS[@]}"; do
   # Retry IP lookup — DHCP may not be complete immediately after RUNNING.
+  # Prefer management subnet (10.10.10.0/24) which is always reachable from host.
   ip=""
   for _ in $(seq 1 30); do
-    ip=$(lxc list "$vm" --format csv -c 4 2>/dev/null \
-         | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1 || true)
+    local_ips=$(lxc list "$vm" --format csv -c 4 2>/dev/null \
+         | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+' || true)
+    ip=$(echo "$local_ips" | grep '^10\.10\.10\.' | head -1 || true)
+    [[ -z "$ip" ]] && ip=$(echo "$local_ips" | head -1 || true)
     [[ -n "$ip" ]] && break
     sleep 2
   done
