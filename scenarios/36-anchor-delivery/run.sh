@@ -19,7 +19,7 @@ set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCENARIO_DIR/../lib/common.sh"
 
-: "${PROXY_UDP_ADDR:=[fd20::2]:9000}"
+: "${PROXY_UDP_ADDR:=[2001:db8:ffff::1]:9000}"
 : "${ANCHOR_COUNT:=20}"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"

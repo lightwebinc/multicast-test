@@ -41,8 +41,17 @@ fi
 sudo systemctl enable --now lxd-bridge-mcast-querier.service
 echo ""
 
-echo "==> Deploying Ansible playbooks (proxy + listeners)"
+echo "==> Installing FRR on BGP router VMs"
+bash "$LAB/05b-bgp-packages.sh"
+echo ""
+
+echo "==> Deploying Ansible playbooks (proxies + listeners)"
 bash "$SCRIPT_DIR/ansible/run-deploy.sh"
+echo ""
+
+echo "==> Deploying BGP router configuration"
+(cd "$SCRIPT_DIR/ansible" && \
+  ansible-playbook -i bgp-hosts.yml bgp-router.yml)
 echo ""
 
 echo "==> Building and installing source VM binaries"

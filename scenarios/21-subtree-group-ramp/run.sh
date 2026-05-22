@@ -38,7 +38,7 @@ AFTER_DRAIN="$SCENARIO_DIR/metrics.after-drain.tsv"
 # Well-known group ID — matches listener3 SUBTREE_GROUPS in listener-hosts.yml.
 TEST_GROUP_ID="bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf"
 # Proxy TCP address for SubtreeAnnounce injection.
-: "${PROXY_TCP_ADDR:=[fd20::2]:9002}"
+: "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 
 # Timing parameters (overrideable).
 : "${GEN_DURATION:=24h}"           # total generator run time

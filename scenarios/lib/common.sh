@@ -9,7 +9,8 @@ set -euo pipefail
 
 # Defaults — override via env.
 : "${PROXY_VM:=proxy}"
-: "${PROXY_ADDR:=[fd20::2]:9000}"
+: "${PROXY_ADDR:=[2001:db8:ffff::1]:9000}"
+: "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 : "${SOURCE_VM:=source}"
 : "${LISTENER_PORT:=9001}"
 : "${METRICS_PORT:=9200}"

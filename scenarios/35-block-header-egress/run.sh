@@ -19,7 +19,7 @@ set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCENARIO_DIR/../lib/common.sh"
 
-: "${PROXY_TCP_ADDR:=[fd20::2]:9002}"
+: "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 : "${BLOCK_COUNT:=20}"
 : "${SUBTREES_PER_BLOCK:=4}"
 : "${HEADER_SINK_PORT:=9107}"

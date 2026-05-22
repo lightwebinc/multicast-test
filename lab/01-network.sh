@@ -41,6 +41,18 @@ else
     bridge.mtu=1500
 fi
 
+echo "==> [01] Creating lxdbr4 (source LAN: source + router1)..."
+if lxc network show lxdbr4 &>/dev/null; then
+  echo "     lxdbr4 already exists, skipping create"
+else
+  lxc network create lxdbr4 \
+    ipv4.address=198.51.100.78/28 \
+    ipv4.nat=false \
+    ipv6.address=2001:db8:e::ffff/64 \
+    ipv6.nat=false \
+    bridge.mtu=1500
+fi
+
 echo "==> [01] Enabling multicast snooping + querier on lxdbr1..."
 echo 1 | sudo tee /sys/devices/virtual/net/lxdbr1/bridge/multicast_snooping > /dev/null
 echo 1 | sudo tee /sys/devices/virtual/net/lxdbr1/bridge/multicast_querier > /dev/null

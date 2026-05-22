@@ -7,9 +7,9 @@
 #      detection → NACK chain retry1 (T0/P128) → retry2 (T0/P64) → retry3
 #      (T1/P128), each silently rate-limiting and forcing backoff escalation.
 #
-#   2. Rogue node flood: Python3 UDP flood from source VM (fd20::10, not a
-#      listener) targeting all three endpoints directly on port 9300 with a
-#      fixed LookupSeq. Proves per-IP limiter fires for arbitrary IPs.
+#   2. Rogue node flood: Python3 UDP flood from listener4 VM (fd20::27, not a
+#      configured listener) targeting all three endpoints directly on port 9300
+#      with a fixed LookupSeq. Proves per-IP limiter fires for arbitrary IPs.
 #
 #   3. Compromised listener flood: Python3 UDP flood from listener1 VM
 #      (fd20::21, a legitimate IP abused at high rate) with random LookupSeq
@@ -143,8 +143,8 @@ for spec in "$RETRY1_IP:$RETRY1_METRICS_PORT" \
   echo "     $spec: healthy"
 done
 
-echo "==> Checking Python3 availability on source and listener1 VMs..."
-for vm in "$SOURCE_VM" listener1; do
+echo "==> Checking Python3 availability on listener4 and listener1 VMs..."
+for vm in listener4 listener1; do
   if ! lxc exec "$vm" -- python3 --version >/dev/null 2>&1; then
     echo "FAIL  python3 not found on $vm — install with: lxc exec $vm -- apt-get install -y python3"
     exit 1
@@ -187,7 +187,7 @@ snapshot_retry "$RETRY3_VM" "$RETRY3_IP" "$RETRY3_METRICS_PORT" "$R3_BEFORE"
 
 flood_secs=$(( $(dur_to_seconds "$DURATION") + 25 ))
 echo "==> Launching background NACK floods (flood_secs=$flood_secs)..."
-echo "    Attack 1 (rogue node):           source VM (fd20::10) → all 3 endpoints, fixed LookupSeq"
+echo "    Attack 1 (rogue node):           listener4 VM (fd20::27) → all 3 endpoints, fixed LookupSeq"
 echo "    Attack 2 (compromised listener): listener1 VM (fd20::21) → all 3 endpoints, random LookupSeq"
 
 # NACK wire format (64 bytes):
@@ -215,7 +215,7 @@ end=time.time()+${flood_secs}
 while time.time()<end:
   [sock.sendto(pkt,a) for a in TARGETS]
 "
-lxc exec "$SOURCE_VM" -- python3 -c "$rogue_script" &
+lxc exec listener4 -- python3 -c "$rogue_script" &
 ROGUE_PID=$!
 echo "     rogue flood started [controller pid=$ROGUE_PID]"
 
@@ -314,7 +314,7 @@ bsl_gaps_unrecovered_total = $gaps_unrecovered
 
 -- retry1 (T0/P128) --
 bre_nack_requests_total                       = $r1_nacks
-bre_rate_limit_drops_total{level="ip"}        = $r1_drops_ip   [rogue node fd20::10 + compromised listener fd20::21]
+bre_rate_limit_drops_total{level="ip"}        = $r1_drops_ip   [rogue node fd20::27 + compromised listener fd20::21]
 bre_rate_limit_drops_total{level="sequence"}  = $r1_drops_seq
 bre_rate_limit_drops_total{level="chain"}     = $r1_drops_chain
 bre_rate_limit_drops_total{level="group"}     = $r1_drops_group

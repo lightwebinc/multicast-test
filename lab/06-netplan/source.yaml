@@ -9,4 +9,11 @@ network:
       nameservers:
         addresses: [1.1.1.1, 8.8.8.8]
     enp6s0:
-      addresses: [fd20::10/64]
+      addresses:
+        - 198.51.100.66/28
+        - 2001:db8:e::10/64
+      routes:
+        - to: 2001:db8:ffff::/48
+          via: 2001:db8:e::1
+        - to: 192.0.2.0/24
+          via: 198.51.100.65

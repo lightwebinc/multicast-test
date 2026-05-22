@@ -27,7 +27,20 @@ else
   lxc profile device add ubuntu-small-single root disk path=/ pool=vmpool size=15GiB
 fi
 
-echo "==> [02] Creating LXD profile: ubuntu-bgp-r1 (mgmt + lxdbr2)..."
+echo "==> [02] Creating LXD profile: ubuntu-source (mgmt + lxdbr4 source LAN)..."
+if lxc profile show ubuntu-source &>/dev/null; then
+  echo "     ubuntu-source already exists, skipping"
+else
+  lxc profile create ubuntu-source
+  lxc profile set ubuntu-source limits.cpu=2
+  lxc profile set ubuntu-source limits.memory=2GiB
+
+  lxc profile device add ubuntu-source eth0 nic network=lxdbr0 name=eth0
+  lxc profile device add ubuntu-source eth1 nic network=lxdbr4 name=eth1
+  lxc profile device add ubuntu-source root disk path=/ pool=vmpool size=15GiB
+fi
+
+echo "==> [02] Creating LXD profile: ubuntu-bgp-r1 (mgmt + lxdbr2 + lxdbr4)..."
 if lxc profile show ubuntu-bgp-r1 &>/dev/null; then
   echo "     ubuntu-bgp-r1 already exists, skipping"
 else
@@ -37,6 +50,7 @@ else
 
   lxc profile device add ubuntu-bgp-r1 eth0 nic network=lxdbr0 name=eth0
   lxc profile device add ubuntu-bgp-r1 eth1 nic network=lxdbr2 name=eth1
+  lxc profile device add ubuntu-bgp-r1 eth2 nic network=lxdbr4 name=eth2
   lxc profile device add ubuntu-bgp-r1 root disk path=/ pool=vmpool size=15GiB
 fi
 

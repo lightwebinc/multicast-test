@@ -4,7 +4,7 @@
 set -euo pipefail
 exec </dev/null
 
-VMS=(source proxy listener1 listener2 listener3 listener4 retry1 retry2 retry3)
+VMS=(source proxy proxy2 listener1 listener2 listener3 listener4 retry1 retry2 retry3 router1 router2)
 
 echo "==> [06b] Restarting all lab VMs..."
 for vm in "${VMS[@]}"; do

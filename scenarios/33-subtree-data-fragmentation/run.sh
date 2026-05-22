@@ -14,7 +14,7 @@
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-: "${PROXY_TCP_ADDR:=[fd20::2]:9002}"
+: "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 : "${FRAG_MTU:=1500}"
 : "${FRAME_COUNT:=20}"
 : "${PAYLOAD_SIZE:=8192}"   # 7 fragments each at FRAG_MTU=1500

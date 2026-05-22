@@ -16,6 +16,7 @@ all:
           ansible_host: 10.10.10.51
           bgp_local_as: 65000
           bgp_router_id: "198.51.100.1"
+          bgp_redistribute_connected: true
           bgp_ebgp_peers:
             - peer_ip: "203.0.113.2"
               peer_as: 65001
@@ -34,3 +35,7 @@ all:
               description: "proxy-v4"
             - peer_ip: "2001:db8:d::2"
               description: "proxy-v6"
+            - peer_ip: "198.51.100.19"
+              description: "proxy2-v4"
+            - peer_ip: "2001:db8:d::3"
+              description: "proxy2-v6"

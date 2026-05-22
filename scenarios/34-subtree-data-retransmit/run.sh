@@ -19,7 +19,7 @@
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-: "${PROXY_TCP_ADDR:=[fd20::2]:9002}"
+: "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 : "${FRAME_COUNT:=60}"
 : "${NODES:=8}"
 : "${SUBTREE_COUNT:=8}"

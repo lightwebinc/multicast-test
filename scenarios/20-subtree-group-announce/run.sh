@@ -24,7 +24,7 @@ AFTER="$SCENARIO_DIR/metrics.after.tsv"
 # Well-known test group ID — matches subtree_groups in listener-hosts.yml.
 TEST_GROUP_ID="bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf"
 # Proxy TCP address for SubtreeAnnounce injection.
-: "${PROXY_TCP_ADDR:=[fd20::2]:9002}"
+: "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 
 # ---------------------------------------------------------------------------
 # Optional inline service reconfiguration (skipped when SKIP_RECONFIG=1).

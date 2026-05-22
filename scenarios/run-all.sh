@@ -137,7 +137,7 @@ echo "${BOLD}==============================${RESET}"
 echo "${BOLD} FAILURE DETAIL for diagnosis${RESET}"
 echo "${BOLD}==============================${RESET}"
 echo ""
-echo "Lab: LXD — proxy=fd20::2:9000, listeners=fd20::21-23:9200,"
+echo "Lab: LXD — proxy VIP=2001:db8:ffff::1:9000, listeners=fd20::21-23:9200,"
 echo "     retry endpoints=fd20::24-26:9300"
 echo ""
 

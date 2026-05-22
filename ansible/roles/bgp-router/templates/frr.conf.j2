@@ -47,6 +47,9 @@ router bgp {{ bgp_local_as }}
 {% endif %}
 {% endfor %}
 {% endif %}
+{% if bgp_redistribute_connected | default(false) | bool %}
+  redistribute connected
+{% endif %}
  exit-address-family
 !
  address-family ipv6 unicast
@@ -64,6 +67,9 @@ router bgp {{ bgp_local_as }}
   no neighbor {{ peer.peer_ip }} activate
 {% endif %}
 {% endfor %}
+{% endif %}
+{% if bgp_redistribute_connected | default(false) | bool %}
+  redistribute connected
 {% endif %}
  exit-address-family
 !

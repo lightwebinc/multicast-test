@@ -41,3 +41,23 @@ all:
             - "192.0.2.0/24"
           bgp_prefix6:
             - "2001:db8:ffff::/48"
+
+        proxy2:
+          ansible_host: 10.10.10.21
+          egress_iface: enp6s0
+          tcp_listen_port: 9002
+          # BGP peering with router2 (iBGP, AS 65001)
+          enable_bgp: true
+          bgp_daemon: bird2
+          bgp_local_as: 65001
+          bgp_peer_as: 65001
+          bgp_peer_ip: "198.51.100.17"
+          bgp_peer_ip6: "2001:db8:d::1"
+          bgp_source_ip6: "2001:db8:d::3"
+          bgp_router_id: "198.51.100.19"
+          bgp_vip: "192.0.2.1"
+          bgp_vip6: "2001:db8:ffff::1"
+          bgp_prefix:
+            - "192.0.2.0/24"
+          bgp_prefix6:
+            - "2001:db8:ffff::/48"

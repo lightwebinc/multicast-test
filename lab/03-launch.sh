@@ -4,7 +4,7 @@
 set -euo pipefail
 exec </dev/null
 
-VMS=(source proxy listener1 listener2 listener3 listener4 retry1 retry2 retry3 redis)
+VMS=(source proxy proxy2 listener1 listener2 listener3 listener4 retry1 retry2 retry3 redis)
 
 wait_for_vm() {
   local vm="$1"
@@ -24,6 +24,8 @@ wait_for_vm() {
 for vm in "${VMS[@]}"; do
   if [[ "$vm" == "redis" ]]; then
     profile="ubuntu-small-single"
+  elif [[ "$vm" == "source" ]]; then
+    profile="ubuntu-source"
   else
     profile="ubuntu-small-mcast"
   fi
@@ -62,35 +64,40 @@ done
 echo "==> [03] All VMs running:"
 lxc list
 
-# --- BGP router VMs (opt-in: LAUNCH_BGP=1) ---
-if [[ "${LAUNCH_BGP:-}" == "1" ]]; then
-  declare -A BGP_PROFILES=( [router1]=ubuntu-bgp-r1 [router2]=ubuntu-bgp-r2 )
+# --- BGP router VMs ---
+declare -A BGP_PROFILES=( [router1]=ubuntu-bgp-r1 [router2]=ubuntu-bgp-r2 )
 
-  for vm in router1 router2; do
-    profile="${BGP_PROFILES[$vm]}"
-    echo "==> [03] Launching BGP VM: $vm ($profile)..."
-    if lxc info "$vm" &>/dev/null; then
-      echo "     $vm already exists, skipping"
-    else
-      lxc launch ubuntu:24.04 "$vm" --vm --profile "$profile"
-    fi
-  done
-
-  echo "==> [03] Adding lxdbr3 NIC to proxy (for iBGP peering)..."
-  if lxc config device show proxy | grep -q eth2; then
-    echo "     proxy eth2 already exists, skipping"
+for vm in router1 router2; do
+  profile="${BGP_PROFILES[$vm]}"
+  echo "==> [03] Launching BGP VM: $vm ($profile)..."
+  if lxc info "$vm" &>/dev/null; then
+    echo "     $vm already exists, skipping"
   else
-    lxc config device add proxy eth2 nic network=lxdbr3 name=eth2
+    lxc launch ubuntu:24.04 "$vm" --vm --profile "$profile"
   fi
+done
 
-  echo "==> [03] Waiting for BGP VMs..."
-  for vm in router1 router2; do
-    wait_for_vm "$vm"
-  done
-  for vm in router1 router2; do
-    wait_for_agent "$vm"
-  done
+echo "==> [03] Adding lxdbr3 NIC to proxy (for iBGP peering)..."
+if lxc config device show proxy | grep -q eth2; then
+  echo "     proxy eth2 already exists, skipping"
+else
+  lxc config device add proxy eth2 nic network=lxdbr3 name=eth2
 fi
+
+echo "==> [03] Adding lxdbr3 NIC to proxy2 (for iBGP peering)..."
+if lxc config device show proxy2 | grep -q eth2; then
+  echo "     proxy2 eth2 already exists, skipping"
+else
+  lxc config device add proxy2 eth2 nic network=lxdbr3 name=eth2
+fi
+
+echo "==> [03] Waiting for BGP VMs..."
+for vm in router1 router2; do
+  wait_for_vm "$vm"
+done
+for vm in router1 router2; do
+  wait_for_agent "$vm"
+done
 
 echo "==> [03] Tuning lxdbr1 tap interfaces (txqlen + mrouter)..."
 for iface in $(ls /sys/devices/virtual/net/lxdbr1/brif/ 2>/dev/null); do

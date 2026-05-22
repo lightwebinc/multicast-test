@@ -6,7 +6,7 @@ PUBKEY="$(cat ~/.ssh/id_ed25519.pub)"
 
 echo "==> [04] Configuring passwordless sudo and SSH key for ubuntu user on all VMs..."
 
-for vm in source proxy listener1 listener2 listener3 listener4 retry1 retry2 retry3 redis; do
+for vm in source proxy proxy2 listener1 listener2 listener3 listener4 retry1 retry2 retry3 redis router1 router2; do
   echo "     $vm..."
   lxc exec "$vm" -- bash -c \
     "echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ubuntu-nopasswd && chmod 440 /etc/sudoers.d/ubuntu-nopasswd"
