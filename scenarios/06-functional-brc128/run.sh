@@ -37,7 +37,7 @@ bad_l2=$(diff_metric "$BEFORE" "$AFTER" listener2 'bsl_frames_dropped_total|bad_
 bad_l3=$(diff_metric "$BEFORE" "$AFTER" listener3 'bsl_frames_dropped_total|bad_frame')
 
 assert_near "listener1 forwarded"                        "$fwd_l1" "$received_l1"              0.05
-assert_near "listener2 forwarded (shard×subtree filter)" "$fwd_l2" "$(( received_l2 * 7 / 8 ))" 0.10
+assert_near "listener2 forwarded (shardxsubtree filter)" "$fwd_l2" "$(( received_l2 * 7 / 8 ))" 0.10
 assert_near "listener3 forwarded (subtree-include)"      "$fwd_l3" "$(( received_l3 * 1 / 8 ))" 0.15
 
 # EF payloads must NOT trip the bad_frame counter (header is identical to BRC-124).

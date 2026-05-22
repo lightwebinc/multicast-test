@@ -12,8 +12,8 @@ Listener-side metric deltas match scenario 01:
 | Listener  | `bsl_frames_forwarded_total\|proto="udp"` Δ | Rationale                       |
 |-----------|---------------------------------------------|---------------------------------|
 | listener1 | ≈ received                                  | no filter                       |
-| listener2 | ≈ received × ⅞                              | shard × subtree filter          |
-| listener3 | ≈ received × ⅛                              | only one subtree allowed        |
+| listener2 | ≈ received x 7/8                             | shard x subtree filter          |
+| listener3 | ≈ received x 1/8                             | only one subtree allowed        |
 
 Additional assertion: `bsl_frames_dropped_total{reason="bad_frame"}` must
 remain at zero on every listener — confirming the 92-byte BRC-124 header is

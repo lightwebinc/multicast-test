@@ -7,7 +7,7 @@
 * Listeners (`listener1..3`) with `retry_endpoints` listing all three.
 * Flood sources: source VM (fd20::10, rogue) + listener1 VM (fd20::21,
   compromised), both targeting all three endpoints on port 9300 directly.
-* Generator: 500 pps × 15s, gap-every=20, gap-size=2, gap-delay=2s.
+* Generator: 500 pps x 15s, gap-every=20, gap-size=2, gap-delay=2s.
 
 ## Pass criteria
 

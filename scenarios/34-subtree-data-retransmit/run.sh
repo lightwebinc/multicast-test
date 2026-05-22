@@ -196,9 +196,9 @@ for host in "${LISTENERS[@]}"; do
   u=$(diff_metric "$BEFORE" "$AFTER" "$host" 'bsl_gaps_unrecovered_total|flow="brc132"')
   total_unrecovered=$(( total_unrecovered + u ))
 done
-max_unrecovered=$(( expected_frames * 3 * 5 / 100 ))  # 5% × 3 listeners
+max_unrecovered=$(( expected_frames * 3 * 5 / 100 ))  # 5% x 3 listeners
 if (( total_unrecovered <= max_unrecovered )); then
-  echo "PASS  total_unrecovered=$total_unrecovered <= $max_unrecovered (5% of ${expected_frames}×3)"
+  echo "PASS  total_unrecovered=$total_unrecovered <= $max_unrecovered (5% of ${expected_frames}x3)"
 else
   echo "FAIL  total_unrecovered=$total_unrecovered > $max_unrecovered"
   SCENARIO_FAIL=1

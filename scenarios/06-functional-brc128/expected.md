@@ -9,7 +9,7 @@ done: sent=10000 errors=0 elapsed=10.00s avg_pps=1000
 ==> Allow egress pipeline to drain
 ==> Snapshot metrics (after)
 PASS  listener1 forwarded: got 10000 expected~10000 (tol=.05, ...)
-PASS  listener2 forwarded (shard×subtree filter): got ~4375 (tol=.10, ...)
+PASS  listener2 forwarded (shardxsubtree filter): got ~4375 (tol=.10, ...)
 PASS  listener3 forwarded (subtree-include): got ~1250 (tol=.15, ...)
 PASS  listener1 bad_frame=0 (EF payload transparent to header parser)
 PASS  listener2 bad_frame=0 (EF payload transparent to header parser)

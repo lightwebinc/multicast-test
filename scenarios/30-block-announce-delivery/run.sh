@@ -80,7 +80,7 @@ snapshot_metrics "$AFTER"
 expected_frames=$(( BLOCK_COUNT * 2 ))
 
 echo ""
-echo "Expected frames per listener: $expected_frames (${BLOCK_COUNT} blocks × 2 msg types)"
+echo "Expected frames per listener: $expected_frames (${BLOCK_COUNT} blocks x 2 msg types)"
 echo ""
 
 all_pass=1

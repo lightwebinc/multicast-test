@@ -298,7 +298,7 @@ fi
 
 # retry3 dedup must fire: all 3 listeners escalate to retry3 for the same gaps;
 # the first NACK triggers SetNX (succeeds), subsequent NACKs for the same SeqNum
-# are suppressed. Dedup count ≈ (num_listeners - 1) × recovered_gaps.
+# are suppressed. Dedup count ≈ (num_listeners - 1) x recovered_gaps.
 if [[ "$r3_dedup" -le 0 ]]; then
   echo "FAIL  retry3 had no dedup fires (Redis not configured, or only one listener escalating?)"
   SCENARIO_FAIL=1

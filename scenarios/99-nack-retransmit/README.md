@@ -37,7 +37,7 @@ Assertions (all listeners):
 | `bsl_gaps_detected_total` | > 0 (roughly `frames / seq_gap_every`) | same |
 | `bsl_nacks_dispatched_total` | > 0 | > 0 |
 | `bsl_gaps_suppressed_total` | ≈ `gaps_detected` | 0 |
-| `bsl_gaps_unrecovered_total` | 0 | ≈ `gaps_detected` × NACK_MAX_RETRIES |
+| `bsl_gaps_unrecovered_total` | 0 | ≈ `gaps_detected` x NACK_MAX_RETRIES |
 
 ## Activation checklist (once retry-endpoint exists)
 

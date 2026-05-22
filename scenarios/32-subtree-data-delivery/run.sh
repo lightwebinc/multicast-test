@@ -17,7 +17,7 @@ source "$SCENARIO_DIR/../lib/common.sh"
 
 : "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 : "${FRAME_COUNT:=30}"
-: "${NODES:=8}"          # 8 hashes × 32B = 256B payload — fits in one datagram
+: "${NODES:=8}"          # 8 hashes x 32B = 256B payload — fits in one datagram
 : "${MSG_TYPE:=hashes}"
 : "${INTERVAL:=50ms}"
 

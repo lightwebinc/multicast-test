@@ -32,7 +32,7 @@ fwd_l2=$(diff_metric "$BEFORE" "$AFTER" listener2 'bsl_frames_forwarded_total|pr
 fwd_l3=$(diff_metric "$BEFORE" "$AFTER" listener3 'bsl_frames_forwarded_total|proto="udp"')
 
 assert_near "listener1 forwarded (mixed)"                        "$fwd_l1" "$received_l1"              0.05
-assert_near "listener2 forwarded (mixed, shard×subtree filter)"  "$fwd_l2" "$(( received_l2 * 7 / 8 ))" 0.10
+assert_near "listener2 forwarded (mixed, shardxsubtree filter)"  "$fwd_l2" "$(( received_l2 * 7 / 8 ))" 0.10
 assert_near "listener3 forwarded (mixed, subtree-include)"       "$fwd_l3" "$(( received_l3 * 1 / 8 ))" 0.15
 
 # Mixed traffic must not produce bad_frame drops.

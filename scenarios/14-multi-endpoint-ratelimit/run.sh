@@ -173,7 +173,7 @@ for vm_ep in "$RETRY1_VM $RETRY1_IP:$RETRY1_METRICS_PORT" \
   done
 done
 
-echo "==> Waiting 12s for beacon registry to converge (2 × beacon_interval=5s)..."
+echo "==> Waiting 12s for beacon registry to converge (2x beacon_interval=5s)..."
 sleep 12
 
 echo "==> Injecting selective frame loss on listeners (1%) to create legitimate gap traffic"

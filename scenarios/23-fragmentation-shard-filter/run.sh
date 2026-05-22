@@ -8,8 +8,8 @@
 # Expectations:
 #   listener1: reassembly_completed ≈ received frames (no filter)
 #   listener2: reassembly_completed ≈ reassembly_started / num_groups (shard filter)
-#              forwarded ≈ reassembly_completed × 7/8 (subtree filter)
-#   listener3: forwarded ≈ reassembly_completed × 1/8
+#              forwarded ≈ reassembly_completed x 7/8 (subtree filter)
+#   listener3: forwarded ≈ reassembly_completed x 1/8
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -58,8 +58,8 @@ echo "    listener3: completed=$completed_l3 fwd=$fwd_l3"
 assert_near "listener1 completed ≈ started_l1"         "$completed_l1" "$started_l1"                  0.10
 assert_near "listener1 fwd ≈ completed_l1"             "$fwd_l1"       "$completed_l1"                0.10
 assert_near "listener2 started ≈ started_l1/2"         "$started_l2"   "$(( started_l1 / 2 ))"        0.20
-assert_near "listener2 fwd ≈ completed_l2 × 7/8"      "$fwd_l2"       "$(( completed_l2 * 7 / 8 ))" 0.15
-assert_near "listener3 fwd ≈ completed_l3 × 1/8"      "$fwd_l3"       "$(( completed_l3 * 1 / 8 ))" 0.20
+assert_near "listener2 fwd ≈ completed_l2 x 7/8"      "$fwd_l2"       "$(( completed_l2 * 7 / 8 ))" 0.15
+assert_near "listener3 fwd ≈ completed_l3 x 1/8"      "$fwd_l3"       "$(( completed_l3 * 1 / 8 ))" 0.20
 
 if [[ "$SCENARIO_FAIL" -ne 0 ]]; then
   echo "Scenario 23: FAIL"

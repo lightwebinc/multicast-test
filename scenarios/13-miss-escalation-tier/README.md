@@ -73,7 +73,7 @@ debugging this scenario:
 
 1. **Phantom gaps from retransmitted frames** — `Observe()` created a new gap
    entry even for out-of-order retransmits (`seqNum < lastSeqNum`), inflating
-   `bsl_gaps_detected_total` by ~10× and causing cascading false unrecovered gaps.
+   `bsl_gaps_detected_total` by ~10x and causing cascading false unrecovered gaps.
    Fix: skip gap detection when `seqNum <= lastSeqNum`; only advance
    `lastSeqNum` forward (never regress on retransmit or duplicate).
 

@@ -114,7 +114,7 @@ echo "    sent=${frames:-0} frames"
 
 # Allow extra drain time for retries to exhaust.
 # With MaxRetries=8, BackoffMax=5s, and 3 endpoints, per-gap eviction takes
-# ~26s (3 immediate MISSes, then 4s + 5s × 4 backoff). The last gap detected
+# ~26s (3 immediate MISSes, then 4s + 5s x 4 backoff). The last gap detected
 # near the end of the generator window needs ~30s of post-traffic drain.
 echo "==> Allow NACK retry pipeline to exhaust (45s drain)"
 sleep 45

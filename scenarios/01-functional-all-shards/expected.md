@@ -9,7 +9,7 @@ done: sent=10000 errors=0 elapsed=10.00s avg_pps=1000
 ==> Allow egress pipeline to drain
 ==> Snapshot metrics (after)
 PASS  listener1 forwarded: got 10000 expected~10000 (tol=.05, diff=0 <= 500)
-PASS  listener2 forwarded (shard×subtree filter): got 4380 expected~4375 (tol=.10, diff=5 <= 437)
+PASS  listener2 forwarded (shardxsubtree filter): got 4380 expected~4375 (tol=.10, diff=5 <= 437)
 PASS  listener3 forwarded (subtree-include): got 1247 expected~1250 (tol=.15, diff=3 <= 187)
 Scenario 01: PASS
 ```

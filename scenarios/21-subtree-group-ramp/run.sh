@@ -46,7 +46,7 @@ TEST_GROUP_ID="bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf"
 : "${ANNOUNCE_PHASE_INTERVAL:=1h}" # how often to add the next subtree (8 subtrees over 8h)
 : "${ANNOUNCE_INTERVAL:=5m}"       # re-announce period (TTL refresh)
 : "${ANNOUNCE_TTL:=900}"           # seconds (15 min); entries expire 15 min after last announce
-: "${DRAIN_WAIT:=1800}"            # seconds (30 min); 2× TTL for safety margin
+: "${DRAIN_WAIT:=1800}"            # seconds (30 min); 2x TTL for safety margin
 
 # Derived snapshot timing:
 #   EARLY snapshot at T=30min (before first phase tick at T=1h → 0 subtrees)

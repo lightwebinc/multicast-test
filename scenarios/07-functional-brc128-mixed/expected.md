@@ -9,7 +9,7 @@ done: sent=10000 errors=0 elapsed=10.00s avg_pps=1000
 ==> Allow egress pipeline to drain
 ==> Snapshot metrics (after)
 PASS  listener1 forwarded (mixed): got ~10000
-PASS  listener2 forwarded (mixed, shard×subtree filter): got ~4375
+PASS  listener2 forwarded (mixed, shardxsubtree filter): got ~4375
 PASS  listener3 forwarded (mixed, subtree-include): got ~1250
 PASS  listener1 bad_frame=0 (mixed BRC-124/BRC-128 traffic transparent)
 PASS  listener2 bad_frame=0 (mixed BRC-124/BRC-128 traffic transparent)
