@@ -26,9 +26,16 @@ done
 
 echo "==> [06b] Waiting for SSH to be ready on all VMs..."
 for vm in "${VMS[@]}"; do
-  ip=$(lxc list "$vm" --format csv -c 4 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+  # Retry IP lookup — DHCP may not be complete immediately after RUNNING.
+  ip=""
+  for _ in $(seq 1 30); do
+    ip=$(lxc list "$vm" --format csv -c 4 2>/dev/null \
+         | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1 || true)
+    [[ -n "$ip" ]] && break
+    sleep 2
+  done
   if [[ -z "$ip" ]]; then
-    echo "WARNING: could not determine IP for $vm, skipping SSH wait" >&2
+    echo "WARNING: could not determine IP for $vm after 60s, skipping SSH wait" >&2
     continue
   fi
   echo -n "     $vm ($ip): waiting for SSH..."
