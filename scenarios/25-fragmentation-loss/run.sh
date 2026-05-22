@@ -20,33 +20,18 @@ source "$SCENARIO_DIR/../lib/common.sh"
 # Shorter TTL makes the test faster (abandonment fires sooner).
 # listener1's NACK_GAP_TTL would normally cover this; here we rely on
 # reassembly.DefaultTTL (10s) which is already short enough.
-PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
 AFTER="$SCENARIO_DIR/metrics.after.tsv"
 
 restore_all() {
-  lxc exec proxy -- bash -c "
-    if [ -f ${PROXY_ENV_FILE}.bak ]; then
-      mv ${PROXY_ENV_FILE}.bak ${PROXY_ENV_FILE}
-      systemctl restart bitcoin-shard-proxy
-    fi
-  " || true
+  restore_frag_all
   remove_listener_loss
 }
 trap 'restore_all' EXIT
 
-echo "==> Enabling fragmentation on proxy (FRAG_MTU=$FRAG_MTU)"
-lxc exec proxy -- bash -c "
-  cp ${PROXY_ENV_FILE} ${PROXY_ENV_FILE}.bak
-  if grep -q '^FRAG_MTU=' ${PROXY_ENV_FILE}; then
-    sed -i 's|^FRAG_MTU=.*|FRAG_MTU=${FRAG_MTU}|' ${PROXY_ENV_FILE}
-  else
-    echo 'FRAG_MTU=${FRAG_MTU}' >> ${PROXY_ENV_FILE}
-  fi
-  systemctl restart bitcoin-shard-proxy
-"
-sleep 2
+echo "==> Enabling fragmentation on all proxy VMs (FRAG_MTU=$FRAG_MTU)"
+enable_frag_all "$FRAG_MTU"
 
 echo "==> Applying $FRAGMENT_LOSS fragment loss on listeners"
 apply_listener_loss "$FRAGMENT_LOSS"

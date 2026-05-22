@@ -51,6 +51,9 @@ if [[ "$PROXY_TCP_WAS_ZERO" -eq 1 ]]; then
   sleep 3
 fi
 
+echo "==> Drain residual frames from prior scenario (3s)"
+sleep 3
+
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"
 

@@ -229,6 +229,42 @@ remove_listener_loss() {
   _LOSS_VMS=()
 }
 
+# --- Proxy configuration helpers ------------------------------------------
+
+# All proxy VMs that must be configured identically.
+PROXY_VMS=(proxy proxy2)
+PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
+
+# enable_frag_all <mtu>: set FRAG_MTU on all proxy VMs and restart.
+enable_frag_all() {
+  local mtu="${1:?usage: enable_frag_all <mtu>}"
+  for vm in "${PROXY_VMS[@]}"; do
+    lxc exec "$vm" -- bash -c "
+      cp ${PROXY_ENV_FILE} ${PROXY_ENV_FILE}.bak
+      if grep -q '^FRAG_MTU=' ${PROXY_ENV_FILE}; then
+        sed -i 's|^FRAG_MTU=.*|FRAG_MTU=${mtu}|' ${PROXY_ENV_FILE}
+      else
+        echo 'FRAG_MTU=${mtu}' >> ${PROXY_ENV_FILE}
+      fi
+      systemctl restart bitcoin-shard-proxy
+    "
+    echo "     $vm restarted with FRAG_MTU=$mtu"
+  done
+  sleep 3
+}
+
+# restore_frag_all: restore all proxy VMs config from .bak and restart.
+restore_frag_all() {
+  for vm in "${PROXY_VMS[@]}"; do
+    lxc exec "$vm" -- bash -c "
+      if [ -f ${PROXY_ENV_FILE}.bak ]; then
+        mv ${PROXY_ENV_FILE}.bak ${PROXY_ENV_FILE}
+        systemctl restart bitcoin-shard-proxy
+      fi
+    " || true
+  done
+}
+
 # --- Retry endpoint multi-instance helpers --------------------------------
 
 RETRY_VMS=(retry1 retry2 retry3)

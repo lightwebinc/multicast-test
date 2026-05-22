@@ -20,39 +20,14 @@ SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${FRAG_MTU:=1500}"
 : "${PAYLOAD_SIZE:=2048}"
 source "$SCENARIO_DIR/../lib/common.sh"
-PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
 AFTER="$SCENARIO_DIR/metrics.after.tsv"
 
-# --- Enable fragmentation on the proxy VM -----------------------------------
-enable_fragmentation() {
-  echo "==> Enabling fragmentation on proxy VM (FRAG_MTU=$FRAG_MTU)..."
-  lxc exec proxy -- bash -c "
-    cp ${PROXY_ENV_FILE} ${PROXY_ENV_FILE}.bak
-    if grep -q '^FRAG_MTU=' ${PROXY_ENV_FILE}; then
-      sed -i 's|^FRAG_MTU=.*|FRAG_MTU=${FRAG_MTU}|' ${PROXY_ENV_FILE}
-    else
-      echo 'FRAG_MTU=${FRAG_MTU}' >> ${PROXY_ENV_FILE}
-    fi
-    systemctl restart bitcoin-shard-proxy
-  "
-  sleep 3
-  echo "     proxy restarted with FRAG_MTU=$FRAG_MTU"
-}
+trap 'echo "==> Cleanup: restoring proxy config.env..."; restore_frag_all' EXIT
 
-restore_fragmentation() {
-  echo "==> Cleanup: restoring proxy config.env..."
-  lxc exec proxy -- bash -c "
-    if [ -f ${PROXY_ENV_FILE}.bak ]; then
-      mv ${PROXY_ENV_FILE}.bak ${PROXY_ENV_FILE}
-      systemctl restart bitcoin-shard-proxy
-    fi
-  " || true
-}
-trap 'restore_fragmentation' EXIT
-
-enable_fragmentation
+echo "==> Enabling fragmentation on all proxy VMs (FRAG_MTU=$FRAG_MTU)..."
+enable_frag_all "$FRAG_MTU"
 
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"

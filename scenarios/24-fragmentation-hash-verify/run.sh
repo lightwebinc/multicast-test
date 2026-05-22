@@ -17,7 +17,6 @@ SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${FRAG_MTU:=1500}"
 : "${PAYLOAD_SIZE:=2048}"
 source "$SCENARIO_DIR/../lib/common.sh"
-PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
 LISTENER_ENV_FILE="/etc/bitcoin-shard-listener/config.env"
 LISTENER_VM="listener1"
 
@@ -25,12 +24,7 @@ BEFORE="$SCENARIO_DIR/metrics.before.tsv"
 AFTER="$SCENARIO_DIR/metrics.after.tsv"
 
 restore_all() {
-  lxc exec proxy -- bash -c "
-    if [ -f ${PROXY_ENV_FILE}.bak ]; then
-      mv ${PROXY_ENV_FILE}.bak ${PROXY_ENV_FILE}
-      systemctl restart bitcoin-shard-proxy
-    fi
-  " || true
+  restore_frag_all
   lxc exec "$LISTENER_VM" -- bash -c "
     if [ -f ${LISTENER_ENV_FILE}.bak ]; then
       mv ${LISTENER_ENV_FILE}.bak ${LISTENER_ENV_FILE}
@@ -40,16 +34,8 @@ restore_all() {
 }
 trap 'restore_all' EXIT
 
-echo "==> Enabling fragmentation on proxy (FRAG_MTU=$FRAG_MTU)"
-lxc exec proxy -- bash -c "
-  cp ${PROXY_ENV_FILE} ${PROXY_ENV_FILE}.bak
-  if grep -q '^FRAG_MTU=' ${PROXY_ENV_FILE}; then
-    sed -i 's|^FRAG_MTU=.*|FRAG_MTU=${FRAG_MTU}|' ${PROXY_ENV_FILE}
-  else
-    echo 'FRAG_MTU=${FRAG_MTU}' >> ${PROXY_ENV_FILE}
-  fi
-  systemctl restart bitcoin-shard-proxy
-"
+echo "==> Enabling fragmentation on all proxy VMs (FRAG_MTU=$FRAG_MTU)"
+enable_frag_all "$FRAG_MTU"
 
 echo "==> Enabling verify-payload-hash on $LISTENER_VM"
 lxc exec "$LISTENER_VM" -- bash -c "

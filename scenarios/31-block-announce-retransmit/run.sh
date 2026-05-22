@@ -56,6 +56,9 @@ if [[ "$PROXY_TCP_WAS_ZERO" -eq 1 ]]; then
   sleep 3
 fi
 
+echo "==> Drain residual frames from prior scenario (3s)"
+sleep 3
+
 echo "==> Injecting ${LOSS_PCT}% packet loss on all listeners"
 apply_listener_loss "${LOSS_PCT}%"
 
