@@ -115,6 +115,14 @@ restore_rl() {
   echo "==> Cleanup: stopping flood background jobs..."
   [[ -n "$ROGUE_PID" ]]      && kill "$ROGUE_PID"      2>/dev/null || true
   [[ -n "$COMPROMISED_PID" ]] && kill "$COMPROMISED_PID" 2>/dev/null || true
+  # Remove temporary flood nft rules.
+  for _fvm in listener4 listener1; do
+    lxc exec "$_fvm" -- bash -c \
+      'for h in $(nft -a list chain inet bitcoin-listener output 2>/dev/null \
+         | grep "scenario14-flood" | grep -oP "handle \K[0-9]+"); do
+         nft delete rule inet bitcoin-listener output handle "$h"
+       done' 2>/dev/null || true
+  done
   echo "==> Cleanup: restoring original config.env and restarting endpoints..."
   local env_file="/etc/bitcoin-retry-endpoint/config.env"
   for vm in "$RETRY1_VM" "$RETRY2_VM" "$RETRY3_VM"; do
@@ -188,6 +196,17 @@ snapshot_retry "$RETRY2_VM" "$RETRY2_IP" "$RETRY2_METRICS_PORT" "$R2_BEFORE"
 snapshot_retry "$RETRY3_VM" "$RETRY3_IP" "$RETRY3_METRICS_PORT" "$R3_BEFORE"
 
 # --- Launch background flood jobs --------------------------------------------
+
+# Temporarily allow outgoing UDP to retry fabric IPs on the flood source VMs.
+# listener4 has no retry_endpoints configured, so its nft OUTPUT chain drops the traffic.
+echo "==> Adding temporary nft rules for flood source VMs..."
+for _fvm in listener4 listener1; do
+  for _rip in "$RETRY1_FABRIC" "$RETRY2_FABRIC" "$RETRY3_FABRIC"; do
+    lxc exec "$_fvm" -- nft add rule inet bitcoin-listener output \
+      oifname "enp6s0" ip6 daddr "$_rip" udp dport "$NACK_PORT" accept \
+      comment "scenario14-flood" 2>/dev/null || true
+  done
+done
 
 flood_secs=$(( $(dur_to_seconds "$DURATION") + 25 ))
 echo "==> Launching background NACK floods (flood_secs=$flood_secs)..."
