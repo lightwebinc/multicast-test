@@ -259,6 +259,10 @@ LISTENER_ENV_FILE="/etc/bitcoin-shard-listener/config.env"
 # listener VM's config.env, saving a .bak, and restart the service.
 enable_txid_dedup() {
   local vm="$1"
+  # The deployed listener firewall denies outbound TCP except DNS/HTTP/HTTPS.
+  # Without opening the Redis port, txdedup.New times out at startup and the
+  # listener service exits, so we must open the firewall before restart.
+  allow_redis_egress "$vm"
   lxc exec "$vm" -- bash -c "
     # Preserve original config: only create .bak if not already present
     # (a stale .bak from a failed prior run already holds the original).
@@ -272,7 +276,56 @@ enable_txid_dedup() {
   echo "     $vm txid-dedup enabled (redis=$TXID_DEDUP_ADDR)"
 }
 
-# enable_txid_dedup_all: enable on all 3 listener VMs.
+# allow_redis_egress <vm>: insert an nft rule at the top of the
+# `inet bitcoin-listener output` chain permitting outbound TCP to
+# TXID_DEDUP_ADDR. The deployed listener firewall has policy=drop on output
+# with only DNS/HTTP/HTTPS allowed; without this, the Redis TCP SYN is dropped
+# and txdedup.New times out causing the listener to fail to start.
+#
+# Idempotent: removes any prior rule with the same comment before inserting.
+allow_redis_egress() {
+  local vm="$1"
+  local redis_ip="${TXID_DEDUP_ADDR%%:*}"
+  local redis_port="${TXID_DEDUP_ADDR##*:}"
+  lxc exec "$vm" -- bash -c "
+    # Remove any prior rule with our marker handle (idempotent).
+    handle=\$(nft -a list chain inet bitcoin-listener output 2>/dev/null \
+      | awk '/txdedup-redis-allow/ { for (i=1;i<=NF;i++) if (\$i==\"handle\") print \$(i+1) }')
+    if [ -n \"\$handle\" ]; then
+      nft delete rule inet bitcoin-listener output handle \$handle 2>/dev/null || true
+    fi
+    # Insert at top so it runs before the trailing 'counter drop'.
+    nft insert rule inet bitcoin-listener output \
+      ip daddr ${redis_ip} tcp dport ${redis_port} accept comment '\"txdedup-redis-allow\"'
+  "
+  echo "     $vm redis-egress allowed (${TXID_DEDUP_ADDR})"
+}
+
+revoke_redis_egress() {
+  local vm="$1"
+  lxc exec "$vm" -- bash -c "
+    handle=\$(nft -a list chain inet bitcoin-listener output 2>/dev/null \
+      | awk '/txdedup-redis-allow/ { for (i=1;i<=NF;i++) if (\$i==\"handle\") print \$(i+1) }')
+    if [ -n \"\$handle\" ]; then
+      nft delete rule inet bitcoin-listener output handle \$handle 2>/dev/null || true
+    fi
+  " || true
+}
+
+allow_redis_egress_all() {
+  for vm in "${LISTENERS[@]}"; do
+    allow_redis_egress "$vm"
+  done
+}
+
+revoke_redis_egress_all() {
+  for vm in "${LISTENERS[@]}"; do
+    revoke_redis_egress "$vm"
+  done
+}
+
+# enable_txid_dedup_all: enable on all 3 listener VMs (firewall opened
+# per-VM inside enable_txid_dedup).
 enable_txid_dedup_all() {
   for vm in "${LISTENERS[@]}"; do
     enable_txid_dedup "$vm"
@@ -280,7 +333,8 @@ enable_txid_dedup_all() {
   sleep 3  # allow workers to reconnect to Redis and start serving
 }
 
-# restore_txid_dedup <vm>: restore config.env from .bak and restart.
+# restore_txid_dedup <vm>: restore config.env from .bak, restart, and
+# revoke the Redis firewall allow rule.
 restore_txid_dedup() {
   local vm="$1"
   lxc exec "$vm" -- bash -c "
@@ -289,9 +343,10 @@ restore_txid_dedup() {
       systemctl restart bitcoin-shard-listener
     fi
   " || true
+  revoke_redis_egress "$vm"
 }
 
-# restore_txid_dedup_all: restore all 3 listener VMs.
+# restore_txid_dedup_all: restore all 3 listener VMs (config + firewall).
 restore_txid_dedup_all() {
   for vm in "${LISTENERS[@]}"; do
     restore_txid_dedup "$vm"

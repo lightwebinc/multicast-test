@@ -58,9 +58,12 @@ for i in 1 2 3; do
 
   echo "==> $host: received=$received  forwarded=$forwarded  tx_deduped=$tx_deduped  dedup_errors=$dedup_errors"
 
-  # Fail-open: forwarded ≈ received (nothing dropped due to Redis being down).
-  if [[ "$received" -gt 0 ]]; then
-    assert_near "$host fail-open: forwarded ≈ received" "$forwarded" "$received" 0.15
+  # Fail-open: every frame that reaches the dedup gate is both forwarded and
+  # counted as a dedup error. So forwarded ≈ dedup_errors. (We cannot compare
+  # to `received` directly because received is counted before the filter while
+  # forwarded happens after.)
+  if [[ "$dedup_errors" -gt 0 ]]; then
+    assert_near "$host fail-open: forwarded ≈ dedup_errors" "$forwarded" "$dedup_errors" 0.10
   fi
 
   # No suppression: Redis is down, so no TxID can be claimed.

@@ -61,23 +61,25 @@ echo "     frames_sent=$frames  l1_received=$rec_l1"
 assert_near "total forwarded across l1+l2+l3 ≈ l1_received" \
   "$total_fwd" "$rec_l1" 0.15
 
-# Assertion 2: per-listener (forwarded + tx_deduped) ≈ received.
-# Every frame received by a listener is either forwarded or deduped — no gaps.
-if [[ "$rec_l1" -gt 0 ]]; then
-  fwd_plus_dedup_l1=$(( fwd_l1 + dedup_l1 ))
-  assert_near "l1: forwarded+tx_deduped ≈ received" \
-    "$fwd_plus_dedup_l1" "$rec_l1" 0.10
-fi
-if [[ "$rec_l2" -gt 0 ]]; then
-  fwd_plus_dedup_l2=$(( fwd_l2 + dedup_l2 ))
-  assert_near "l2: forwarded+tx_deduped ≈ received" \
-    "$fwd_plus_dedup_l2" "$rec_l2" 0.10
-fi
-if [[ "$rec_l3" -gt 0 ]]; then
-  fwd_plus_dedup_l3=$(( fwd_l3 + dedup_l3 ))
-  assert_near "l3: forwarded+tx_deduped ≈ received" \
-    "$fwd_plus_dedup_l3" "$rec_l3" 0.10
-fi
+# Assertion 2: per-listener accounting — every frame received is either
+# forwarded, suppressed by TxID dedup, or dropped by the filter.
+# received counts BEFORE the filter; forwarded/tx_deduped count AFTER.
+# l1 has no filter so the strict equality holds; for l2/l3 we add filter drops.
+for i in 1 2 3; do
+  host="listener${i}"
+  rec=$(diff_metric "$BEFORE" "$AFTER" "$host" bsl_frames_received_total)
+  fwd=$(diff_metric "$BEFORE" "$AFTER" "$host" 'bsl_frames_forwarded_total|proto="udp"')
+  ded=$(diff_metric "$BEFORE" "$AFTER" "$host" bsl_frames_tx_deduped_total)
+  shard_drop=$(diff_metric "$BEFORE" "$AFTER" "$host" 'bsl_frames_dropped_total|shard_filter')
+  st_exc_drop=$(diff_metric "$BEFORE" "$AFTER" "$host" 'bsl_frames_dropped_total|subtree_exclude')
+  st_inc_drop=$(diff_metric "$BEFORE" "$AFTER" "$host" 'bsl_frames_dropped_total|subtree_include_miss')
+  filter_drops=$(( shard_drop + st_exc_drop + st_inc_drop ))
+  accounted=$(( fwd + ded + filter_drops ))
+  if [[ "$rec" -gt 0 ]]; then
+    assert_near "$host: forwarded+tx_deduped+filter_drops ≈ received" \
+      "$accounted" "$rec" 0.10
+  fi
+done
 
 # Assertion 3: tx_deduped > 0 (dedup is actually firing; at least 2 listeners
 # receive overlapping TxIDs, so some must be suppressed).
