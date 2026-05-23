@@ -21,7 +21,7 @@ target **1000 pps for 10 s** (10 000 frames).
 | `12-burst-gap-ratelimit/`        | Multi-frame bursts → rate limiter fires                                                            | all                   | bitcoin-retry-endpoint |
 | `13-miss-escalation-tier/`       | 2-hop MISS escalation: retry1→retry2→retry3 ACK                                                    | all                   | bitcoin-retry-endpoint |
 | `14-multi-endpoint-ratelimit/`   | Rogue + compromised-listener NACK flood; RL fires on all 3 endpoints                               | all                   | bitcoin-retry-endpoint |
-| `15-chain-ratelimit/`            | Fixed non-zero ChainID flood; chain RL fires; ChainID=0 bypasses (orphan)                          | all                   | bitcoin-retry-endpoint |
+| `15-chain-ratelimit/`            | Fixed non-zero HashKey flood; chain RL fires; HashKey=0 bypasses (orphan)                          | all                   | bitcoin-retry-endpoint |
 | `16-group-ratelimit/`            | Dense gap injection; group RL fires post-lookup; ACK still sent on throttle                        | all                   | bitcoin-retry-endpoint |
 | `20-subtree-group-announce/`     | BRC-127 dynamic group filtering via SubtreeAnnounce                                                | listener3             | —                      |
 | `21-subtree-group-ramp/`         | BRC-127+124 membership ramp over time: dashboard time-series + delivery assertions                 | listener3             | —                      |

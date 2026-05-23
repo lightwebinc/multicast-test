@@ -58,14 +58,15 @@ pass/fail, so production RL config is always restored.
 
 ## NACK flood tool
 
-Python3 inline (no extra dependencies). Constructs wire-valid 24-byte NACK
-datagrams (magic `0xE3E1F3E8`, ProtoVer `0x02BF`, MsgType `0x10`). Each
-script self-terminates after `DURATION + 25` seconds.
+Python3 inline (no extra dependencies). Constructs wire-valid 64-byte NACK
+datagrams (magic `0xE3E1F3E8`, ProtoVer `0x02BF`, MsgType `0x10`, HashKey,
+StartSeq, EndSeq, 32-byte SubtreeID). Each script self-terminates after
+`DURATION + 25` seconds.
 
-The rogue flood uses a fixed LookupSeq (`0xDEADBEEFCAFEBABE`). The
-compromised-listener flood uses a new random `uint64` per packet to prove the
-per-IP limiter fires even when the per-sequence window is never exhausted for
-any individual seq.
+The rogue flood uses fixed HashKey/SeqNum values. The compromised-listener
+flood uses a new random `uint64` SeqNum per packet to prove the per-IP
+limiter fires even when the per-sequence window is never exhausted for any
+individual seq.
 
 ## Assertions
 
