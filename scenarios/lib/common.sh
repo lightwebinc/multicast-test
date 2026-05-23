@@ -86,7 +86,9 @@ snapshot_metrics() {
              'bsl_gaps_unrecovered_total|flow="brc134"' \
              'bsl_nacks_dispatched_total|flow="brc134"' \
              bsl_header_forwarded_total \
-             bsl_header_egress_errors_total; do
+             bsl_header_egress_errors_total \
+             bsl_frames_tx_deduped_total \
+             bsl_txid_dedup_errors_total; do
       local name="${m%%|*}"
       local filter=""
       if [[ "$m" == *'|'* ]]; then
@@ -243,6 +245,67 @@ remove_listener_loss() {
     lxc exec "$vm" -- nft delete table inet bitcoin-listener-test 2>/dev/null || true
   done
   _LOSS_VMS=()
+}
+
+# --- TxID dedup (Redis) helpers -------------------------------------------
+
+: "${TXID_DEDUP_ADDR:=10.10.10.40:6379}"
+: "${TXID_DEDUP_PREFIX:=bsl:txid:}"
+: "${TXID_DEDUP_TTL:=60s}"
+
+LISTENER_ENV_FILE="/etc/bitcoin-shard-listener/config.env"
+
+# enable_txid_dedup <vm>: inject TXID_DEDUP_ADDR/PREFIX/TTL into a single
+# listener VM's config.env, saving a .bak, and restart the service.
+enable_txid_dedup() {
+  local vm="$1"
+  lxc exec "$vm" -- bash -c "
+    # Preserve original config: only create .bak if not already present
+    # (a stale .bak from a failed prior run already holds the original).
+    if [ ! -f ${LISTENER_ENV_FILE}.txdedup.bak ]; then
+      cp ${LISTENER_ENV_FILE} ${LISTENER_ENV_FILE}.txdedup.bak
+    fi
+    sed -i '/^TXID_DEDUP_ADDR=/d; /^TXID_DEDUP_PREFIX=/d; /^TXID_DEDUP_TTL=/d' ${LISTENER_ENV_FILE}
+    printf 'TXID_DEDUP_ADDR=${TXID_DEDUP_ADDR}\nTXID_DEDUP_PREFIX=${TXID_DEDUP_PREFIX}\nTXID_DEDUP_TTL=${TXID_DEDUP_TTL}\n' >> ${LISTENER_ENV_FILE}
+    systemctl restart bitcoin-shard-listener
+  "
+  echo "     $vm txid-dedup enabled (redis=$TXID_DEDUP_ADDR)"
+}
+
+# enable_txid_dedup_all: enable on all 3 listener VMs.
+enable_txid_dedup_all() {
+  for vm in "${LISTENERS[@]}"; do
+    enable_txid_dedup "$vm"
+  done
+  sleep 3  # allow workers to reconnect to Redis and start serving
+}
+
+# restore_txid_dedup <vm>: restore config.env from .bak and restart.
+restore_txid_dedup() {
+  local vm="$1"
+  lxc exec "$vm" -- bash -c "
+    if [ -f ${LISTENER_ENV_FILE}.txdedup.bak ]; then
+      mv ${LISTENER_ENV_FILE}.txdedup.bak ${LISTENER_ENV_FILE}
+      systemctl restart bitcoin-shard-listener
+    fi
+  " || true
+}
+
+# restore_txid_dedup_all: restore all 3 listener VMs.
+restore_txid_dedup_all() {
+  for vm in "${LISTENERS[@]}"; do
+    restore_txid_dedup "$vm"
+  done
+}
+
+# flush_txid_dedup_keys: delete all bsl:txid:* keys from Redis so each
+# scenario starts with a clean dedup state.
+flush_txid_dedup_keys() {
+  lxc exec redis -- bash -c "
+    redis-cli --no-auth-warning --scan --pattern '${TXID_DEDUP_PREFIX}*' \
+      | xargs -r redis-cli --no-auth-warning del
+  " 2>/dev/null || true
+  echo "     Redis: flushed ${TXID_DEDUP_PREFIX}* keys"
 }
 
 # --- Proxy configuration helpers ------------------------------------------
