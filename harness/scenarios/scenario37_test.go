@@ -35,6 +35,7 @@ func TestScenario37_AnchorRetransmit(t *testing.T) {
 
 	genCmd := []string{
 		"send-anchor-frame",
+		"-tcp",
 		"-addr", "[fd10::2]:9002",
 		"-count", "50",
 		"-interval", "50ms",

@@ -22,6 +22,9 @@ func TestScenario34_SubtreeDataRetransmit(t *testing.T) {
 	for _, l := range []string{"s34-listener1", "s34-listener2", "s34-listener3"} {
 		e.PatchEnv(l, map[string]string{"SUBTREE_DATA_ENABLED": "true"})
 	}
+	// Retry endpoint must also opt in to cache BRC-132 V5 frames; without
+	// this it joins only shard groups and never caches CtrlGroupSubtreeAnnounce.
+	e.PatchEnv("s34-retry1", map[string]string{"SUBTREE_DATA_ENABLED": "true"})
 	e.StartAll(ctx)
 	e.Sleep(4*time.Second, "MLD querier settle")
 
@@ -39,10 +42,11 @@ func TestScenario34_SubtreeDataRetransmit(t *testing.T) {
 	genCmd := []string{
 		"send-subtree-data",
 		"-addr", "[fd10::2]:9002",
-		"-frames", "50",
+		"-frames", "60",
 		"-nodes", "8",
+		"-subtree-count", "8",
 		"-msg-type", "hashes",
-		"-interval", "50ms",
+		"-interval", "80ms",
 	}
 	startGenerator(t, ctx, "s34", genCmd)
 	waitGenerator(t, ctx, "s34")
@@ -55,12 +59,15 @@ func TestScenario34_SubtreeDataRetransmit(t *testing.T) {
 
 	gapsDetected := sumListenerDelta("s34", "bsl_gaps_detected_total", beforeL, afterL)
 	nacksDispatched := sumListenerDelta("s34", "bsl_nacks_dispatched_total", beforeL, afterL)
+	framesRecv := sumListenerDelta("s34", "bsl_frames_received_total", beforeL, afterL)
 
 	deltaR := metrics.DeltaMap(beforeR, afterR)
 	retransmits := deltaR["bre_retransmits_total"]
+	reFramesRecv := deltaR["bre_frames_received_total"]
+	reCached := deltaR["bre_frames_cached_total"]
 
-	t.Logf("gaps_detected=%.0f nacks=%.0f retransmits=%.0f",
-		gapsDetected, nacksDispatched, retransmits)
+	t.Logf("listeners: frames_recv=%.0f gaps=%.0f nacks=%.0f", framesRecv, gapsDetected, nacksDispatched)
+	t.Logf("retry: frames_recv=%.0f cached=%.0f retransmits=%.0f", reFramesRecv, reCached, retransmits)
 
 	metrics.AssertGT(t, "gaps detected", gapsDetected)
 	metrics.AssertGT(t, "NACKs dispatched", nacksDispatched)
