@@ -1,4 +1,4 @@
-.PHONY: test test-quick test-retransmit test-frag test-bgp clean images help
+.PHONY: test test-quick test-retransmit test-frag test-bgp test-one clean images help
 
 GOTEST := sudo go test ./harness/scenarios/... -v -count=1
 
@@ -16,6 +16,10 @@ test-frag: ## Run fragmentation scenarios
 
 test-bgp: ## Run BGP scenarios
 	$(GOTEST) -timeout 10m -run 'Scenario4[02]'
+
+test-one: ## Run a single scenario test by name: make test-one T=Scenario36
+	@if [ -z "$(T)" ]; then echo "usage: make test-one T=<TestName>"; exit 2; fi
+	$(GOTEST) -timeout 15m -run '^$(T)$$'
 
 clean: ## Remove harness containers and network
 	@sudo docker ps -a --filter 'name=^s[0-9]' --format '{{.Names}}' | xargs -r sudo docker rm -f 2>/dev/null || true
