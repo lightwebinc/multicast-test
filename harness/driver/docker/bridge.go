@@ -63,9 +63,9 @@ func CreateMcastBridge(ctx context.Context) error {
 		}
 	}
 	// mcast_querier6 is not exposed via `ip link set type bridge`; write sysfs
-	// directly (we are root when running the test suite).
+	// directly, falling back to sudo tee if the process lacks the privilege.
 	q6path := fmt.Sprintf("/sys/class/net/%s/bridge/mcast_querier6", BridgeName)
-	if err2 := os.WriteFile(q6path, []byte("1"), 0644); err2 != nil {
+	if err2 := writeSysfs(ctx, q6path, "1"); err2 != nil {
 		fmt.Fprintf(os.Stderr, "[bridge] WARN mcast_querier6: %v (non-fatal)\n", err2)
 	}
 
@@ -107,6 +107,21 @@ func waitForIface(ctx context.Context, name string, timeout time.Duration) error
 		}
 	}
 	return fmt.Errorf("timeout waiting for %s", path)
+}
+
+// writeSysfs writes value to a sysfs path. If the direct write is denied it
+// retries via "sudo tee" so the harness works when run without CAP_NET_ADMIN.
+func writeSysfs(ctx context.Context, path, value string) error {
+	if err := os.WriteFile(path, []byte(value), 0644); err == nil {
+		return nil
+	}
+	cmd := exec.CommandContext(ctx, "sudo", "tee", path)
+	cmd.Stdin = strings.NewReader(value)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("sudo tee %s: %w (%s)", path, err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }
 
 // run executes a command and returns combined output + error.

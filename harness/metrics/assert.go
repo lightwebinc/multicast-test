@@ -91,9 +91,10 @@ func WaitForGTE(t *testing.T, url, metric string, min float64, timeout time.Dura
 }
 
 // ScrapeOrFail scrapes the URL and fails the test on error.
+// Retries for up to 30 s on transient NDP "no route to host" errors.
 func ScrapeOrFail(t *testing.T, url string) map[string]float64 {
 	t.Helper()
-	m, err := Scrape(url)
+	m, err := scrapeWithNDPRetry(url, 30*time.Second)
 	if err != nil {
 		t.Fatalf("metrics scrape %s: %v", url, err)
 	}
@@ -116,9 +117,10 @@ func LabelledValue(t *testing.T, url, metricName, labelKey, labelVal string) flo
 }
 
 // Snapshot returns a snapshot of all metrics at url. Fails the test on error.
+// Retries for up to 30 s on transient NDP "no route to host" errors.
 func Snapshot(t *testing.T, label, url string) map[string]float64 {
 	t.Helper()
-	m, err := Scrape(url)
+	m, err := scrapeWithNDPRetry(url, 30*time.Second)
 	if err != nil {
 		t.Fatalf("snapshot %s (%s): %v", label, url, err)
 	}

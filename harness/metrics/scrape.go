@@ -96,6 +96,27 @@ func ScrapeWithLabel(url, metricName, labelKey, labelVal string) (float64, error
 	return sum, nil
 }
 
+// scrapeWithNDPRetry calls Scrape, retrying on transient "no route to host"
+// errors for up to retryDur. This handles the race window where the bridge
+// MLD snooping table hasn't yet forwarded a Neighbor Solicitation for a
+// freshly-started container, causing the kernel to return EHOSTUNREACH.
+func scrapeWithNDPRetry(url string, retryDur time.Duration) (map[string]float64, error) {
+	deadline := time.Now().Add(retryDur)
+	var lastErr error
+	for {
+		m, err := Scrape(url)
+		if err == nil {
+			return m, nil
+		}
+		lastErr = err
+		if strings.Contains(err.Error(), "no route to host") && time.Now().Before(deadline) {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		return nil, lastErr
+	}
+}
+
 // WaitFor polls url every interval until the named metric satisfies pred, or
 // until timeout expires. Returns the final value and whether pred was satisfied.
 func WaitFor(url, metricName string, pred func(float64) bool, timeout, interval time.Duration) (float64, bool) {
