@@ -20,14 +20,14 @@ func TestScenario15_ChainRatelimit(t *testing.T) {
 	e, _ := retryTopology(t, "s15")
 
 	e.PatchEnv("s15-retry1", map[string]string{
-		"RL_IP_RATE":        "50000",
-		"RL_IP_BURST":       "10000",
-		"RL_CHAIN_RATE":     "3",
-		"RL_CHAIN_WINDOW":   "10s",
-		"RL_SEQUENCE_MAX":   "1000",
+		"RL_IP_RATE":         "50000",
+		"RL_IP_BURST":        "10000",
+		"RL_CHAIN_RATE":      "3",
+		"RL_CHAIN_WINDOW":    "10s",
+		"RL_SEQUENCE_MAX":    "1000",
 		"RL_SEQUENCE_WINDOW": "60s",
-		"RL_GROUP_RATE":     "10000",
-		"RL_GROUP_BURST":    "5000",
+		"RL_GROUP_RATE":      "10000",
+		"RL_GROUP_BURST":     "5000",
 	})
 
 	e.StartAll(ctx)
