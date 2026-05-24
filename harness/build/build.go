@@ -164,6 +164,24 @@ func DefaultSpecs(repoRoot string) []ImageSpec {
 			Binary:  "subtx-gen",
 			Tag:     "bitcoin-subtx-generator:harness",
 		},
+		{
+			RepoDir: filepath.Join(repoRoot, "bitcoin-subtx-generator"),
+			MainPkg: "./cmd/send-block-announce",
+			Binary:  "send-block-announce",
+			Tag:     "send-block-announce:harness",
+		},
+		{
+			RepoDir: filepath.Join(repoRoot, "bitcoin-subtx-generator"),
+			MainPkg: "./cmd/send-subtree-data",
+			Binary:  "send-subtree-data",
+			Tag:     "send-subtree-data:harness",
+		},
+		{
+			RepoDir: filepath.Join(repoRoot, "bitcoin-subtx-generator"),
+			MainPkg: "./cmd/send-anchor-frame",
+			Binary:  "send-anchor-frame",
+			Tag:     "send-anchor-frame:harness",
+		},
 	}
 }
 

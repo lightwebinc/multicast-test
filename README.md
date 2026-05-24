@@ -1,81 +1,62 @@
 # bitcoin-multicast-test
 
-Linux LXD-based end-to-end test lab for the Bitcoin sharding pipeline. The lab
-validates
+End-to-end test suite for the Bitcoin multicast sharding pipeline. Validates
 [`bitcoin-shard-proxy`](https://github.com/lightwebinc/bitcoin-shard-proxy),
 [`bitcoin-shard-listener`](https://github.com/lightwebinc/bitcoin-shard-listener),
-and [`bitcoin-retry-endpoint`](https://github.com/lightwebinc/bitcoin-retry-endpoint)
-working together over an IPv6 multicast fabric, using
-[`bitcoin-subtx-generator`](https://github.com/lightwebinc/bitcoin-subtx-generator)
-as the traffic source.
+[`bitcoin-retry-endpoint`](https://github.com/lightwebinc/bitcoin-retry-endpoint),
+and [`bitcoin-subtx-generator`](https://github.com/lightwebinc/bitcoin-subtx-generator)
+working together over an IPv6 multicast fabric.
+
+Two test frameworks are provided:
+
+| Framework | Location | Runtime | Description |
+|-----------|----------|---------|-------------|
+| **Go Docker harness** | `harness/` | Docker containers on `fd10::/64` | Primary. 40 scenario tests driven by `go test`. |
+| **LXD VM lab** | `vm-lab/` | LXD VMs on `fd20::/64` | Legacy. Bash `run.sh` scripts against persistent VMs. |
 
 ```
- source ──► proxy (ingress) ──► ff05::%enp6s0 ──► listener1 / listener2 / listener3
-                                      │                 │       │  NACK (escalating)    sink :9100
-                                      ▼          ff02:: │       │  ① retry1 (T0/P128) → MISS
-                                    retry1      (mc-egress)     │  ② retry2 (T0/P64)  → MISS
+ source ──► proxy (ingress) ──► multicast fabric ──► listener1 / listener2 / listener3
+                                      │                 │       │  NACK (escalating)    sink
+                                      ▼          mc-egress      │  ① retry1 (T0/P128) → MISS
+                                    retry1              │       │  ② retry2 (T0/P64)  → MISS
                                     retry2              │       │  ③ retry3 (T1/P128) → ACK
                                     retry3 ◄────────────│───────┘
-                                      └──► ff05::%enp6s0 (retransmit → listeners)
-                                    listener4 ◄─────────┘  (ff02:: subscriber, scenario 05)
+                                      └──► multicast fabric (retransmit → listeners)
+                                    listener4 ◄─────────┘  (link-local subscriber, scenario 05)
 ```
 
-Tests target **1000 pps / 10 s** (functional, ~10 000 frames).
+## Quickstart — Go Docker harness
 
-## Quickstart
+Requires Docker and Go 1.25+. Tests run as root (for network namespaces).
 
 ```bash
-git clone https://github.com/lightwebinc/bitcoin-multicast-test.git
-cd bitcoin-multicast-test
-chmod +x deploy.sh
-bash deploy.sh           # provisions everything from scratch
+make test          # all 40 scenarios (~30 min)
+make test-quick    # tier-1 filter scenarios (~60s)
+make test-retransmit  # NACK/retransmit scenarios
+make test-frag     # fragmentation scenarios
+make help          # show all targets
+```
+
+Individual scenarios:
+
+```bash
+sudo go test ./harness/scenarios/... -v -run TestScenario01
 ```
 
 ## Layout
 
-| Path               | Purpose                                                                      |
-| ------------------ | ---------------------------------------------------------------------------- |
-| `deploy.sh`        | Top-level: full lab bring-up                                                 |
-| `lab/01-*..09-*`   | LXD provisioning + verification scripts                                      |
-| `lab/06-netplan/`  | Per-VM static IP netplans                                                    |
-| `ansible/`         | Inventory + thin wrapper for upstream proxy/listener playbooks               |
-| `scenarios/`       | End-to-end test scenarios (see [`scenarios/README.md`](scenarios/README.md)) |
-| `docs/prometheus/` | `prometheus.yml` (source of truth for metrics VM)                            |
-| `docs/grafana/`    | Proxy + listener dashboard JSON                                              |
-| `docs/`            | Network, listener/proxy, and troubleshooting docs                            |
+| Path | Purpose |
+|------|---------|
+| `Makefile` | `make test` targets for the Go Docker harness |
+| `harness/scenarios/` | Go test files — one per scenario |
+| `harness/build/` | Docker image builder (compiles binaries, creates minimal images) |
+| `harness/driver/` | Docker driver (container lifecycle, network) |
+| `harness/env/` | Network emulation (`tc netem`) and firewall (`ip6tables`) helpers |
+| `harness/metrics/` | Prometheus scraper and assertion helpers |
+| `vm-lab/` | LXD VM lab — see [`vm-lab/README.md`](vm-lab/README.md) |
 
-## VMs
+## LXD VM lab
 
-| VM          | mgmt (enp5s0) | egress (enp6s0) | Role                                                                      |
-| ----------- | ------------- | --------------- | ------------------------------------------------------------------------- |
-| `source`    | 10.10.10.10   | fd20::10/64     | runs `subtx-gen` to emit BRC-124 frames                                   |
-| `proxy`     | 10.10.10.20   | fd20::2/64      | `bitcoin-shard-proxy` ingress                                             |
-| `listener1` | 10.10.10.31   | fd20::21/64     | all shards, all subtrees; mc-egress re-emits ff05→ff02                    |
-| `listener2` | 10.10.10.32   | fd20::22/64     | shards 0,1 + subtree_exclude                                              |
-| `listener3` | 10.10.10.33   | fd20::23/64     | all shards + single subtree_include                                       |
-| `listener4` | 10.10.10.37   | fd20::27/64     | `ff02::` subscriber; terminal consumer for mc-egress bridge (scenario 05) |
-| `retry1`    | 10.10.10.34   | fd20::24/64     | `bitcoin-retry-endpoint` Tier 0 / Pref 128 (primary)                      |
-| `retry2`    | 10.10.10.35   | fd20::25/64     | `bitcoin-retry-endpoint` Tier 0 / Pref 64 (secondary)                     |
-| `retry3`    | 10.10.10.36   | fd20::26/64     | `bitcoin-retry-endpoint` Tier 1 / Pref 128 (escalation target)            |
-| `metrics`   | 10.10.10.142  | —               | Prometheus :9090 + Grafana :3000 (pre-existing)                           |
-
-## Documentation
-
-- [`docs/network.md`](docs/network.md) — bridge layout, VM IPs, multicast groups
-- [`docs/bitcoin-shard-proxy.md`](docs/bitcoin-shard-proxy.md) — proxy deploy notes
-- [`docs/bitcoin-shard-listener.md`](docs/bitcoin-shard-listener.md) — listener deploy notes
-- [`docs/retransmission-testing.md`](docs/retransmission-testing.md) — retry-endpoint deploy + NACK testing notes
-- [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) — common issues
-- [`scenarios/README.md`](scenarios/README.md) — test scenario index
-
-## Metrics
-
-The `metrics` VM hosts Prometheus and Grafana. After any topology change
-run:
-
-```bash
-bash lab/09-metrics-update.sh
-```
-
-This pushes the canonical `docs/prometheus/prometheus.yml` and imports
-both dashboards under `docs/grafana/` via the Grafana HTTP API.
+The legacy test lab provisions persistent LXD VMs and runs bash scenario
+scripts against them. See [`vm-lab/README.md`](vm-lab/README.md) for the
+VM quickstart, topology, and scenario index.

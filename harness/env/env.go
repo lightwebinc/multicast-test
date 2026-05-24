@@ -31,6 +31,23 @@ func (e *Env) AddNode(cfg driver.NodeConfig) {
 	e.nodes = append(e.nodes, cfg)
 }
 
+// PatchEnv merges extra environment variables into the named node's config.
+// Must be called before StartAll.
+func (e *Env) PatchEnv(name string, extra map[string]string) {
+	for i, cfg := range e.nodes {
+		if cfg.Name == name {
+			if e.nodes[i].Env == nil {
+				e.nodes[i].Env = make(map[string]string)
+			}
+			for k, v := range extra {
+				e.nodes[i].Env[k] = v
+			}
+			return
+		}
+	}
+	e.t.Fatalf("[env] PatchEnv: node %q not found", name)
+}
+
 // StartAll starts all registered nodes in registration order.
 // A cleanup function is registered with t.Cleanup to stop all nodes on test exit.
 func (e *Env) StartAll(ctx context.Context) {

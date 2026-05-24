@@ -50,6 +50,26 @@ func AssertGT(t *testing.T, label string, got float64) {
 	}
 }
 
+// AssertZero fails t if got != 0.
+func AssertZero(t *testing.T, label string, got float64) {
+	t.Helper()
+	if got == 0 {
+		t.Logf("PASS  %s: got 0", label)
+	} else {
+		t.Errorf("FAIL  %s: got %.0f (expected 0)", label, got)
+	}
+}
+
+// AssertLT fails t if got >= max.
+func AssertLT(t *testing.T, label string, got, max float64) {
+	t.Helper()
+	if got < max {
+		t.Logf("PASS  %s: got %.0f < %.0f", label, got, max)
+	} else {
+		t.Errorf("FAIL  %s: got %.0f >= %.0f", label, got, max)
+	}
+}
+
 // Delta returns after-before, handling Prometheus counter wraps (2^64).
 func Delta(before, after float64) float64 {
 	d := after - before

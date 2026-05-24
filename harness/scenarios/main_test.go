@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -42,11 +43,36 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	// 2. Create the multicast bridge (idempotent).
+	// 2. Pull external images used by some scenarios (Redis, FRR).
+	for _, img := range []string{"redis:7-alpine"} {
+		if err := dockerPull(ctx, img); err != nil {
+			fmt.Fprintf(os.Stderr, "pull %s failed: %v\n", img, err)
+			os.Exit(1)
+		}
+	}
+
+	// 3. Create the multicast bridge (idempotent).
 	if err := dockerdriver.CreateMcastBridge(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "bridge setup failed: %v\n", err)
 		os.Exit(1)
 	}
 
-	os.Exit(m.Run())
+	code := m.Run()
+	fmt.Fprintf(os.Stderr, "\n=== Scenario harness complete (exit code %d) ===\n", code)
+	os.Exit(code)
+}
+
+// dockerPull pulls a Docker image if not already present locally.
+func dockerPull(ctx context.Context, image string) error {
+	// Check if already present.
+	check := exec.CommandContext(ctx, "docker", "image", "inspect", "--format", "{{.Id}}", image)
+	if out, err := check.CombinedOutput(); err == nil && len(out) > 0 {
+		fmt.Fprintf(os.Stderr, "[pull] %s: already present\n", image)
+		return nil
+	}
+	fmt.Fprintf(os.Stderr, "[pull] %s: pulling...\n", image)
+	cmd := exec.CommandContext(ctx, "docker", "pull", image)
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }

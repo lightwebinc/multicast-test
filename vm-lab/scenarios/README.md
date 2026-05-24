@@ -41,12 +41,12 @@ target **1000 pps for 10 s** (10 000 frames).
 1. Create `NN-short-name/` with `README.md`, `run.sh`, `expected.md`.
 2. `run.sh` must be idempotent and self-contained: snapshot `/metrics`
    deltas, run the generator, assert pass/fail, exit non-zero on failure.
-3. Reference the shared helpers in `scenarios/lib/` rather than duplicating
+3. Reference the shared helpers in `lib/` rather than duplicating
    curl/jq code.
 
 ## Payload format (BRC-124 vs BRC-128)
 
-`scenarios/lib/common.sh` exposes `PAYLOAD_FORMAT` (default `brc124`).
+`lib/common.sh` exposes `PAYLOAD_FORMAT` (default `brc124`).
 Override to `brc128` or `mixed` to drive `subtx-gen -payload-format`,
 which switches the payload between BRC-12 raw transactions and BRC-30
 Extended Format (EF) transactions. The frame header is identical in both
@@ -54,7 +54,7 @@ cases (BRC-124 92-byte v2), so proxy/listener/retry behaviour is
 unchanged — scenarios 06/07/08 exercise this property end-to-end.
 
 ```bash
-PAYLOAD_FORMAT=brc128 bash scenarios/01-functional-all-shards/run.sh
+PAYLOAD_FORMAT=brc128 bash vm-lab/scenarios/01-functional-all-shards/run.sh
 ```
 
 ## Rotating the pinned subtree IDs
@@ -68,4 +68,4 @@ subtx-gen -subtrees 8 -subtree-seed 'multicast-lab-bsv' -print-subtrees
 
 Listener 2 excludes index 2; listener 3 includes only index 5. To rotate,
 change the `-subtree-seed` in both `ansible/listener-hosts.yml` and in
-`scenarios/lib/common.sh` (SUBTREE_SEED).
+`lib/common.sh` (SUBTREE_SEED).

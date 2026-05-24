@@ -3,9 +3,9 @@
 # summary.
 #
 # Usage:
-#   bash scenarios/run-all.sh               # skip 04-extended-dashboard (24h soak)
-#   RUN_EXTENDED=1 bash scenarios/run-all.sh # include all scenarios
-#   ONLY=99 bash scenarios/run-all.sh        # run only scenarios matching glob "99*"
+#   bash vm-lab/scenarios/run-all.sh               # skip 04-extended-dashboard (24h soak)
+#   RUN_EXTENDED=1 bash vm-lab/scenarios/run-all.sh # include all scenarios
+#   ONLY=99 bash vm-lab/scenarios/run-all.sh        # run only scenarios matching glob "99*"
 #
 # Exit code: 0 if all scenarios pass, 1 if any fail.
 set -uo pipefail

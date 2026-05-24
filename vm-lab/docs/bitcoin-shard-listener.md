@@ -85,10 +85,10 @@ done
 curl -s http://10.10.10.31:9200/metrics | grep bsl_frames_received_total
 
 # Run functional scenarios
-bash scenarios/01-functional-all-shards/run.sh
-bash scenarios/02-functional-shard-filter/run.sh
-bash scenarios/03-functional-subtree-filter/run.sh
-bash scenarios/05-mc-egress-bridge/run.sh
+bash vm-lab/scenarios/01-functional-all-shards/run.sh
+bash vm-lab/scenarios/02-functional-shard-filter/run.sh
+bash vm-lab/scenarios/03-functional-subtree-filter/run.sh
+bash vm-lab/scenarios/05-mc-egress-bridge/run.sh
 ```
 
 ## Known deployment notes

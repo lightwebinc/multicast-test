@@ -13,6 +13,7 @@ const (
 	RoleListener  Role = "listener"
 	RoleRetry     Role = "retry"
 	RoleGenerator Role = "generator"
+	RoleAux       Role = "aux"
 )
 
 // NodeConfig describes how a single node should be provisioned.
