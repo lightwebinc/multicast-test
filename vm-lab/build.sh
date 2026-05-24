@@ -12,7 +12,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+# vm-lab/ lives inside the bitcoin-multicast-test repo; sibling repos
+# (bitcoin-shard-proxy, bitcoin-shard-listener, ...) are checked out alongside
+# it under the parent directory.
+REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 BUILD_ENV=(
   GOOS=linux

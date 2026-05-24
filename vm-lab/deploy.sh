@@ -56,7 +56,7 @@ echo ""
 
 echo "==> Building and installing source VM binaries"
 (
-  SUBTX_ROOT="$(dirname "$SCRIPT_DIR")/bitcoin-subtx-generator"
+  SUBTX_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")/bitcoin-subtx-generator"
   GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false -o /tmp/subtx-gen            "$SUBTX_ROOT/cmd/subtx-gen"
   GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false -o /tmp/send-block-announce  "$SUBTX_ROOT/cmd/send-block-announce"
   GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false -o /tmp/send-subtree-data    "$SUBTX_ROOT/cmd/send-subtree-data"
