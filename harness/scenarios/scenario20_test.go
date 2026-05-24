@@ -55,7 +55,7 @@ func TestScenario20_SubtreeGroupAnnounce(t *testing.T) {
 		"-announce-addr", "[fd10::2]:9002",
 		"-subtree-group", "bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf",
 		"-announce-interval", "1s",
-		"-announce-ttl", "30s",
+		"-announce-ttl", "30",
 	)
 	startGenerator(t, ctx, "s20", announceCmd)
 

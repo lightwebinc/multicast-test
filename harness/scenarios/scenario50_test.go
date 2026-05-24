@@ -27,6 +27,7 @@ func TestScenario50_TxIDDedupBasic(t *testing.T) {
 		Name:  "s50-redis",
 		Image: "redis:7-alpine",
 		IPv6:  "fd10::30",
+		Cmd:   []string{"redis-server", "--bind", "::", "--protected-mode", "no"},
 		Role:  driver.RoleAux,
 	})
 
