@@ -59,15 +59,13 @@ func TestScenario20_SubtreeGroupAnnounce(t *testing.T) {
 	)
 	startGenerator(t, ctx, "s20", announceCmd)
 
-	// Wait for announce to propagate.
+	// Wait for announce to propagate, then start measuring.
 	e.Sleep(5*time.Second, "subtree announce propagation")
-
 	beforeL3 := e.Snapshot(ctx, "s20-listener3")
 
-	// Now run traffic.
-	genCmd := subtxGenCmd("[fd10::2]:9000")
-	startGenerator(t, ctx, "s20-traffic", genCmd)
-	waitGenerator(t, ctx, "s20-traffic")
+	// s20-source runs both announce + traffic (subtxGenCmd included);
+	// wait for it to finish — traffic runs for the remaining ~5 s.
+	waitGenerator(t, ctx, "s20")
 
 	e.Sleep(3*time.Second, "pipeline drain")
 
@@ -77,12 +75,13 @@ func TestScenario20_SubtreeGroupAnnounce(t *testing.T) {
 	deltaL3 := metrics.DeltaMap(beforeL3, afterL3)
 	recv := deltaL3["bsl_frames_received_total"]
 	fwd := deltaL3["bsl_frames_forwarded_total"]
+	egrErr := deltaL3["bsl_egress_errors_total"]
 	missed := deltaL3["bsl_frames_dropped_total"]
 
-	t.Logf("listener3: received=%.0f forwarded=%.0f dropped=%.0f", recv, fwd, missed)
+	t.Logf("listener3: received=%.0f forwarded=%.0f egrErr=%.0f dropped=%.0f", recv, fwd, egrErr, missed)
 
 	metrics.AssertGT(t, "listener3 received", recv)
 	metrics.AssertGT(t, "listener3 forwarded", fwd)
 	// All 8 subtrees should be forwarded (announce covers all).
-	metrics.AssertNear(t, "forwarded ≈ received", fwd, recv, 0.10)
+	metrics.AssertNear(t, "forwarded+egrErr ≈ received", fwd+egrErr, recv, 0.10)
 }

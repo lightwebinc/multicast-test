@@ -18,6 +18,9 @@ var _ driver.Driver = (*Driver)(nil)
 func New() *Driver { return &Driver{} }
 
 // Start runs a detached container with the given config.
+// If docker reports "Address already in use" (IPv6 address not yet released by
+// the kernel after the previous container was removed), it retries up to 5
+// times with 600 ms backoff before giving up.
 func (d *Driver) Start(ctx context.Context, cfg driver.NodeConfig) error {
 	args := []string{
 		"run", "-d",
@@ -36,8 +39,16 @@ func (d *Driver) Start(ctx context.Context, cfg driver.NodeConfig) error {
 	// arguments to the container's ENTRYPOINT (do not include the binary name).
 	args = append(args, cfg.Cmd...)
 
-	out, err := run(ctx, "docker", args...)
-	if err != nil {
+	const maxRetries = 5
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		out, err := run(ctx, "docker", args...)
+		if err == nil {
+			return nil
+		}
+		if strings.Contains(out+err.Error(), "Address already in use") && attempt < maxRetries {
+			time.Sleep(600 * time.Millisecond)
+			continue
+		}
 		return fmt.Errorf("docker run %s: %w\n%s", cfg.Name, err, out)
 	}
 	return nil

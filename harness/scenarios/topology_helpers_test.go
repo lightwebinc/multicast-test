@@ -124,17 +124,36 @@ func basicTopology(t *testing.T, prefix string) (*env.Env, map[string]string, ma
 	return e, l1env, l2env, l3env
 }
 
-// startGenerator starts the subtx-gen container and registers cleanup.
+// specialBinaries lists the harness images that have their own ENTRYPOINT and
+// are invoked by passing the binary name as cmd[0] from the test.
+var specialBinaries = map[string]string{
+	"send-block-announce": "send-block-announce:harness",
+	"send-subtree-data":   "send-subtree-data:harness",
+	"send-anchor-frame":   "send-anchor-frame:harness",
+}
+
+// startGenerator starts the source container and registers cleanup.
+// If cmd[0] is the name of a dedicated harness binary (e.g. "send-block-announce"),
+// that binary's image is used and cmd[0] is stripped so it is not passed as an
+// argument to the ENTRYPOINT. Otherwise bitcoin-subtx-generator:harness is used.
 // Returns after the container starts; caller should WaitForExit to wait for it.
 func startGenerator(t *testing.T, ctx context.Context, prefix string, cmd []string) {
 	t.Helper()
 	drv := dockerdriver.New()
 	name := prefix + "-source"
+	image := "bitcoin-subtx-generator:harness"
+	entryCmd := cmd
+	if len(cmd) > 0 {
+		if img, ok := specialBinaries[cmd[0]]; ok {
+			image = img
+			entryCmd = cmd[1:]
+		}
+	}
 	if err := drv.Start(ctx, driver.NodeConfig{
 		Name:  name,
-		Image: "bitcoin-subtx-generator:harness",
+		Image: image,
 		IPv6:  "fd10::3",
-		Cmd:   cmd,
+		Cmd:   entryCmd,
 		Role:  driver.RoleGenerator,
 	}); err != nil {
 		t.Fatalf("start source: %v", err)

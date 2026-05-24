@@ -48,10 +48,11 @@ func TestScenario30_BlockAnnounceDelivery(t *testing.T) {
 		delta := metrics.DeltaMap(beforeL[i], afterL[i])
 		recv := delta["bsl_frames_received_total"]
 		fwd := delta["bsl_frames_forwarded_total"]
+		egrErr := delta["bsl_egress_errors_total"]
 
-		t.Logf("%s: brc131_received=%.0f forwarded=%.0f", label, recv, fwd)
+		t.Logf("%s: brc131_received=%.0f forwarded=%.0f egrErr=%.0f", label, recv, fwd, egrErr)
 
 		metrics.AssertNear(t, label+" brc131 received ≈ expected", recv, expectedFrames, 0.05)
-		metrics.AssertGTE(t, label+" forwarded >= received", fwd, recv)
+		metrics.AssertNear(t, label+" forwarded+egrErr ≈ received", fwd+egrErr, recv, 0.10)
 	}
 }

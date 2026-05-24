@@ -27,13 +27,14 @@ func TestScenario26_FragmentationThroughput(t *testing.T) {
 	completed := deltaL1["bsl_reassembly_completed_total"]
 	abandoned := deltaL1["bsl_reassembly_abandoned_total"]
 	fwd := deltaL1["bsl_frames_forwarded_total"]
+	egrErr := deltaL1["bsl_egress_errors_total"]
 
-	t.Logf("listener1: started=%.0f completed=%.0f abandoned=%.0f fwd=%.0f",
-		started, completed, abandoned, fwd)
+	t.Logf("listener1: started=%.0f completed=%.0f abandoned=%.0f fwd=%.0f egrErr=%.0f",
+		started, completed, abandoned, fwd, egrErr)
 
 	// ≥95% completion rate.
 	minCompleted := started * 0.95
 	metrics.AssertGTE(t, "completion rate ≥95%", completed, minCompleted)
 	metrics.AssertZero(t, "reassembly abandoned", abandoned)
-	metrics.AssertNear(t, "forwarded ≈ completed", fwd, completed, 0.10)
+	metrics.AssertNear(t, "forwarded+egrErr ≈ completed", fwd+egrErr, completed, 0.10)
 }

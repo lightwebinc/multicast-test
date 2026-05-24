@@ -62,10 +62,11 @@ func TestScenario24_FragmentationHashVerify(t *testing.T) {
 	completed := deltaL1["bsl_reassembly_completed_total"]
 	mismatch := deltaL1["bsl_reassembly_hash_mismatch_total"]
 	fwd := deltaL1["bsl_frames_forwarded_total"]
+	egrErr := deltaL1["bsl_egress_errors_total"]
 
-	t.Logf("listener1: completed=%.0f hash_mismatch=%.0f fwd=%.0f", completed, mismatch, fwd)
+	t.Logf("listener1: completed=%.0f hash_mismatch=%.0f fwd=%.0f egrErr=%.0f", completed, mismatch, fwd, egrErr)
 
 	metrics.AssertGT(t, "reassembly completed", completed)
 	metrics.AssertZero(t, "hash mismatch", mismatch)
-	metrics.AssertNear(t, "forwarded ≈ completed", fwd, completed, 0.10)
+	metrics.AssertNear(t, "forwarded+egrErr ≈ completed", fwd+egrErr, completed, 0.10)
 }

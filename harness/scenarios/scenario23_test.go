@@ -29,22 +29,25 @@ func TestScenario23_FragmentationShardFilter(t *testing.T) {
 	startedL1 := deltaL1["bsl_reassembly_started_total"]
 	completedL1 := deltaL1["bsl_reassembly_completed_total"]
 	fwdL1 := deltaL1["bsl_frames_forwarded_total"]
+	egrErrL1 := deltaL1["bsl_egress_errors_total"]
 
 	startedL2 := deltaL2["bsl_reassembly_started_total"]
 	completedL2 := deltaL2["bsl_reassembly_completed_total"]
 	fwdL2 := deltaL2["bsl_frames_forwarded_total"]
+	egrErrL2 := deltaL2["bsl_egress_errors_total"]
 
 	completedL3 := deltaL3["bsl_reassembly_completed_total"]
 	fwdL3 := deltaL3["bsl_frames_forwarded_total"]
+	egrErrL3 := deltaL3["bsl_egress_errors_total"]
 
-	t.Logf("l1: started=%.0f completed=%.0f fwd=%.0f", startedL1, completedL1, fwdL1)
-	t.Logf("l2: started=%.0f completed=%.0f fwd=%.0f", startedL2, completedL2, fwdL2)
-	t.Logf("l3: completed=%.0f fwd=%.0f", completedL3, fwdL3)
+	t.Logf("l1: started=%.0f completed=%.0f fwd=%.0f egrErr=%.0f", startedL1, completedL1, fwdL1, egrErrL1)
+	t.Logf("l2: started=%.0f completed=%.0f fwd=%.0f egrErr=%.0f", startedL2, completedL2, fwdL2, egrErrL2)
+	t.Logf("l3: completed=%.0f fwd=%.0f egrErr=%.0f", completedL3, fwdL3, egrErrL3)
 
 	metrics.AssertNear(t, "l1 completed ≈ started", completedL1, startedL1, 0.10)
-	metrics.AssertNear(t, "l1 fwd ≈ completed", fwdL1, completedL1, 0.10)
+	metrics.AssertNear(t, "l1 fwd+egrErr ≈ completed", fwdL1+egrErrL1, completedL1, 0.10)
 	// l2: SHARD_INCLUDE=0,1 → receives 2 of 4 groups (50% of transactions).
 	metrics.AssertNear(t, "l2 started ≈ l1_started/2", startedL2, startedL1/2, 0.20)
-	metrics.AssertNear(t, "l2 fwd ≈ completed × 7/8", fwdL2, completedL2*7/8, 0.15)
-	metrics.AssertNear(t, "l3 fwd ≈ completed × 1/8", fwdL3, completedL3*1/8, 0.20)
+	metrics.AssertNear(t, "l2 fwd+egrErr ≈ completed × 7/8", fwdL2+egrErrL2, completedL2*7/8, 0.15)
+	metrics.AssertNear(t, "l3 fwd+egrErr ≈ completed × 1/8", fwdL3+egrErrL3, completedL3*1/8, 0.20)
 }

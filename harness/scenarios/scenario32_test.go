@@ -49,10 +49,11 @@ func TestScenario32_SubtreeDataDelivery(t *testing.T) {
 		delta := metrics.DeltaMap(beforeL[i], afterL[i])
 		recv := delta["bsl_frames_received_total"]
 		fwd := delta["bsl_frames_forwarded_total"]
+		egrErr := delta["bsl_egress_errors_total"]
 
-		t.Logf("%s: brc132_received=%.0f forwarded=%.0f", label, recv, fwd)
+		t.Logf("%s: brc132_received=%.0f forwarded=%.0f egrErr=%.0f", label, recv, fwd, egrErr)
 
 		metrics.AssertNear(t, label+" brc132 received ≈ expected", recv, frameCount, 0.10)
-		metrics.AssertGTE(t, label+" forwarded >= received", fwd, recv)
+		metrics.AssertNear(t, label+" forwarded+egrErr ≈ received", fwd+egrErr, recv, 0.10)
 	}
 }

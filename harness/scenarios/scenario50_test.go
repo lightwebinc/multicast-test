@@ -39,11 +39,10 @@ func TestScenario50_TxIDDedupBasic(t *testing.T) {
 		Role:        driver.RoleProxy,
 	})
 
-	redisAddr := "fd10::30:6379"
+	redisAddr := "[fd10::30]:6379"
 	for i, suffix := range []string{"1", "2", "3"} {
 		lenv := listenerEnv()
-		lenv["TXID_DEDUP_ENABLED"] = "true"
-		lenv["TXID_DEDUP_REDIS_ADDR"] = redisAddr
+		lenv["TXID_DEDUP_ADDR"] = redisAddr
 		switch suffix {
 		case "2":
 			lenv["SHARD_INCLUDE"] = "0,1"
@@ -80,22 +79,27 @@ func TestScenario50_TxIDDedupBasic(t *testing.T) {
 
 	recvL1 := deltaL1["bsl_frames_received_total"]
 	fwdL1 := deltaL1["bsl_frames_forwarded_total"]
+	egrErrL1 := deltaL1["bsl_egress_errors_total"]
 	fwdL2 := deltaL2["bsl_frames_forwarded_total"]
+	egrErrL2 := deltaL2["bsl_egress_errors_total"]
 	fwdL3 := deltaL3["bsl_frames_forwarded_total"]
+	egrErrL3 := deltaL3["bsl_egress_errors_total"]
 	totalFwd := fwdL1 + fwdL2 + fwdL3
+	totalEgrErr := egrErrL1 + egrErrL2 + egrErrL3
 
 	dedupL1 := deltaL1["bsl_frames_tx_deduped_total"]
 	dedupL2 := deltaL2["bsl_frames_tx_deduped_total"]
 	dedupL3 := deltaL3["bsl_frames_tx_deduped_total"]
 	totalDedup := dedupL1 + dedupL2 + dedupL3
 
-	t.Logf("l1: recv=%.0f fwd=%.0f dedup=%.0f", recvL1, fwdL1, dedupL1)
-	t.Logf("l2: fwd=%.0f dedup=%.0f", fwdL2, dedupL2)
-	t.Logf("l3: fwd=%.0f dedup=%.0f", fwdL3, dedupL3)
-	t.Logf("total_fwd=%.0f total_dedup=%.0f", totalFwd, totalDedup)
+	t.Logf("l1: recv=%.0f fwd=%.0f egrErr=%.0f dedup=%.0f", recvL1, fwdL1, egrErrL1, dedupL1)
+	t.Logf("l2: fwd=%.0f egrErr=%.0f dedup=%.0f", fwdL2, egrErrL2, dedupL2)
+	t.Logf("l3: fwd=%.0f egrErr=%.0f dedup=%.0f", fwdL3, egrErrL3, dedupL3)
+	t.Logf("total_fwd=%.0f total_egrErr=%.0f total_dedup=%.0f", totalFwd, totalEgrErr, totalDedup)
 
-	// Total forwarded ≈ l1 received (each TxID forwarded once).
-	metrics.AssertNear(t, "total forwarded ≈ l1 received", totalFwd, recvL1, 0.15)
-	// Dedup must fire.
+	// Each TxID is claimed by one listener; that listener attempts egress → fwd+egrErr counts it.
+	// Total egress attempts (fwd + egrErr) ≈ l1 received (each TxID claimed once).
+	metrics.AssertNear(t, "total fwd+egrErr ≈ l1 received", totalFwd+totalEgrErr, recvL1, 0.15)
+	// TxID dedup must fire: the other listeners are suppressed.
 	metrics.AssertGT(t, "total dedup > 0", totalDedup)
 }

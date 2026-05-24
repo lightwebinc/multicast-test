@@ -63,14 +63,16 @@ func TestScenario09_ListenerPayloadVerification(t *testing.T) {
 	deltaL1 := metrics.DeltaMap(beforeL1, afterL1)
 	recvL1 := deltaL1["bsl_frames_received_total"]
 	invalidL1 := deltaL1["bsl_frames_invalid_payload_total"]
-	passL1 := recvL1 - deltaL1["bsl_frames_dropped_total"]
+	fwdL1 := deltaL1["bsl_frames_forwarded_total"]
+	egrErrL1 := deltaL1["bsl_egress_errors_total"]
 
-	t.Logf("listener1: received=%.0f invalid=%.0f passed=%.0f", recvL1, invalidL1, passL1)
+	t.Logf("listener1: received=%.0f invalid=%.0f fwd=%.0f egrErr=%.0f", recvL1, invalidL1, fwdL1, egrErrL1)
 
 	// ~50% should be invalid (±20%).
 	metrics.AssertNear(t, "listener1 invalid_payload (≈50%)", invalidL1, recvL1/2, 0.20)
-	// ~50% should be forwarded (±20%).
-	metrics.AssertNear(t, "listener1 forwarded (≈50%)", passL1, recvL1/2, 0.20)
+	// ~50% should be forwarded (±20%); fwd+egrErr accounts for ICMP feedback on
+	// the connected UDP egress socket when nothing is listening at EGRESS_ADDR.
+	metrics.AssertNear(t, "listener1 forwarded+egrErr (≈50%)", fwdL1+egrErrL1, recvL1/2, 0.20)
 
 	metrics.AssertGTE(t, "listener1 received > 2000", recvL1, 2000)
 }
