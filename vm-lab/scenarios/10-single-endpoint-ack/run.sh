@@ -43,6 +43,31 @@ snapshot_retry() {
   done
 }
 
+echo "==> Restarting listeners to clear stale gap-tracker state..."
+for lvm in "${LISTENERS[@]}"; do
+  lxc exec "$lvm" -- systemctl restart bitcoin-shard-listener
+done
+
+echo "==> Waiting for listeners to be ready..."
+for i in "${!LISTENERS[@]}"; do
+  lvm="${LISTENERS[$i]}"; lip="${LISTENER_IPS[$i]}"
+  for try in $(seq 1 20); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "http://$lip:9200/healthz" || echo 000)
+    if [[ "$code" == "200" ]]; then
+      echo "     $lvm: ready"
+      break
+    fi
+    if [[ "$try" -eq 20 ]]; then
+      echo "FAIL  $lvm did not become ready within 60s"
+      exit 1
+    fi
+    sleep 3
+  done
+done
+
+# Allow beacon discovery to repopulate retry-endpoint registry post-restart.
+sleep 5
+
 echo "==> Injecting selective frame loss on listeners (1%) to create cacheable gaps"
 apply_listener_loss "1%"
 trap 'remove_listener_loss' EXIT
