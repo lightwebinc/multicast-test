@@ -23,15 +23,17 @@ func TestScenario25_FragmentationLoss(t *testing.T) {
 	e.StartAll(ctx)
 	e.Sleep(4*time.Second, "MLD querier settle")
 
+	// Snapshot before netem is applied so the HTTP metrics connection is reliable.
+	beforeL1 := e.Snapshot(ctx, "s25-listener1")
+
 	// 60% loss on all listeners (containers must be running).
-	for _, l := range []string{"s25-listener1", "s25-listener2", "s25-listener3"} {
+	listeners := []string{"s25-listener1", "s25-listener2", "s25-listener3"}
+	for _, l := range listeners {
 		if err := env.ApplyNetemLoss(ctx, l, 60.0); err != nil {
 			t.Fatalf("netem loss %s: %v", l, err)
 		}
 		t.Cleanup(func() { env.RemoveNetemLoss(ctx, l) }) //nolint:errcheck
 	}
-
-	beforeL1 := e.Snapshot(ctx, "s25-listener1")
 
 	genCmd := subtxGenCmd("[fd10::2]:9000")
 	genCmd = append(genCmd, "-payload-size", "2048")
@@ -40,6 +42,12 @@ func TestScenario25_FragmentationLoss(t *testing.T) {
 
 	// Wait for reassembly TTL to expire on incomplete slots.
 	e.Sleep(15*time.Second, "reassembly TTL eviction")
+
+	// Remove netem before scraping so TCP metrics connections are reliable.
+	// t.Cleanup will also attempt removal but handles the already-removed case.
+	for _, l := range listeners {
+		env.RemoveNetemLoss(ctx, l) //nolint:errcheck
+	}
 
 	urlL1 := e.MetricsURL(ctx, "s25-listener1")
 	afterL1 := metrics.ScrapeOrFail(t, urlL1)

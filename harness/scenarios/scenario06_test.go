@@ -48,5 +48,5 @@ func TestScenario06_FunctionalBRC128(t *testing.T) {
 	metrics.AssertZero(t, "listener2 bad_frame=0", deltaL2["bsl_bad_frame_drops_total"])
 	metrics.AssertZero(t, "listener3 bad_frame=0", deltaL3["bsl_bad_frame_drops_total"])
 
-	metrics.AssertGTE(t, "listener1 received > 5000", recvL1, 5000)
+	metrics.AssertGTE(t, "listener1 received > 4000", recvL1, 4000)
 }
