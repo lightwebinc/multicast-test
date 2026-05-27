@@ -18,7 +18,13 @@ import (
 func TestScenario34_SubtreeDataRetransmit(t *testing.T) {
 	ctx := context.Background()
 	e, _ := retryTopology(t, "s34")
-	e.PatchEnv("s34-proxy", map[string]string{"TCP_LISTEN_PORT": "9002"})
+	// TXID_DEDUP_LOCAL_CAP=0 disables the proxy's ingress dedup so multiple
+	// V5 frames sharing a SubtreeID (the dedup key for BRC-132) all flow and
+	// build a per-SubtreeID SeqNum chain that gap detection can observe.
+	e.PatchEnv("s34-proxy", map[string]string{
+		"TCP_LISTEN_PORT":      "9002",
+		"TXID_DEDUP_LOCAL_CAP": "0",
+	})
 	for _, l := range []string{"s34-listener1", "s34-listener2", "s34-listener3"} {
 		e.PatchEnv(l, map[string]string{"SUBTREE_DATA_ENABLED": "true"})
 	}

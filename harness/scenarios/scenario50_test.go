@@ -44,6 +44,10 @@ func TestScenario50_TxIDDedupBasic(t *testing.T) {
 	for i, suffix := range []string{"1", "2", "3"} {
 		lenv := listenerEnv()
 		lenv["TXID_DEDUP_ADDR"] = redisAddr
+		// Share DeploymentID across listeners so they race against the same
+		// Redis prefix; the default (hostname) would give each listener its
+		// own namespace and dedup would never fire.
+		lenv["DEPLOYMENT_ID"] = "s50"
 		switch suffix {
 		case "2":
 			lenv["SHARD_INCLUDE"] = "0,1"
