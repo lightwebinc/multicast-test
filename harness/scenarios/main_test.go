@@ -29,8 +29,8 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "getwd: %v\n", err)
 		os.Exit(1)
 	}
-	// wd = /path/to/bitcoin-multicast-test/harness/scenarios
-	// repoRoot = /path/to (parent of bitcoin-multicast-test)
+	// wd = /path/to/multicast-test/harness/scenarios
+	// repoRoot = /path/to (parent of multicast-test)
 	repoRoot = filepath.Dir(filepath.Dir(filepath.Dir(wd)))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
