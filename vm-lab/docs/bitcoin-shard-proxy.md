@@ -22,7 +22,6 @@ Inventory lives in this repo at
 [`ansible/ingress-hosts.yml`](../ansible/ingress-hosts.yml) and is
 invoked by `ansible/run-deploy.sh`. See
 [ingress-infra docs/ansible.md](https://github.com/lightwebinc/ingress-infra/blob/main/docs/ansible.md)
-and [docs/lxd-lab.md](https://github.com/lightwebinc/ingress-infra/blob/main/docs/lxd-lab.md)
 for full playbook documentation.
 
 ```yaml

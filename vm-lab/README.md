@@ -1,11 +1,13 @@
 # LXD VM Lab
 
+> **Status: legacy.** The primary test framework is the Go Docker harness in
+> [`harness/`](../harness/); see the [top-level README](../README.md) for
+> quickstart. This VM lab is preserved for compatibility testing on real
+> distributions and for scenarios that need persistent state across runs.
+
 Linux LXD-based end-to-end test lab for the Bitcoin sharding pipeline. This
 provisions persistent Ubuntu VMs on a host machine and runs bash scenario
 scripts against them over an IPv6 multicast fabric (`fd20::/64`).
-
-> **Note:** The primary test framework is the Go Docker harness in `harness/`.
-> See the [top-level README](../README.md) for quickstart.
 
 ## Quickstart
 
