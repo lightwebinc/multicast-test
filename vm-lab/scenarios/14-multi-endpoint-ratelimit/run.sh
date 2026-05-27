@@ -92,7 +92,7 @@ apply_tight_rl() {
   echo "==> Applying tight RL config (IP rate=${RL_IP_RATE} burst=${RL_IP_BURST} seq_max=${RL_SEQUENCE_MAX} window=${RL_SEQUENCE_WINDOW} chain_rate=${RL_CHAIN_RATE} group_rate=${RL_GROUP_RATE})..."
   # NOTE: systemd Environment= drop-ins are overridden by EnvironmentFile= when
   # the file is read at service start. Modify config.env in-place instead.
-  local env_file="/etc/bitcoin-retry-endpoint/config.env"
+  local env_file="/etc/retry-endpoint/config.env"
   for vm in "$RETRY1_VM" "$RETRY2_VM" "$RETRY3_VM"; do
     lxc exec "$vm" -- bash -c "
       cp ${env_file} ${env_file}.bak
@@ -104,7 +104,7 @@ apply_tight_rl() {
       sed -i 's|^RL_CHAIN_WINDOW=.*|RL_CHAIN_WINDOW=${RL_CHAIN_WINDOW}|'   ${env_file}
       sed -i 's|^RL_GROUP_RATE=.*|RL_GROUP_RATE=${RL_GROUP_RATE}|'         ${env_file}
       sed -i 's|^RL_GROUP_BURST=.*|RL_GROUP_BURST=${RL_GROUP_BURST}|'      ${env_file}
-      systemctl restart bitcoin-retry-endpoint
+      systemctl restart retry-endpoint
     "
     echo "     $vm: tight RL applied + restarted"
   done
@@ -117,15 +117,15 @@ restore_rl() {
   [[ -n "$COMPROMISED_PID" ]] && kill "$COMPROMISED_PID" 2>/dev/null || true
   # Reload nftables from disk to remove temporary flood rules.
   for _fvm in listener4 listener1; do
-    lxc exec "$_fvm" -- nft -f /etc/nftables.d/60-bitcoin-listener.nft 2>/dev/null || true
+    lxc exec "$_fvm" -- nft -f /etc/nftables.d/60-listener-infra.nft 2>/dev/null || true
   done
   echo "==> Cleanup: restoring original config.env and restarting endpoints..."
-  local env_file="/etc/bitcoin-retry-endpoint/config.env"
+  local env_file="/etc/retry-endpoint/config.env"
   for vm in "$RETRY1_VM" "$RETRY2_VM" "$RETRY3_VM"; do
     lxc exec "$vm" -- bash -c "
       if [ -f ${env_file}.bak ]; then
         mv ${env_file}.bak ${env_file}
-        systemctl restart bitcoin-retry-endpoint
+        systemctl restart retry-endpoint
       fi
     " || true
     echo "     $vm: RL config restored"
@@ -198,7 +198,7 @@ snapshot_retry "$RETRY3_VM" "$RETRY3_IP" "$RETRY3_METRICS_PORT" "$R3_BEFORE"
 echo "==> Adding temporary nft rules for flood source VMs..."
 for _fvm in listener4 listener1; do
   for _rip in "$RETRY1_FABRIC" "$RETRY2_FABRIC" "$RETRY3_FABRIC"; do
-    lxc exec "$_fvm" -- nft insert rule inet bitcoin-listener output \
+    lxc exec "$_fvm" -- nft insert rule inet listener-infra output \
       oifname enp6s0 ip6 daddr "$_rip" udp dport "$NACK_PORT" accept 2>/dev/null || true
   done
 done

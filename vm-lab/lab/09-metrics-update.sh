@@ -5,7 +5,7 @@
 # Prereqs:
 #   - `metrics` LXD VM is RUNNING with prometheus (:9090) and grafana (:3000)
 #     already installed (same instance used in previous proxy tests).
-#   - docs/prometheus/prometheus.yml and docs/grafana/bitcoin-shard-listener.json
+#   - docs/prometheus/prometheus.yml and docs/grafana/shard-listener.json
 #     checked into this repo.
 set -euo pipefail
 exec </dev/null
@@ -13,9 +13,9 @@ exec </dev/null
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROM_FILE="$REPO_DIR/docs/prometheus/prometheus.yml"
-DASH_PROXY="$REPO_DIR/docs/grafana/bitcoin-shard-proxy.json"
-DASH_LISTENER="$REPO_DIR/docs/grafana/bitcoin-shard-listener.json"
-DASH_RETRY="$REPO_DIR/docs/grafana/bitcoin-retry-endpoint.json"
+DASH_PROXY="$REPO_DIR/docs/grafana/shard-proxy.json"
+DASH_LISTENER="$REPO_DIR/docs/grafana/shard-listener.json"
+DASH_RETRY="$REPO_DIR/docs/grafana/retry-endpoint.json"
 
 METRICS_VM=${METRICS_VM:-metrics}
 METRICS_IP=${METRICS_IP:-10.10.10.142}

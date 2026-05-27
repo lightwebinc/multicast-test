@@ -12,8 +12,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# vm-lab/ lives inside the bitcoin-multicast-test repo; sibling repos
-# (bitcoin-shard-proxy, bitcoin-shard-listener, ...) are checked out alongside
+# vm-lab/ lives inside the multicast-test repo; sibling repos
+# (shard-proxy, shard-listener, ...) are checked out alongside
 # it under the parent directory.
 REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
@@ -47,16 +47,16 @@ push_source_vm() {
 }
 
 echo "================================================="
-echo " bitcoin-multicast-test — build all binaries"
+echo " multicast-test — build all binaries"
 echo "================================================="
 echo ""
 
-build_one "bitcoin-shard-proxy"    "$REPO_ROOT/bitcoin-shard-proxy"    /tmp/bitcoin-shard-proxy
-build_one "bitcoin-shard-listener" "$REPO_ROOT/bitcoin-shard-listener" /tmp/bitcoin-shard-listener
-build_one "bitcoin-retry-endpoint" "$REPO_ROOT/bitcoin-retry-endpoint" /tmp/bitcoin-retry-endpoint
-build_one "subtx-gen"            "$REPO_ROOT/bitcoin-subtx-generator/cmd/subtx-gen"            /tmp/subtx-gen
-build_one "send-block-announce"  "$REPO_ROOT/bitcoin-subtx-generator/cmd/send-block-announce"  /tmp/send-block-announce
-build_one "send-subtree-data"    "$REPO_ROOT/bitcoin-subtx-generator/cmd/send-subtree-data"    /tmp/send-subtree-data
+build_one "shard-proxy"    "$REPO_ROOT/shard-proxy"    /tmp/shard-proxy
+build_one "shard-listener" "$REPO_ROOT/shard-listener" /tmp/shard-listener
+build_one "retry-endpoint" "$REPO_ROOT/retry-endpoint" /tmp/retry-endpoint
+build_one "subtx-gen"            "$REPO_ROOT/subtx-generator/cmd/subtx-gen"            /tmp/subtx-gen
+build_one "send-block-announce"  "$REPO_ROOT/subtx-generator/cmd/send-block-announce"  /tmp/send-block-announce
+build_one "send-subtree-data"    "$REPO_ROOT/subtx-generator/cmd/send-subtree-data"    /tmp/send-subtree-data
 
 echo ""
 echo "==> Pushing source VM binaries"

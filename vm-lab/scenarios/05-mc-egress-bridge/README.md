@@ -17,7 +17,7 @@ domain boundary.
   (new VM: 10.10.10.37 / fd20::27)
 - New binary (`bsl-new`) pushed to all four listener VMs
 - listener1 nft OUTPUT chain includes the mc-egress rule
-  (`bitcoin-listener.nft.j2` rendered with `mc_egress_enabled=true`)
+  (`listener-infra.nft.j2` rendered with `mc_egress_enabled=true`)
 
 ## Expected
 

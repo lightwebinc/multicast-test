@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/driver"
-	dockerdriver "github.com/lightwebinc/bitcoin-multicast-test/harness/driver/docker"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/env"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/driver"
+	dockerdriver "github.com/lightwebinc/multicast-test/harness/driver/docker"
+	"github.com/lightwebinc/multicast-test/harness/env"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 05 — Multicast egress bridge (group re-mapping)
@@ -23,7 +23,7 @@ func TestScenario05_McEgressBridge(t *testing.T) {
 
 	e.AddNode(driver.NodeConfig{
 		Name:        "s05-proxy",
-		Image:       "bitcoin-shard-proxy:harness",
+		Image:       "shard-proxy:harness",
 		IPv6:        "fd10::2",
 		Env:         proxyEnv(),
 		MetricsPort: 9100,
@@ -35,7 +35,7 @@ func TestScenario05_McEgressBridge(t *testing.T) {
 	l1env["MC_EGRESS_SCOPE"] = "link"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s05-listener1",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::11",
 		Env:         l1env,
 		MetricsPort: 9200,
@@ -47,7 +47,7 @@ func TestScenario05_McEgressBridge(t *testing.T) {
 	l4env["BEACON_ENABLED"] = "false"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s05-listener4",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::14",
 		Env:         l4env,
 		MetricsPort: 9201,

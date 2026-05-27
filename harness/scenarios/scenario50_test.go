@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/driver"
-	dockerdriver "github.com/lightwebinc/bitcoin-multicast-test/harness/driver/docker"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/env"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/driver"
+	dockerdriver "github.com/lightwebinc/multicast-test/harness/driver/docker"
+	"github.com/lightwebinc/multicast-test/harness/env"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 50 — TxID dedup basic: cross-listener deduplication
@@ -33,7 +33,7 @@ func TestScenario50_TxIDDedupBasic(t *testing.T) {
 
 	e.AddNode(driver.NodeConfig{
 		Name:        "s50-proxy",
-		Image:       "bitcoin-shard-proxy:harness",
+		Image:       "shard-proxy:harness",
 		IPv6:        "fd10::2",
 		Env:         proxyEnv(),
 		MetricsPort: 9100,
@@ -53,7 +53,7 @@ func TestScenario50_TxIDDedupBasic(t *testing.T) {
 		}
 		e.AddNode(driver.NodeConfig{
 			Name:        "s50-listener" + suffix,
-			Image:       "bitcoin-shard-listener:harness",
+			Image:       "shard-listener:harness",
 			IPv6:        fmt.Sprintf("fd10::1%d", i+1),
 			Env:         lenv,
 			MetricsPort: 9200,

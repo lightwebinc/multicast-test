@@ -2,7 +2,7 @@
 // host and package them into minimal Docker images for the test harness.
 //
 // All component repos share a private dependency on
-// github.com/lightwebinc/bitcoin-shard-common. Because the module is not
+// github.com/lightwebinc/shard-common. Because the module is not
 // publicly available on the Go module proxy, the standard "go mod download"
 // inside a docker build would fail. Instead, this package:
 //
@@ -22,7 +22,7 @@ import (
 	"text/template"
 )
 
-const commonModule = "github.com/lightwebinc/bitcoin-shard-common"
+const commonModule = "github.com/lightwebinc/shard-common"
 
 // ImageSpec describes one component image to build.
 type ImageSpec struct {
@@ -33,14 +33,14 @@ type ImageSpec struct {
 	MainPkg string
 	// Binary is the output binary filename (no path).
 	Binary string
-	// Tag is the Docker image tag, e.g. "bitcoin-shard-proxy:harness".
+	// Tag is the Docker image tag, e.g. "shard-proxy:harness".
 	Tag string
 }
 
-// commonDir returns the absolute path of bitcoin-shard-common, which must
+// commonDir returns the absolute path of shard-common, which must
 // live alongside all component repos under the same parent.
 func commonDir(anyRepoDir string) string {
-	return filepath.Join(filepath.Dir(anyRepoDir), "bitcoin-shard-common")
+	return filepath.Join(filepath.Dir(anyRepoDir), "shard-common")
 }
 
 // BuildAll builds Docker images for all given specs. If a spec's image already
@@ -64,7 +64,7 @@ func Build(ctx context.Context, s ImageSpec, force bool) error {
 	}
 	fmt.Fprintf(os.Stderr, "[build] building %s from %s\n", s.Tag, s.RepoDir)
 
-	// 1. Resolve how to provide bitcoin-shard-common inside the build.
+	// 1. Resolve how to provide shard-common inside the build.
 	// Prefer the go.work workspace file in the parent directory, which
 	// already lists all component repos (including shard-common). If found,
 	// pass GOWORK to the compiler so go module replace magic is automatic.
@@ -77,7 +77,7 @@ func Build(ctx context.Context, s ImageSpec, force bool) error {
 	} else {
 		commonPath := commonDir(s.RepoDir)
 		if _, err2 := os.Stat(commonPath); err2 != nil {
-			return fmt.Errorf("bitcoin-shard-common not found at %s and no go.work: %w", commonPath, err2)
+			return fmt.Errorf("shard-common not found at %s and no go.work: %w", commonPath, err2)
 		}
 		if err3 := modReplace(ctx, s.RepoDir, commonPath); err3 != nil {
 			return fmt.Errorf("go mod edit -replace: %w", err3)
@@ -141,43 +141,43 @@ func Build(ctx context.Context, s ImageSpec, force bool) error {
 func DefaultSpecs(repoRoot string) []ImageSpec {
 	return []ImageSpec{
 		{
-			RepoDir: filepath.Join(repoRoot, "bitcoin-shard-proxy"),
+			RepoDir: filepath.Join(repoRoot, "shard-proxy"),
 			MainPkg: ".",
-			Binary:  "bitcoin-shard-proxy",
-			Tag:     "bitcoin-shard-proxy:harness",
+			Binary:  "shard-proxy",
+			Tag:     "shard-proxy:harness",
 		},
 		{
-			RepoDir: filepath.Join(repoRoot, "bitcoin-shard-listener"),
+			RepoDir: filepath.Join(repoRoot, "shard-listener"),
 			MainPkg: ".",
-			Binary:  "bitcoin-shard-listener",
-			Tag:     "bitcoin-shard-listener:harness",
+			Binary:  "shard-listener",
+			Tag:     "shard-listener:harness",
 		},
 		{
-			RepoDir: filepath.Join(repoRoot, "bitcoin-retry-endpoint"),
+			RepoDir: filepath.Join(repoRoot, "retry-endpoint"),
 			MainPkg: ".",
-			Binary:  "bitcoin-retry-endpoint",
-			Tag:     "bitcoin-retry-endpoint:harness",
+			Binary:  "retry-endpoint",
+			Tag:     "retry-endpoint:harness",
 		},
 		{
-			RepoDir: filepath.Join(repoRoot, "bitcoin-subtx-generator"),
+			RepoDir: filepath.Join(repoRoot, "subtx-generator"),
 			MainPkg: "./cmd/subtx-gen",
 			Binary:  "subtx-gen",
-			Tag:     "bitcoin-subtx-generator:harness",
+			Tag:     "subtx-generator:harness",
 		},
 		{
-			RepoDir: filepath.Join(repoRoot, "bitcoin-subtx-generator"),
+			RepoDir: filepath.Join(repoRoot, "subtx-generator"),
 			MainPkg: "./cmd/send-block-announce",
 			Binary:  "send-block-announce",
 			Tag:     "send-block-announce:harness",
 		},
 		{
-			RepoDir: filepath.Join(repoRoot, "bitcoin-subtx-generator"),
+			RepoDir: filepath.Join(repoRoot, "subtx-generator"),
 			MainPkg: "./cmd/send-subtree-data",
 			Binary:  "send-subtree-data",
 			Tag:     "send-subtree-data:harness",
 		},
 		{
-			RepoDir: filepath.Join(repoRoot, "bitcoin-subtx-generator"),
+			RepoDir: filepath.Join(repoRoot, "subtx-generator"),
 			MainPkg: "./cmd/send-anchor-frame",
 			Binary:  "send-anchor-frame",
 			Tag:     "send-anchor-frame:harness",
@@ -192,7 +192,7 @@ func imageExists(ctx context.Context, tag string) bool {
 	return err == nil && len(strings.TrimSpace(string(out))) > 0
 }
 
-// modReplace adds a replace directive for bitcoin-shard-common to go.mod.
+// modReplace adds a replace directive for shard-common to go.mod.
 func modReplace(ctx context.Context, repoDir, commonPath string) error {
 	cmd := exec.CommandContext(ctx, "go", "mod", "edit",
 		"-replace", commonModule+"="+commonPath,
@@ -205,7 +205,7 @@ func modReplace(ctx context.Context, repoDir, commonPath string) error {
 	return nil
 }
 
-// modDropReplace removes the replace directive for bitcoin-shard-common.
+// modDropReplace removes the replace directive for shard-common.
 func modDropReplace(ctx context.Context, repoDir string) error {
 	cmd := exec.CommandContext(ctx, "go", "mod", "edit",
 		"-dropreplace", commonModule,

@@ -37,8 +37,8 @@ restore() {
   for vm in "${_TCP_RESTORED_VMS[@]+"${_TCP_RESTORED_VMS[@]}"}"; do
     echo "==> [cleanup] Disabling TCP ingress on $vm"
     lxc exec "$vm" -- bash -c "
-      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/bitcoin-shard-proxy/config.env
-      systemctl restart bitcoin-shard-proxy
+      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/shard-proxy/config.env
+      systemctl restart shard-proxy
     " || true
   done
 }
@@ -46,13 +46,13 @@ trap restore EXIT
 
 for _pvm in "${PROXY_VMS[@]}"; do
   _was_zero=$(lxc exec "$_pvm" -- bash -c "
-    grep -q '^TCP_LISTEN_PORT=0' /etc/bitcoin-shard-proxy/config.env && echo 1 || echo 0
+    grep -q '^TCP_LISTEN_PORT=0' /etc/shard-proxy/config.env && echo 1 || echo 0
   " 2>/dev/null || echo 0)
   if [[ "$_was_zero" -eq 1 ]]; then
     echo "==> Enabling TCP ingress on $_pvm (port 9002)"
     lxc exec "$_pvm" -- bash -c "
-      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/bitcoin-shard-proxy/config.env
-      systemctl restart bitcoin-shard-proxy
+      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/shard-proxy/config.env
+      systemctl restart shard-proxy
     "
     _TCP_RESTORED_VMS+=("$_pvm")
   fi

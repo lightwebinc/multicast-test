@@ -1,10 +1,10 @@
-# bitcoin-multicast-test
+# multicast-test
 
 End-to-end test suite for the Bitcoin multicast sharding pipeline. Validates
-[`bitcoin-shard-proxy`](https://github.com/lightwebinc/bitcoin-shard-proxy),
-[`bitcoin-shard-listener`](https://github.com/lightwebinc/bitcoin-shard-listener),
-[`bitcoin-retry-endpoint`](https://github.com/lightwebinc/bitcoin-retry-endpoint),
-and [`bitcoin-subtx-generator`](https://github.com/lightwebinc/bitcoin-subtx-generator)
+[`shard-proxy`](https://github.com/lightwebinc/shard-proxy),
+[`shard-listener`](https://github.com/lightwebinc/shard-listener),
+[`retry-endpoint`](https://github.com/lightwebinc/retry-endpoint),
+and [`subtx-generator`](https://github.com/lightwebinc/subtx-generator)
 working together over an IPv6 multicast fabric.
 
 Two test frameworks are provided:

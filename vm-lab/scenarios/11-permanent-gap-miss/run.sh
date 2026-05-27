@@ -73,7 +73,7 @@ trap 'remove_listener_loss; unblock_retry_ingress' EXIT
 # --- Phase 1: restart all retry endpoints to flush caches, then block ingress ------
 echo "==> Restarting all retry endpoint services to flush in-memory caches"
 for vm in "$RETRY_VM" "$RETRY2_VM" "$RETRY3_VM"; do
-  lxc exec "$vm" -- systemctl restart bitcoin-retry-endpoint
+  lxc exec "$vm" -- systemctl restart retry-endpoint
   echo "     $vm: restarted"
 done
 sleep 2

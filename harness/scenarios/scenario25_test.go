@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/env"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/env"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 25 — BRC-130 fragmentation: fragment loss / reassembly abandonment

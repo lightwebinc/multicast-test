@@ -4,12 +4,12 @@
 pass criteria and the most recent run, and run [`run.sh`](run.sh) to execute.
 
 Topology requires a `retry1` VM (provisioned by `lab/03-launch.sh`,
-`lab/06-netplan.sh`, etc.) and the `bitcoin-retransmission` ansible
+`lab/06-netplan.sh`, etc.) and the `retransmission-infra` ansible
 playbook deployed via:
 
 ```bash
-cd ~/repo/bitcoin-retransmission/ansible
-ansible-playbook -i ~/repo/bitcoin-multicast-test/ansible/retry-hosts.yml site.yml
+cd ~/repo/retransmission-infra/ansible
+ansible-playbook -i ~/repo/multicast-test/ansible/retry-hosts.yml site.yml
 ```
 
 Listeners must be re-deployed (or `--tags firewall,listener`) after
@@ -41,7 +41,7 @@ Assertions (all listeners):
 
 ## Activation checklist (once retry-endpoint exists)
 
-1. Deploy `bitcoin-retry-endpoint` to a new VM (e.g. `retry1`).
+1. Deploy `retry-endpoint` to a new VM (e.g. `retry1`).
 2. Set `retry_endpoints: "10.10.10.<retry-ip>:9300"` in
    `ansible/listener-hosts.yml` group vars.
 3. Re-run `ansible/run-deploy.sh` and `lab/09-metrics-update.sh`.

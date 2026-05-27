@@ -68,7 +68,7 @@ done
 # (retry1/retry2 blocked) and can overwhelm it during run-all.
 echo "==> Restarting listeners to clear stale gap-tracker state..."
 for lvm in listener1 listener2 listener3; do
-  lxc exec "$lvm" -- systemctl restart bitcoin-shard-listener
+  lxc exec "$lvm" -- systemctl restart shard-listener
 done
 
 echo "==> Waiting for listeners to be ready..."
@@ -89,8 +89,8 @@ for lvm_ip in "listener1:10.10.10.31" "listener2:10.10.10.32" "listener3:10.10.1
 done
 
 echo "==> Restarting retry1 and retry2 to flush in-memory caches..."
-lxc exec "$RETRY1_VM" -- systemctl restart bitcoin-retry-endpoint
-lxc exec "$RETRY2_VM" -- systemctl restart bitcoin-retry-endpoint
+lxc exec "$RETRY1_VM" -- systemctl restart retry-endpoint
+lxc exec "$RETRY2_VM" -- systemctl restart retry-endpoint
 
 echo "==> Waiting for retry1 and retry2 to be ready..."
 for vm_ip_port in "$RETRY1_VM $RETRY1_IP:$RETRY1_METRICS_PORT" "$RETRY2_VM $RETRY2_IP:$RETRY2_METRICS_PORT"; do

@@ -1,6 +1,6 @@
 {
-  "title": "bitcoin-retry-endpoint",
-  "uid": "bitcoin-retry-endpoint",
+  "title": "retry-endpoint",
+  "uid": "retry-endpoint",
   "schemaVersion": 39,
   "tags": ["bitcoin", "retry-endpoint", "multicast-lab"],
   "timezone": "browser",
@@ -128,13 +128,13 @@
       "type": "timeseries", "title": "Goroutines",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 37}, "id": 41,
-      "targets": [{"expr": "go_goroutines{job=\"bitcoin-retry-endpoint\", instance=~\"$instance\"}", "refId": "A", "legendFormat": "{{instance}}"}]
+      "targets": [{"expr": "go_goroutines{job=\"retry-endpoint\", instance=~\"$instance\"}", "refId": "A", "legendFormat": "{{instance}}"}]
     },
     {
       "type": "timeseries", "title": "Resident memory (RSS)",
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 37}, "id": 42,
-      "targets": [{"expr": "process_resident_memory_bytes{job=\"bitcoin-retry-endpoint\", instance=~\"$instance\"}", "refId": "A", "legendFormat": "{{instance}}"}],
+      "targets": [{"expr": "process_resident_memory_bytes{job=\"retry-endpoint\", instance=~\"$instance\"}", "refId": "A", "legendFormat": "{{instance}}"}],
       "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
     },
     {

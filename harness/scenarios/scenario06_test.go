@@ -3,7 +3,7 @@ package scenarios
 import (
 	"testing"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 06 — Functional BRC-128 (Extended Format payload)

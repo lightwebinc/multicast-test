@@ -3,7 +3,7 @@ package scenarios
 import (
 	"testing"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 26 — BRC-130 fragmentation: high-throughput delivery ratio

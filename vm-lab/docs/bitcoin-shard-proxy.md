@@ -1,14 +1,14 @@
-# bitcoin-shard-proxy integration
+# shard-proxy integration
 
-The `proxy` VM runs [bitcoin-shard-proxy](https://github.com/lightwebinc/bitcoin-shard-proxy), deployed via the [bitcoin-ingress](https://github.com/lightwebinc/bitcoin-ingress) Ansible playbook.
+The `proxy` VM runs [shard-proxy](https://github.com/lightwebinc/shard-proxy), deployed via the [ingress-infra](https://github.com/lightwebinc/ingress-infra) Ansible playbook.
 
 ## Deployed state
 
 | Item       | Value                                                        |
 | ---------- | ------------------------------------------------------------ |
-| Binary     | `/usr/local/bin/bitcoin-shard-proxy`                         |
-| Config     | `/etc/bitcoin-shard-proxy/config.env`                        |
-| Service    | `bitcoin-shard-proxy.service` (systemd, enabled)             |
+| Binary     | `/usr/local/bin/shard-proxy`                         |
+| Config     | `/etc/shard-proxy/config.env`                        |
+| Service    | `shard-proxy.service` (systemd, enabled)             |
 | Listen     | `[::]:9000` UDP — BRC-124/BRC-128 (or legacy BRC-12) frames in |
 | Egress     | `enp6s0` → `ff05::/16` (site-local multicast)                |
 | Shard bits | `2` (4 groups: `ff05::b:0`–`ff05::b:3`)                          |
@@ -21,8 +21,8 @@ The `proxy` VM runs [bitcoin-shard-proxy](https://github.com/lightwebinc/bitcoin
 Inventory lives in this repo at
 [`ansible/ingress-hosts.yml`](../ansible/ingress-hosts.yml) and is
 invoked by `ansible/run-deploy.sh`. See
-[bitcoin-ingress docs/ansible.md](https://github.com/lightwebinc/bitcoin-ingress/blob/main/docs/ansible.md)
-and [docs/lxd-lab.md](https://github.com/lightwebinc/bitcoin-ingress/blob/main/docs/lxd-lab.md)
+[ingress-infra docs/ansible.md](https://github.com/lightwebinc/ingress-infra/blob/main/docs/ansible.md)
+and [docs/lxd-lab.md](https://github.com/lightwebinc/ingress-infra/blob/main/docs/lxd-lab.md)
 for full playbook documentation.
 
 ```yaml
@@ -43,12 +43,12 @@ all:
           egress_iface: enp6s0 # must be host-level var, not group vars
 ```
 
-> **Note:** `egress_iface` must be set at the host level. Setting it under `vars:` is silently overridden by `group_vars/all.yml` in bitcoin-ingress. See [bitcoin-ingress docs/ansible.md](https://github.com/lightwebinc/bitcoin-ingress/blob/main/docs/ansible.md) for details.
+> **Note:** `egress_iface` must be set at the host level. Setting it under `vars:` is silently overridden by `group_vars/all.yml` in ingress-infra. See [ingress-infra docs/ansible.md](https://github.com/lightwebinc/ingress-infra/blob/main/docs/ansible.md) for details.
 
 ## Deploy / upgrade
 
 ```bash
-cd /path/to/bitcoin-ingress/ansible
+cd /path/to/ingress-infra/ansible
 ansible-playbook -i inventory/hosts.yml site.yml
 
 # Upgrade to a specific version
@@ -56,18 +56,18 @@ ansible-playbook -i inventory/hosts.yml site.yml --tags proxy -e proxy_version=v
 ```
 
 After deployment, listeners re-emit MLD membership automatically when the
-`bitcoin-shard-listener.service` restarts — see
+`shard-listener.service` restarts — see
 [docs/network.md](network.md#bridge-mdb-volatility).
 
 ## Verification
 
 ```bash
 # Service and health
-lxc exec proxy -- systemctl status bitcoin-shard-proxy
+lxc exec proxy -- systemctl status shard-proxy
 lxc exec proxy -- curl -s http://localhost:9100/healthz
 lxc exec proxy -- curl -s http://localhost:9100/readyz
 
-# Send BSV frames from the source VM using bitcoin-subtx-generator.
+# Send BSV frames from the source VM using subtx-generator.
 # 1000 pps for 10 s with 8 random subtree IDs (seed pinned in ansible/listener-hosts.yml).
 lxc exec source -- subtx-gen \
   -addr '[fd20::2]:9000' \
@@ -86,6 +86,6 @@ lxc exec listener1 -- tcpdump -i enp6s0 -n 'ip6 and udp' -c 8
 - Ubuntu 24.04 LXD VMs use predictable NIC names (`enp5s0`, `enp6s0`), not `eth0`/`eth1`.
 - The `acl` package must be present on the target VM for Ansible `become` with system users to work.
 - The systemd `ExecStartPre` command requires `/bin/sh -c '...'` wrapping — systemd does not perform shell expansion in `ExecStartPre` directly.
-- Bridge MDB is volatile. Restart `bitcoin-shard-listener.service` on
+- Bridge MDB is volatile. Restart `shard-listener.service` on
   all listeners after any proxy reboot or re-deploy to restore
   multicast delivery.

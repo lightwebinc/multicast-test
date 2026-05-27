@@ -1,6 +1,6 @@
 # Bitcoin Multicast Test - Troubleshooting Guide
 
-This guide documents common issues and solutions discovered during testing of the bitcoin-shard-proxy multicast test lab.
+This guide documents common issues and solutions discovered during testing of the shard-proxy multicast test lab.
 
 ## Table of Contents
 
@@ -69,7 +69,7 @@ grep subtree_ ansible/listener-hosts.yml
 
 ### Retry endpoints not appearing in listener registry
 
-**Symptoms:** `journalctl -u bitcoin-shard-listener | grep "upserted endpoint"` shows
+**Symptoms:** `journalctl -u shard-listener | grep "upserted endpoint"` shows
 no output even after 10+ seconds. `bsl_gaps_unrecovered_total` climbs because
 the registry is empty and no NACKs can be dispatched.
 
@@ -87,7 +87,7 @@ sudo tcpdump -i lxdbr1 -n 'udp and dst port 9300' &
 # Wait 6s; should see packets from fd20::24, fd20::25, fd20::26
 ```
 
-**Fix:** `bitcoin-retry-endpoint/beacon/beacon.go` sets `IPV6_MULTICAST_IF` via
+**Fix:** `retry-endpoint/beacon/beacon.go` sets `IPV6_MULTICAST_IF` via
 `syscall.SetsockoptInt` after `net.DialUDP`. If beacons still don't arrive,
 verify the `MC_IFACE` env var on the retry endpoint is set to the fabric
 interface (`enp6s0`).
@@ -96,7 +96,7 @@ interface (`enp6s0`).
 
 ```bash
 # Confirm beacons arriving at listener
-lxc exec listener1 -- journalctl -u bitcoin-shard-listener --since "1 min ago" | grep upsert
+lxc exec listener1 -- journalctl -u shard-listener --since "1 min ago" | grep upsert
 # Expected: discovery: upserted endpoint addr=... tier=0 pref=128
 ```
 
@@ -114,8 +114,8 @@ counter is exhausted at entry #5 — one short of the last seed.
 ```bash
 for vm in listener1 listener2 listener3; do
   lxc exec $vm -- sed -i 's/^NACK_MAX_RETRIES=.*/NACK_MAX_RETRIES=8/' \
-    /etc/bitcoin-shard-listener/config.env
-  lxc exec $vm -- systemctl restart bitcoin-shard-listener
+    /etc/shard-listener/config.env
+  lxc exec $vm -- systemctl restart shard-listener
 done
 ```
 
@@ -135,7 +135,7 @@ fix to `nack/nack.go`, `Observe()` created a new gap entry for every
 out-of-order or retransmitted frame (`seqNum < lastSeqNum`). Each retransmit
 from a retry endpoint triggered dozens of false gaps.
 
-**Fix:** Already applied to `bitcoin-shard-listener/nack/nack.go`. Rebuild and
+**Fix:** Already applied to `shard-listener/nack/nack.go`. Rebuild and
 redeploy the listener binary. After the fix, `bsl_gaps_detected_total` should
 match the actual number of multicast delivery losses.
 
@@ -152,13 +152,13 @@ match the actual number of multicast delivery losses.
 
 **Root Cause:**
 
-- Prometheus not configured to scrape bitcoin-shard-proxy metrics
+- Prometheus not configured to scrape shard-proxy metrics
 - Dashboard queries using `rate()` functions without sufficient data
 
 **Solution:**
 
 ```bash
-# 1. Add bitcoin-shard-proxy to Prometheus config
+# 1. Add shard-proxy to Prometheus config
 lxc exec metrics -- cp /etc/prometheus/prometheus.yml /etc/prometheus/prometheus.yml.backup
 
 lxc exec metrics -- tee /etc/prometheus/prometheus.yml > /dev/null << 'EOF'
@@ -176,7 +176,7 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9100']
 
-  - job_name: 'bitcoin-shard-proxy'
+  - job_name: 'shard-proxy'
     scrape_interval: 5s
     static_configs:
       - targets: ['10.10.10.20:9100']
@@ -189,7 +189,7 @@ lxc exec metrics -- systemctl restart prometheus
 lxc exec metrics -- curl -s http://localhost:9090/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, health: .health}'
 
 # 4. Update dashboard to use absolute values instead of rate()
-# Access dashboard: http://10.10.10.142:3000/d/bitcoin-shard-proxy-metrics
+# Access dashboard: http://10.10.10.142:3000/d/shard-proxy-metrics
 # Login: admin/admin
 ```
 
@@ -374,7 +374,7 @@ done
 sudo systemctl restart lxd-bridge-mcast-querier.service
 
 # 3. Restart proxy if needed
-lxc exec proxy -- systemctl restart bitcoin-shard-proxy.service
+lxc exec proxy -- systemctl restart shard-proxy.service
 
 # 4. Verify all services
 for vm in recv1 recv2 recv3; do
@@ -466,13 +466,13 @@ If dashboard shows no data despite metrics being available:
 for vm in recv1 recv2 recv3; do
   lxc exec $vm -- systemctl stop mcast-join.service
 done
-lxc exec proxy -- systemctl stop bitcoin-shard-proxy.service
+lxc exec proxy -- systemctl stop shard-proxy.service
 
 # 2. Restart bridge querier
 sudo systemctl restart lxd-bridge-mcast-querier.service
 
 # 3. Start services in order
-lxc exec proxy -- systemctl start bitcoin-shard-proxy.service
+lxc exec proxy -- systemctl start shard-proxy.service
 sleep 5
 
 for vm in recv1 recv2 recv3; do
@@ -485,4 +485,4 @@ bash 08-verify.sh
 bash test-send.sh
 ```
 
-This troubleshooting guide captures the most common issues encountered during bitcoin-shard-proxy testing and their proven solutions.
+This troubleshooting guide captures the most common issues encountered during shard-proxy testing and their proven solutions.

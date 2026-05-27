@@ -65,7 +65,7 @@ SKIP_LIST=()
 TOTAL=0
 
 echo "${BOLD}=================================================${RESET}"
-echo "${BOLD} bitcoin-multicast-test — run all scenarios${RESET}"
+echo "${BOLD} multicast-test — run all scenarios${RESET}"
 echo " Log dir: $LOG_DIR"
 echo "${BOLD}=================================================${RESET}"
 echo ""

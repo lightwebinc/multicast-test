@@ -1,4 +1,4 @@
-module github.com/lightwebinc/bitcoin-multicast-test
+module github.com/lightwebinc/multicast-test
 
 go 1.25
 

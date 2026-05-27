@@ -87,5 +87,5 @@ listeners detect gap → NACK → retry1 lookup → cache HIT → group limiter
 ## Run
 
 ```bash
-bash ~/repo/bitcoin-multicast-test/scenarios/16-group-ratelimit/run.sh
+bash ~/repo/multicast-test/scenarios/16-group-ratelimit/run.sh
 ```

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 36 — BRC-134 anchor frame: basic delivery

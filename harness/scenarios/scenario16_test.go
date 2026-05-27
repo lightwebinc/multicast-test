@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/env"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/env"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 16 — Per-group retransmit rate limit (ACK preserved)

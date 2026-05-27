@@ -106,7 +106,7 @@ listener2 joins only `ff05::b:0` and `ff05::b:1`.
 `ff02::0..3` as the terminal downstream consumer. The same shard index and
 port (9001) are used; only the scope prefix changes (`ff05` → `ff02`).
 
-The join is performed by `bitcoin-shard-listener` itself (socket
+The join is performed by `shard-listener` itself (socket
 `IPV6_JOIN_GROUP` on `enp6s0`); no separate `mcast-join.service` is
 required. This replaces the pre-listener `recv1..3-mcast-join.service`
 units which were retired by `lab/99-teardown-recv.sh`.
@@ -116,7 +116,7 @@ units which were retired by `lab/99-teardown-recv.sh`.
 The bridge multicast database (MDB) is populated by MLD membership
 reports and is **not persisted** across service restarts. After any
 reboot or listener restart, MLD membership is re-emitted by
-`bitcoin-shard-listener.service` — no manual intervention required:
+`shard-listener.service` — no manual intervention required:
 
 ```bash
 bridge mdb show dev lxdbr1

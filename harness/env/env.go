@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/driver"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/driver"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Env holds the runtime context for a single scenario execution.

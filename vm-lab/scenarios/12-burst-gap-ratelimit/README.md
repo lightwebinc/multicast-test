@@ -51,5 +51,5 @@ The intent is to:
 ## Run
 
 ```bash
-bash ~/repo/bitcoin-multicast-test/scenarios/12-burst-gap-ratelimit/run.sh
+bash ~/repo/multicast-test/scenarios/12-burst-gap-ratelimit/run.sh
 ```

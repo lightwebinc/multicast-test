@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/driver"
-	dockerdriver "github.com/lightwebinc/bitcoin-multicast-test/harness/driver/docker"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/env"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/driver"
+	dockerdriver "github.com/lightwebinc/multicast-test/harness/driver/docker"
+	"github.com/lightwebinc/multicast-test/harness/env"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// proxyEnv returns a baseline Env map for bitcoin-shard-proxy.
+// proxyEnv returns a baseline Env map for shard-proxy.
 func proxyEnv() map[string]string {
 	return map[string]string{
 		"MULTICAST_IF":    "eth0",
@@ -25,7 +25,7 @@ func proxyEnv() map[string]string {
 	}
 }
 
-// listenerEnv returns a baseline Env map for bitcoin-shard-listener.
+// listenerEnv returns a baseline Env map for shard-listener.
 func listenerEnv() map[string]string {
 	return map[string]string{
 		"MULTICAST_IF": "eth0",
@@ -39,7 +39,7 @@ func listenerEnv() map[string]string {
 	}
 }
 
-// retryEnv returns a baseline Env map for bitcoin-retry-endpoint.
+// retryEnv returns a baseline Env map for retry-endpoint.
 func retryEnv() map[string]string {
 	return map[string]string{
 		"MULTICAST_IF": "eth0",
@@ -81,7 +81,7 @@ func basicTopology(t *testing.T, prefix string) (*env.Env, map[string]string, ma
 
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-proxy",
-		Image:       "bitcoin-shard-proxy:harness",
+		Image:       "shard-proxy:harness",
 		IPv6:        "fd10::2",
 		Env:         proxyEnv(),
 		MetricsPort: 9100,
@@ -91,7 +91,7 @@ func basicTopology(t *testing.T, prefix string) (*env.Env, map[string]string, ma
 	l1env := listenerEnv()
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-listener1",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::11",
 		Env:         l1env,
 		MetricsPort: 9200,
@@ -103,7 +103,7 @@ func basicTopology(t *testing.T, prefix string) (*env.Env, map[string]string, ma
 	l2env["SUBTREE_EXCLUDE"] = subtreeExcludeL2
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-listener2",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::12",
 		Env:         l2env,
 		MetricsPort: 9200,
@@ -114,7 +114,7 @@ func basicTopology(t *testing.T, prefix string) (*env.Env, map[string]string, ma
 	l3env["SUBTREE_INCLUDE"] = subtreeIncludeL3
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-listener3",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::13",
 		Env:         l3env,
 		MetricsPort: 9200,
@@ -135,13 +135,13 @@ var specialBinaries = map[string]string{
 // startGenerator starts the source container and registers cleanup.
 // If cmd[0] is the name of a dedicated harness binary (e.g. "send-block-announce"),
 // that binary's image is used and cmd[0] is stripped so it is not passed as an
-// argument to the ENTRYPOINT. Otherwise bitcoin-subtx-generator:harness is used.
+// argument to the ENTRYPOINT. Otherwise subtx-generator:harness is used.
 // Returns after the container starts; caller should WaitForExit to wait for it.
 func startGenerator(t *testing.T, ctx context.Context, prefix string, cmd []string) {
 	t.Helper()
 	drv := dockerdriver.New()
 	name := prefix + "-source"
-	image := "bitcoin-subtx-generator:harness"
+	image := "subtx-generator:harness"
 	entryCmd := cmd
 	if len(cmd) > 0 {
 		if img, ok := specialBinaries[cmd[0]]; ok {
@@ -217,7 +217,7 @@ func retryTopology(t *testing.T, prefix string) (*env.Env, map[string]string) {
 
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-proxy",
-		Image:       "bitcoin-shard-proxy:harness",
+		Image:       "shard-proxy:harness",
 		IPv6:        "fd10::2",
 		Env:         proxyEnv(),
 		MetricsPort: 9100,
@@ -236,7 +236,7 @@ func retryTopology(t *testing.T, prefix string) (*env.Env, map[string]string) {
 		}
 		e.AddNode(driver.NodeConfig{
 			Name:        prefix + "-listener" + suffix,
-			Image:       "bitcoin-shard-listener:harness",
+			Image:       "shard-listener:harness",
 			IPv6:        fmt.Sprintf("fd10::1%d", i+1),
 			Env:         lenv,
 			MetricsPort: 9200,
@@ -247,7 +247,7 @@ func retryTopology(t *testing.T, prefix string) (*env.Env, map[string]string) {
 	renv := retryEnv()
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-retry1",
-		Image:       "bitcoin-retry-endpoint:harness",
+		Image:       "retry-endpoint:harness",
 		IPv6:        "fd10::20",
 		Env:         renv,
 		MetricsPort: 9400,
@@ -300,7 +300,7 @@ func multiRetryTopology(t *testing.T, prefix string) *env.Env {
 
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-proxy",
-		Image:       "bitcoin-shard-proxy:harness",
+		Image:       "shard-proxy:harness",
 		IPv6:        "fd10::2",
 		Env:         proxyEnv(),
 		MetricsPort: 9100,
@@ -320,7 +320,7 @@ func multiRetryTopology(t *testing.T, prefix string) *env.Env {
 		}
 		e.AddNode(driver.NodeConfig{
 			Name:        prefix + "-listener" + suffix,
-			Image:       "bitcoin-shard-listener:harness",
+			Image:       "shard-listener:harness",
 			IPv6:        fmt.Sprintf("fd10::1%d", i+1),
 			Env:         lenv,
 			MetricsPort: 9200,
@@ -334,7 +334,7 @@ func multiRetryTopology(t *testing.T, prefix string) *env.Env {
 	r1env["BEACON_PREFERENCE"] = "128"
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-retry1",
-		Image:       "bitcoin-retry-endpoint:harness",
+		Image:       "retry-endpoint:harness",
 		IPv6:        "fd10::20",
 		Env:         r1env,
 		MetricsPort: 9400,
@@ -349,7 +349,7 @@ func multiRetryTopology(t *testing.T, prefix string) *env.Env {
 	r2env["METRICS_ADDR"] = ":9401"
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-retry2",
-		Image:       "bitcoin-retry-endpoint:harness",
+		Image:       "retry-endpoint:harness",
 		IPv6:        "fd10::21",
 		Env:         r2env,
 		MetricsPort: 9401,
@@ -364,7 +364,7 @@ func multiRetryTopology(t *testing.T, prefix string) *env.Env {
 	r3env["METRICS_ADDR"] = ":9402"
 	e.AddNode(driver.NodeConfig{
 		Name:        prefix + "-retry3",
-		Image:       "bitcoin-retry-endpoint:harness",
+		Image:       "retry-endpoint:harness",
 		IPv6:        "fd10::22",
 		Env:         r3env,
 		MetricsPort: 9402,

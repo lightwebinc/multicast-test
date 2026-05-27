@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/driver"
-	dockerdriver "github.com/lightwebinc/bitcoin-multicast-test/harness/driver/docker"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/env"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/driver"
+	dockerdriver "github.com/lightwebinc/multicast-test/harness/driver/docker"
+	"github.com/lightwebinc/multicast-test/harness/env"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 24 — BRC-130 fragmentation: payload hash verification
@@ -25,7 +25,7 @@ func TestScenario24_FragmentationHashVerify(t *testing.T) {
 	penv["FRAG_MTU"] = "1500"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s24-proxy",
-		Image:       "bitcoin-shard-proxy:harness",
+		Image:       "shard-proxy:harness",
 		IPv6:        "fd10::2",
 		Env:         penv,
 		MetricsPort: 9100,
@@ -36,7 +36,7 @@ func TestScenario24_FragmentationHashVerify(t *testing.T) {
 	l1env["VERIFY_PAYLOAD_HASH"] = "true"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s24-listener1",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::11",
 		Env:         l1env,
 		MetricsPort: 9200,

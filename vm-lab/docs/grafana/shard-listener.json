@@ -1,6 +1,6 @@
 {
-  "title": "bitcoin-shard-listener",
-  "uid": "bitcoin-shard-listener",
+  "title": "shard-listener",
+  "uid": "shard-listener",
   "schemaVersion": 39,
   "version": 1,
   "editable": true,
@@ -287,9 +287,9 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "x": 0, "y": 61, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "go_memstats_heap_inuse_bytes{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} heap in-use" },
-        { "expr": "go_memstats_heap_alloc_bytes{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} heap alloc" },
-        { "expr": "go_memstats_heap_sys_bytes{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} heap sys" }
+        { "expr": "go_memstats_heap_inuse_bytes{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} heap in-use" },
+        { "expr": "go_memstats_heap_alloc_bytes{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} heap alloc" },
+        { "expr": "go_memstats_heap_sys_bytes{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} heap sys" }
       ],
       "fieldConfig": { "defaults": { "unit": "bytes" } }
     },
@@ -300,8 +300,8 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "x": 12, "y": 61, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "process_resident_memory_bytes{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} RSS" },
-        { "expr": "process_virtual_memory_bytes{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} VSZ" }
+        { "expr": "process_resident_memory_bytes{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} RSS" },
+        { "expr": "process_virtual_memory_bytes{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} VSZ" }
       ],
       "fieldConfig": { "defaults": { "unit": "bytes" } }
     },
@@ -312,8 +312,8 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "x": 0, "y": 69, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "go_goroutines{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} goroutines" },
-        { "expr": "go_threads{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} OS threads" }
+        { "expr": "go_goroutines{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} goroutines" },
+        { "expr": "go_threads{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}} OS threads" }
       ],
       "fieldConfig": { "defaults": { "unit": "short" } }
     },
@@ -324,8 +324,8 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "x": 12, "y": 69, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "histogram_quantile(0.99, rate(go_gc_duration_seconds_bucket{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}[5m]))", "legendFormat": "{{instance}} p99" },
-        { "expr": "histogram_quantile(0.50, rate(go_gc_duration_seconds_bucket{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}[5m]))", "legendFormat": "{{instance}} p50" }
+        { "expr": "histogram_quantile(0.99, rate(go_gc_duration_seconds_bucket{job=\"shard-listener\", instance=~\"$instance\"}[5m]))", "legendFormat": "{{instance}} p99" },
+        { "expr": "histogram_quantile(0.50, rate(go_gc_duration_seconds_bucket{job=\"shard-listener\", instance=~\"$instance\"}[5m]))", "legendFormat": "{{instance}} p50" }
       ],
       "fieldConfig": { "defaults": { "unit": "s" } }
     },
@@ -336,7 +336,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "x": 0, "y": 77, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "rate(process_cpu_seconds_total{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}[1m])", "legendFormat": "{{instance}} CPU cores" }
+        { "expr": "rate(process_cpu_seconds_total{job=\"shard-listener\", instance=~\"$instance\"}[1m])", "legendFormat": "{{instance}} CPU cores" }
       ],
       "fieldConfig": { "defaults": { "unit": "short" } }
     },
@@ -347,7 +347,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "x": 12, "y": 77, "w": 6, "h": 8 },
       "targets": [
-        { "expr": "bsl_uptime_seconds{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}}" }
+        { "expr": "bsl_uptime_seconds{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}}" }
       ],
       "fieldConfig": { "defaults": { "unit": "dtdurations" } }
     },
@@ -375,7 +375,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "x": 0, "y": 86, "w": 24, "h": 4 },
       "targets": [
-        { "expr": "up{job=\"bitcoin-shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}}" }
+        { "expr": "up{job=\"shard-listener\", instance=~\"$instance\"}", "legendFormat": "{{instance}}" }
       ],
       "fieldConfig": {
         "defaults": {

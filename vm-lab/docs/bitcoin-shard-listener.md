@@ -1,8 +1,8 @@
-# bitcoin-shard-listener integration
+# shard-listener integration
 
 Each `listener1..3` VM runs
-[`bitcoin-shard-listener`](https://github.com/lightwebinc/bitcoin-shard-listener),
-deployed via the [`bitcoin-listener`](https://github.com/lightwebinc/bitcoin-listener)
+[`shard-listener`](https://github.com/lightwebinc/shard-listener),
+deployed via the [`listener-infra`](https://github.com/lightwebinc/listener-infra)
 Ansible playbook using the inventory committed to
 [`ansible/listener-hosts.yml`](../ansible/listener-hosts.yml).
 
@@ -10,9 +10,9 @@ Ansible playbook using the inventory committed to
 
 | Item       | Value                                                            |
 | ---------- | ---------------------------------------------------------------- |
-| Binary     | `/usr/local/bin/bitcoin-shard-listener`                          |
-| Config     | `/etc/bitcoin-shard-listener/config.env`                         |
-| Service    | `bitcoin-shard-listener.service` (systemd)                       |
+| Binary     | `/usr/local/bin/shard-listener`                          |
+| Config     | `/etc/shard-listener/config.env`                         |
+| Service    | `shard-listener.service` (systemd)                       |
 | UDP listen | `[::]:9001` — multicast groups joined on `enp6s0`                |
 | Egress     | `127.0.0.1:9100` UDP (local sink)                                |
 | Metrics    | `http://<mgmt-ip>:9200/metrics`                                  |
@@ -42,8 +42,8 @@ subtx-gen -subtrees 8 -subtree-seed 'multicast-lab-bsv' -print-subtrees
 ```bash
 bash ansible/run-deploy.sh                           # proxy + listeners
 # or just listeners:
-cd ~/repo/bitcoin-listener/ansible
-ansible-playbook -i ~/repo/bitcoin-multicast-test/ansible/listener-hosts.yml site.yml
+cd ~/repo/listener-infra/ansible
+ansible-playbook -i ~/repo/multicast-test/ansible/listener-hosts.yml site.yml
 ```
 
 ## Sink capture (optional)
@@ -55,8 +55,8 @@ To inspect raw frames on a specific listener:
 lxc exec listener1 -- /usr/local/bin/sink-test-frames -port 9100 -count 100 -timeout 30s
 ```
 
-`sink-test-frames` ships with bitcoin-shard-listener; install it onto
-each listener by copying the binary from `~/repo/bitcoin-shard-listener/`
+`sink-test-frames` ships with shard-listener; install it onto
+each listener by copying the binary from `~/repo/shard-listener/`
 or building in place.
 
 ## Metrics integration (metrics VM)
@@ -78,7 +78,7 @@ The same script imports/updates both Grafana dashboards under
 ```bash
 # Service state across all listeners
 for vm in listener1 listener2 listener3 listener4; do
-  lxc exec "$vm" -- systemctl is-active bitcoin-shard-listener.service
+  lxc exec "$vm" -- systemctl is-active shard-listener.service
 done
 
 # Scrape a metrics snapshot
@@ -99,7 +99,7 @@ bash vm-lab/scenarios/05-mc-egress-bridge/run.sh
   with system users to work.
 - `ingress_iface` must be a **host-level** var: setting it under
   `vars:` is silently overridden by `group_vars/all.yml` in
-  bitcoin-listener.
+  listener-infra.
 - `mgmt_cidrs_v4` must include the LXD mgmt CIDR
   (`10.10.10.0/24`) or the firewall will block both SSH and
   Prometheus scrapes.

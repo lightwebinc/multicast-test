@@ -54,5 +54,5 @@ proxy and a listener.
 ## Run
 
 ```bash
-bash ~/repo/bitcoin-multicast-test/scenarios/11-permanent-gap-miss/run.sh
+bash ~/repo/multicast-test/scenarios/11-permanent-gap-miss/run.sh
 ```

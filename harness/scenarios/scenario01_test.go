@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/driver"
-	dockerdriver "github.com/lightwebinc/bitcoin-multicast-test/harness/driver/docker"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/env"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/driver"
+	dockerdriver "github.com/lightwebinc/multicast-test/harness/driver/docker"
+	"github.com/lightwebinc/multicast-test/harness/env"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 01 — Functional all-shards
@@ -17,7 +17,7 @@ import (
 //
 // Topology (5 containers on mcast-fabric fd10::/64):
 //
-//	proxy      fd10::2   — bitcoin-shard-proxy, shard_bits=2, site-local multicast
+//	proxy      fd10::2   — shard-proxy, shard_bits=2, site-local multicast
 //	listener1  fd10::11  — no filters; expects ~all frames forwarded
 //	listener2  fd10::12  — SHARD_INCLUDE=0,1 + SUBTREE_EXCLUDE (1/8 subtree); expects ~7/8 of received
 //	listener3  fd10::13  — SUBTREE_INCLUDE (1/8 subtree only); expects ~1/8 of received
@@ -41,7 +41,7 @@ func TestScenario01_FunctionalAllShards(t *testing.T) {
 
 	e.AddNode(driver.NodeConfig{
 		Name:  "s01-proxy",
-		Image: "bitcoin-shard-proxy:harness",
+		Image: "shard-proxy:harness",
 		IPv6:  "fd10::2",
 		Env: map[string]string{
 			"MULTICAST_IF":    "eth0",
@@ -70,7 +70,7 @@ func TestScenario01_FunctionalAllShards(t *testing.T) {
 	l1env := copyEnv(listenerBase)
 	e.AddNode(driver.NodeConfig{
 		Name:        "s01-listener1",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::11",
 		Env:         l1env,
 		MetricsPort: 9200,
@@ -82,7 +82,7 @@ func TestScenario01_FunctionalAllShards(t *testing.T) {
 	l2env["SUBTREE_EXCLUDE"] = subtreeExcludeL2
 	e.AddNode(driver.NodeConfig{
 		Name:        "s01-listener2",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::12",
 		Env:         l2env,
 		MetricsPort: 9200,
@@ -93,7 +93,7 @@ func TestScenario01_FunctionalAllShards(t *testing.T) {
 	l3env["SUBTREE_INCLUDE"] = subtreeIncludeL3
 	e.AddNode(driver.NodeConfig{
 		Name:        "s01-listener3",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::13",
 		Env:         l3env,
 		MetricsPort: 9200,
@@ -129,7 +129,7 @@ func TestScenario01_FunctionalAllShards(t *testing.T) {
 	}
 	if err := dockerdriver.New().Start(ctx, driver.NodeConfig{
 		Name:  "s01-source",
-		Image: "bitcoin-subtx-generator:harness",
+		Image: "subtx-generator:harness",
 		IPv6:  "fd10::3",
 		Cmd:   sourceCmd,
 		Role:  driver.RoleGenerator,

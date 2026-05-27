@@ -31,7 +31,7 @@ spikes, returning the registry to empty.
 
 ## Prerequisites
 
-- Proxy: `TCP_LISTEN_PORT=9002` in `/etc/bitcoin-shard-proxy/config.env`
+- Proxy: `TCP_LISTEN_PORT=9002` in `/etc/shard-proxy/config.env`
   (the script enables it inline if `SKIP_RECONFIG=0`, which is the default).
 - listener3: no static `SUBTREE_INCLUDE`; `SUBTREE_GROUPS=bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf`
   (the script sets this inline and restores on exit).
@@ -41,13 +41,13 @@ spikes, returning the registry to empty.
 ## Running
 
 ```bash
-bash ~/repo/bitcoin-multicast-test/scenarios/21-subtree-group-ramp/run.sh
+bash ~/repo/multicast-test/scenarios/21-subtree-group-ramp/run.sh
 ```
 
 Skip reconfiguration if VMs are already configured from scenario 20:
 
 ```bash
-SKIP_RECONFIG=1 bash ~/repo/bitcoin-multicast-test/scenarios/21-subtree-group-ramp/run.sh
+SKIP_RECONFIG=1 bash ~/repo/multicast-test/scenarios/21-subtree-group-ramp/run.sh
 ```
 
 ## Timing parameters (overrideable via env)

@@ -123,7 +123,7 @@ ADVERT beacons and that the registry sorts by (Tier ASC, Preference DESC).
 
 ```bash
 # Check listener logs for discovery upsert
-journalctl -u bitcoin-shard-listener | grep "upserted endpoint"
+journalctl -u shard-listener | grep "upserted endpoint"
 ```
 
 ## Scenario 5: Beacon Eviction
@@ -184,7 +184,7 @@ Scenarios 2 and 3 are both covered by `scenarios/13-miss-escalation-tier/run.sh`
 which deploys retry1 (T0/P128), retry2 (T0/P64), and retry3 (T1/P128), blocks
 ingress on retry1 and retry2, and verifies full escalation to retry3.
 
-Scenarios 4–7 are "Ready" now that `bitcoin-retry-endpoint` wires
+Scenarios 4–7 are "Ready" now that `retry-endpoint` wires
 `-beacon-*` and `-suppress-ack` / `-suppress-miss` flags into runtime
 behaviour; only the driver scripts remain.
 

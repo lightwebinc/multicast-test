@@ -194,7 +194,7 @@ SCENARIO_FAIL=0
 # NOT affected, so they accumulate frames that listeners miss — creating the
 # selective delivery needed for cache-hit / retransmit testing.
 #
-# The nftables table is isolated (inet bitcoin-listener-test) and is fully
+# The nftables table is isolated (inet listener-infra-test) and is fully
 # removed on cleanup regardless of scenario outcome.
 #
 # Usage:
@@ -211,18 +211,18 @@ apply_listener_loss() {
   _LOSS_VMS=()
   for vm in "${LISTENERS[@]}"; do
     lxc exec "$vm" -- bash -c "
-      nft add table inet bitcoin-listener-test 2>/dev/null || true
-      nft add chain inet bitcoin-listener-test input \
+      nft add table inet listener-infra-test 2>/dev/null || true
+      nft add chain inet listener-infra-test input \
         '{ type filter hook input priority -100; }' 2>/dev/null || true
-      nft flush chain inet bitcoin-listener-test input 2>/dev/null || true
-      nft add rule inet bitcoin-listener-test input \
+      nft flush chain inet listener-infra-test input 2>/dev/null || true
+      nft add rule inet listener-infra-test input \
         iif \"enp6s0\" udp dport 9001 \
         numgen random mod 1000 lt ${threshold} counter drop
     " 2>/dev/null && _LOSS_VMS+=("$vm") || \
       echo "WARN  could not apply loss rule on $vm (nft unavailable?)"
     # Verify the rule is actually in place.
     local rule_count
-    rule_count=$(lxc exec "$vm" -- nft list chain inet bitcoin-listener-test input 2>/dev/null \
+    rule_count=$(lxc exec "$vm" -- nft list chain inet listener-infra-test input 2>/dev/null \
       | grep -c "counter" || true)
     if [[ "${rule_count:-0}" -lt 1 ]]; then
       echo "WARN  loss rule NOT confirmed on $vm"
@@ -234,7 +234,7 @@ apply_listener_loss() {
 check_listener_loss_counters() {
   for vm in "${_LOSS_VMS[@]+"${_LOSS_VMS[@]}"}"; do
     local cnt
-    cnt=$(lxc exec "$vm" -- nft list chain inet bitcoin-listener-test input 2>/dev/null \
+    cnt=$(lxc exec "$vm" -- nft list chain inet listener-infra-test input 2>/dev/null \
       | grep -oP 'packets \K[0-9]+' || echo "0")
     echo "     [nft] $vm dropped $cnt packets"
   done
@@ -242,7 +242,7 @@ check_listener_loss_counters() {
 
 remove_listener_loss() {
   for vm in "${_LOSS_VMS[@]+"${_LOSS_VMS[@]}"}"; do
-    lxc exec "$vm" -- nft delete table inet bitcoin-listener-test 2>/dev/null || true
+    lxc exec "$vm" -- nft delete table inet listener-infra-test 2>/dev/null || true
   done
   _LOSS_VMS=()
 }
@@ -253,7 +253,7 @@ remove_listener_loss() {
 : "${TXID_DEDUP_PREFIX:=bsl:txid:}"
 : "${TXID_DEDUP_TTL:=60s}"
 
-LISTENER_ENV_FILE="/etc/bitcoin-shard-listener/config.env"
+LISTENER_ENV_FILE="/etc/shard-listener/config.env"
 
 # enable_txid_dedup <vm>: inject TXID_DEDUP_ADDR/PREFIX/TTL into a single
 # listener VM's config.env, saving a .bak, and restart the service.
@@ -271,13 +271,13 @@ enable_txid_dedup() {
     fi
     sed -i '/^TXID_DEDUP_ADDR=/d; /^TXID_DEDUP_PREFIX=/d; /^TXID_DEDUP_TTL=/d' ${LISTENER_ENV_FILE}
     printf 'TXID_DEDUP_ADDR=${TXID_DEDUP_ADDR}\nTXID_DEDUP_PREFIX=${TXID_DEDUP_PREFIX}\nTXID_DEDUP_TTL=${TXID_DEDUP_TTL}\n' >> ${LISTENER_ENV_FILE}
-    systemctl restart bitcoin-shard-listener
+    systemctl restart shard-listener
   "
   echo "     $vm txid-dedup enabled (redis=$TXID_DEDUP_ADDR)"
 }
 
 # allow_redis_egress <vm>: insert an nft rule at the top of the
-# `inet bitcoin-listener output` chain permitting outbound TCP to
+# `inet listener-infra output` chain permitting outbound TCP to
 # TXID_DEDUP_ADDR. The deployed listener firewall has policy=drop on output
 # with only DNS/HTTP/HTTPS allowed; without this, the Redis TCP SYN is dropped
 # and txdedup.New times out causing the listener to fail to start.
@@ -289,13 +289,13 @@ allow_redis_egress() {
   local redis_port="${TXID_DEDUP_ADDR##*:}"
   lxc exec "$vm" -- bash -c "
     # Remove any prior rule with our marker handle (idempotent).
-    handle=\$(nft -a list chain inet bitcoin-listener output 2>/dev/null \
+    handle=\$(nft -a list chain inet listener-infra output 2>/dev/null \
       | awk '/txdedup-redis-allow/ { for (i=1;i<=NF;i++) if (\$i==\"handle\") print \$(i+1) }')
     if [ -n \"\$handle\" ]; then
-      nft delete rule inet bitcoin-listener output handle \$handle 2>/dev/null || true
+      nft delete rule inet listener-infra output handle \$handle 2>/dev/null || true
     fi
     # Insert at top so it runs before the trailing 'counter drop'.
-    nft insert rule inet bitcoin-listener output \
+    nft insert rule inet listener-infra output \
       ip daddr ${redis_ip} tcp dport ${redis_port} accept comment '\"txdedup-redis-allow\"'
   "
   echo "     $vm redis-egress allowed (${TXID_DEDUP_ADDR})"
@@ -304,10 +304,10 @@ allow_redis_egress() {
 revoke_redis_egress() {
   local vm="$1"
   lxc exec "$vm" -- bash -c "
-    handle=\$(nft -a list chain inet bitcoin-listener output 2>/dev/null \
+    handle=\$(nft -a list chain inet listener-infra output 2>/dev/null \
       | awk '/txdedup-redis-allow/ { for (i=1;i<=NF;i++) if (\$i==\"handle\") print \$(i+1) }')
     if [ -n \"\$handle\" ]; then
-      nft delete rule inet bitcoin-listener output handle \$handle 2>/dev/null || true
+      nft delete rule inet listener-infra output handle \$handle 2>/dev/null || true
     fi
   " || true
 }
@@ -340,7 +340,7 @@ restore_txid_dedup() {
   lxc exec "$vm" -- bash -c "
     if [ -f ${LISTENER_ENV_FILE}.txdedup.bak ]; then
       mv ${LISTENER_ENV_FILE}.txdedup.bak ${LISTENER_ENV_FILE}
-      systemctl restart bitcoin-shard-listener
+      systemctl restart shard-listener
     fi
   " || true
   revoke_redis_egress "$vm"
@@ -367,7 +367,7 @@ flush_txid_dedup_keys() {
 
 # All proxy VMs that must be configured identically.
 PROXY_VMS=(proxy proxy2)
-PROXY_ENV_FILE="/etc/bitcoin-shard-proxy/config.env"
+PROXY_ENV_FILE="/etc/shard-proxy/config.env"
 
 # enable_frag_all <mtu>: set FRAG_MTU on all proxy VMs and restart.
 enable_frag_all() {
@@ -380,7 +380,7 @@ enable_frag_all() {
       else
         echo 'FRAG_MTU=${mtu}' >> ${PROXY_ENV_FILE}
       fi
-      systemctl restart bitcoin-shard-proxy
+      systemctl restart shard-proxy
     "
     echo "     $vm restarted with FRAG_MTU=$mtu"
   done
@@ -393,7 +393,7 @@ restore_frag_all() {
     lxc exec "$vm" -- bash -c "
       if [ -f ${PROXY_ENV_FILE}.bak ]; then
         mv ${PROXY_ENV_FILE}.bak ${PROXY_ENV_FILE}
-        systemctl restart bitcoin-shard-proxy
+        systemctl restart shard-proxy
       fi
     " || true
   done

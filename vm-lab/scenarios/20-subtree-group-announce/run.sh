@@ -7,13 +7,13 @@
 #
 # Prerequisites:
 #   - Binaries on all VMs rebuilt from BRC-127 source.
-#   - Proxy configured with TCP_LISTEN_PORT=9002 (/etc/bitcoin-shard-proxy/config.env).
+#   - Proxy configured with TCP_LISTEN_PORT=9002 (/etc/shard-proxy/config.env).
 #   - listener3 configured with SUBTREE_GROUPS=bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf
-#     and no SUBTREE_INCLUDE (/etc/bitcoin-shard-listener/config.env).
+#     and no SUBTREE_INCLUDE (/etc/shard-listener/config.env).
 #   - source VM has new subtx-gen binary.
 #
 # If deploying from scratch use the Ansible inventories:
-#   cd ~/repo/bitcoin-multicast-test/ansible && bash run-deploy.sh
+#   cd ~/repo/multicast-test/ansible && bash run-deploy.sh
 set -euo pipefail
 SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCENARIO_DIR/../lib/common.sh"
@@ -38,18 +38,18 @@ restore() {
   if [[ "$SKIP_RECONFIG" -eq 1 ]]; then return; fi
   echo "==> [cleanup] Restore listener3 config"
   lxc exec listener3 -- bash -c "
-    sed -i '/^SUBTREE_GROUPS=/d'          /etc/bitcoin-shard-listener/config.env
-    sed -i '/^ANNOUNCE_SCOPE=/d'          /etc/bitcoin-shard-listener/config.env
+    sed -i '/^SUBTREE_GROUPS=/d'          /etc/shard-listener/config.env
+    sed -i '/^ANNOUNCE_SCOPE=/d'          /etc/shard-listener/config.env
     if [[ -n '$ORIG_L3_SUBTREE_INCLUDE' ]]; then
-      echo 'SUBTREE_INCLUDE=$ORIG_L3_SUBTREE_INCLUDE' >> /etc/bitcoin-shard-listener/config.env
+      echo 'SUBTREE_INCLUDE=$ORIG_L3_SUBTREE_INCLUDE' >> /etc/shard-listener/config.env
     fi
-    systemctl restart bitcoin-shard-listener
+    systemctl restart shard-listener
   " || true
   if [[ "$PROXY_TCP_WAS_ZERO" -eq 1 ]]; then
     echo "==> [cleanup] Disable proxy TCP"
     lxc exec proxy -- bash -c "
-      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/bitcoin-shard-proxy/config.env
-      systemctl restart bitcoin-shard-proxy
+      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/shard-proxy/config.env
+      systemctl restart shard-proxy
     " || true
   fi
 }
@@ -59,34 +59,34 @@ if [[ "$SKIP_RECONFIG" -ne 1 ]]; then
   # --- Enable proxy TCP ---------------------------------------------------
   echo "==> Enable proxy TCP ingress (port 9002)"
   PROXY_TCP_WAS_ZERO=$(lxc exec proxy -- bash -c "
-    grep -q '^TCP_LISTEN_PORT=0' /etc/bitcoin-shard-proxy/config.env && echo 1 || echo 0
+    grep -q '^TCP_LISTEN_PORT=0' /etc/shard-proxy/config.env && echo 1 || echo 0
   ")
   lxc exec proxy -- bash -c "
-    if grep -q '^TCP_LISTEN_PORT=' /etc/bitcoin-shard-proxy/config.env; then
-      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/bitcoin-shard-proxy/config.env
+    if grep -q '^TCP_LISTEN_PORT=' /etc/shard-proxy/config.env; then
+      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/shard-proxy/config.env
     else
-      echo 'TCP_LISTEN_PORT=9002' >> /etc/bitcoin-shard-proxy/config.env
+      echo 'TCP_LISTEN_PORT=9002' >> /etc/shard-proxy/config.env
     fi
-    systemctl restart bitcoin-shard-proxy
+    systemctl restart shard-proxy
   "
   sleep 3
 
   # --- Configure listener3 for BRC-127 group filter -----------------------
   echo "==> Configure listener3 for BRC-127 group filter (SUBTREE_GROUPS=$TEST_GROUP_ID)"
   ORIG_L3_SUBTREE_INCLUDE=$(lxc exec listener3 -- bash -c "
-    grep '^SUBTREE_INCLUDE=' /etc/bitcoin-shard-listener/config.env | cut -d= -f2 || true
+    grep '^SUBTREE_INCLUDE=' /etc/shard-listener/config.env | cut -d= -f2 || true
   ")
   lxc exec listener3 -- bash -c "
-    sed -i '/^SUBTREE_INCLUDE=/d' /etc/bitcoin-shard-listener/config.env
-    if grep -q '^SUBTREE_GROUPS=' /etc/bitcoin-shard-listener/config.env; then
-      sed -i 's/^SUBTREE_GROUPS=.*/SUBTREE_GROUPS=$TEST_GROUP_ID/' /etc/bitcoin-shard-listener/config.env
+    sed -i '/^SUBTREE_INCLUDE=/d' /etc/shard-listener/config.env
+    if grep -q '^SUBTREE_GROUPS=' /etc/shard-listener/config.env; then
+      sed -i 's/^SUBTREE_GROUPS=.*/SUBTREE_GROUPS=$TEST_GROUP_ID/' /etc/shard-listener/config.env
     else
-      echo 'SUBTREE_GROUPS=$TEST_GROUP_ID' >> /etc/bitcoin-shard-listener/config.env
+      echo 'SUBTREE_GROUPS=$TEST_GROUP_ID' >> /etc/shard-listener/config.env
     fi
-    if ! grep -q '^ANNOUNCE_SCOPE=' /etc/bitcoin-shard-listener/config.env; then
-      echo 'ANNOUNCE_SCOPE=site' >> /etc/bitcoin-shard-listener/config.env
+    if ! grep -q '^ANNOUNCE_SCOPE=' /etc/shard-listener/config.env; then
+      echo 'ANNOUNCE_SCOPE=site' >> /etc/shard-listener/config.env
     fi
-    systemctl restart bitcoin-shard-listener
+    systemctl restart shard-listener
   "
   sleep 5  # allow listener3 to join ff05::b:fffc:9001 and start eviction loop
 fi

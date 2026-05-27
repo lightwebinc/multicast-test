@@ -1,7 +1,7 @@
 # BGP Lab
 
 Demonstrates dual-stack eBGP + iBGP ingress AnyCast reachability for the
-bitcoin-shard-proxy into a traditional IPv4/IPv6 network.
+shard-proxy into a traditional IPv4/IPv6 network.
 
 ## Topology
 

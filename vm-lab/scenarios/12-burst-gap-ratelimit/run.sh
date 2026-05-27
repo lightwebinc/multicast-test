@@ -53,7 +53,7 @@ snapshot_retry  "$RETRY_BEFORE"
 
 # Verify nft loss rule is still in place and reset counters.
 for vm in "${LISTENERS[@]}"; do
-  _rule=$(lxc exec "$vm" -- nft list chain inet bitcoin-listener-test input 2>/dev/null | grep -c "drop" || echo 0)
+  _rule=$(lxc exec "$vm" -- nft list chain inet listener-infra-test input 2>/dev/null | grep -c "drop" || echo 0)
   echo "     [diag] $vm nft_drop_rules=$_rule"
 done
 

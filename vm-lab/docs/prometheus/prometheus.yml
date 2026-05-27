@@ -12,14 +12,14 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: bitcoin-shard-proxy
+  - job_name: shard-proxy
     metrics_path: /metrics
     static_configs:
       - targets: ['10.10.10.20:9100']
         labels:
           instance_role: proxy
 
-  - job_name: bitcoin-shard-listener
+  - job_name: shard-listener
     metrics_path: /metrics
     static_configs:
       - targets:
@@ -48,7 +48,7 @@ scrape_configs:
         target_label: instance
         replacement: 'listener4'
 
-  - job_name: bitcoin-retry-endpoint
+  - job_name: retry-endpoint
     metrics_path: /metrics
     static_configs:
       - targets:

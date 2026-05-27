@@ -5,7 +5,7 @@ source "$SCENARIO_DIR/../lib/common.sh"
 
 LISTENER_VM="listener1"
 LISTENER_IP="10.10.10.31"
-ENV_FILE="/etc/bitcoin-shard-listener/config.env"
+ENV_FILE="/etc/shard-listener/config.env"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
 AFTER="$SCENARIO_DIR/metrics.after.tsv"
@@ -16,7 +16,7 @@ enable_verify_payload_hash() {
   lxc exec "$LISTENER_VM" -- bash -c "
     cp ${ENV_FILE} ${ENV_FILE}.bak
     sed -i 's|^VERIFY_PAYLOAD_HASH=.*|VERIFY_PAYLOAD_HASH=true|' ${ENV_FILE}
-    systemctl restart bitcoin-shard-listener
+    systemctl restart shard-listener
   "
   echo "     $LISTENER_VM: verify-payload-hash enabled + restarted"
   sleep 2  # Allow service to start
@@ -27,7 +27,7 @@ restore_verify_payload_hash() {
   lxc exec "$LISTENER_VM" -- bash -c "
     if [ -f ${ENV_FILE}.bak ]; then
       mv ${ENV_FILE}.bak ${ENV_FILE}
-      systemctl restart bitcoin-shard-listener
+      systemctl restart shard-listener
     fi
   " || true
   echo "     $LISTENER_VM: config restored"

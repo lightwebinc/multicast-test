@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 32 — BRC-132 subtree data: basic delivery

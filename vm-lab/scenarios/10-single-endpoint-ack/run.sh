@@ -45,7 +45,7 @@ snapshot_retry() {
 
 echo "==> Restarting listeners to clear stale gap-tracker state..."
 for lvm in "${LISTENERS[@]}"; do
-  lxc exec "$lvm" -- systemctl restart bitcoin-shard-listener
+  lxc exec "$lvm" -- systemctl restart shard-listener
 done
 
 echo "==> Waiting for listeners to be ready..."

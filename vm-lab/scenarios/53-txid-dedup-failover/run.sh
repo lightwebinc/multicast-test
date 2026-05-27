@@ -23,7 +23,7 @@ AFTER="$SCENARIO_DIR/metrics.after.tsv"
 
 restore_all() {
   echo "==> Cleanup: ensuring listener2 is running + restoring config..."
-  lxc exec listener2 -- systemctl start bitcoin-shard-listener 2>/dev/null || true
+  lxc exec listener2 -- systemctl start shard-listener 2>/dev/null || true
   sleep 1
   restore_txid_dedup_all
 }
@@ -58,7 +58,7 @@ echo "==> Snapshot metrics (mid — just before kill)"
 snapshot_metrics "$MID"
 
 echo "==> Stopping listener2..."
-lxc exec listener2 -- systemctl stop bitcoin-shard-listener
+lxc exec listener2 -- systemctl stop shard-listener
 echo "     listener2 stopped"
 
 echo "==> Waiting for generator to finish..."
@@ -71,7 +71,7 @@ echo "==> Snapshot metrics (after)"
 snapshot_metrics "$AFTER"
 
 echo "==> Restarting listener2..."
-lxc exec listener2 -- systemctl start bitcoin-shard-listener
+lxc exec listener2 -- systemctl start shard-listener
 sleep 1
 
 # Phase 1: before kill (before → mid). All 3 listeners active.

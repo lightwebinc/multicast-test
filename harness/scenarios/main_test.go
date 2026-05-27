@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/build"
-	dockerdriver "github.com/lightwebinc/bitcoin-multicast-test/harness/driver/docker"
+	"github.com/lightwebinc/multicast-test/harness/build"
+	dockerdriver "github.com/lightwebinc/multicast-test/harness/driver/docker"
 )
 
 // repoRoot is derived from the location of this file at runtime.

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/driver"
+	"github.com/lightwebinc/multicast-test/harness/driver"
 )
 
 // Driver implements driver.Driver using the local Docker CLI.

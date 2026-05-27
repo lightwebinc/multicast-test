@@ -44,7 +44,7 @@ bypassing the escalation chain.
 ## Tight RL injection
 
 All three endpoints are temporarily restarted with tight RL via a systemd
-drop-in (`/etc/systemd/system/bitcoin-retry-endpoint.service.d/rl-test.conf`):
+drop-in (`/etc/systemd/system/retry-endpoint.service.d/rl-test.conf`):
 
 | Var | Default scenario value | Production default |
 |---|---|---|
@@ -107,5 +107,5 @@ so we assert the per-IP limiter specifically:
 ## Run
 
 ```bash
-bash ~/repo/bitcoin-multicast-test/scenarios/14-multi-endpoint-ratelimit/run.sh
+bash ~/repo/multicast-test/scenarios/14-multi-endpoint-ratelimit/run.sh
 ```

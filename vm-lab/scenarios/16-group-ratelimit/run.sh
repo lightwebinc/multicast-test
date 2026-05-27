@@ -90,7 +90,7 @@ retry_diff() {
 
 apply_tight_rl() {
   echo "==> Applying tight group RL (group_rate=${RL_GROUP_RATE} burst=${RL_GROUP_BURST} ip_rate=${RL_IP_RATE})..."
-  local env_file="/etc/bitcoin-retry-endpoint/config.env"
+  local env_file="/etc/retry-endpoint/config.env"
   lxc exec "$RETRY_VM" -- bash -c "
     cp ${env_file} ${env_file}.bak
     sed -i 's|^RL_IP_RATE=.*|RL_IP_RATE=${RL_IP_RATE}|'           ${env_file}
@@ -101,18 +101,18 @@ apply_tight_rl() {
     sed -i 's|^RL_SEQUENCE_WINDOW=.*|RL_SEQUENCE_WINDOW=${RL_SEQUENCE_WINDOW}|' ${env_file}
     sed -i 's|^RL_GROUP_RATE=.*|RL_GROUP_RATE=${RL_GROUP_RATE}|'   ${env_file}
     sed -i 's|^RL_GROUP_BURST=.*|RL_GROUP_BURST=${RL_GROUP_BURST}|' ${env_file}
-    systemctl restart bitcoin-retry-endpoint
+    systemctl restart retry-endpoint
   "
   echo "     $RETRY_VM: tight group RL applied + restarted"
 }
 
 restore_rl() {
   echo "==> Cleanup: restoring original config.env..."
-  local env_file="/etc/bitcoin-retry-endpoint/config.env"
+  local env_file="/etc/retry-endpoint/config.env"
   lxc exec "$RETRY_VM" -- bash -c "
     if [ -f ${env_file}.bak ]; then
       mv ${env_file}.bak ${env_file}
-      systemctl restart bitcoin-retry-endpoint
+      systemctl restart retry-endpoint
     fi
   " || true
   echo "     $RETRY_VM: RL config restored"

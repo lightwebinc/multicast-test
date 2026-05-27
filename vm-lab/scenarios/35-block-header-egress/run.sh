@@ -38,18 +38,18 @@ restore_all() {
   if [[ "$L1_HEADER_WAS_OFF" -eq 1 ]]; then
     echo "==> [cleanup] Disabling header egress on listener1"
     lxc exec listener1 -- bash -c "
-      sed -i '/^HEADER_EGRESS_ENABLED=/d' /etc/bitcoin-shard-listener/config.env
-      sed -i '/^HEADER_EGRESS_ADDR=/d' /etc/bitcoin-shard-listener/config.env
-      sed -i '/^HEADER_EGRESS_PROTO=/d' /etc/bitcoin-shard-listener/config.env
-      systemctl restart bitcoin-shard-listener
+      sed -i '/^HEADER_EGRESS_ENABLED=/d' /etc/shard-listener/config.env
+      sed -i '/^HEADER_EGRESS_ADDR=/d' /etc/shard-listener/config.env
+      sed -i '/^HEADER_EGRESS_PROTO=/d' /etc/shard-listener/config.env
+      systemctl restart shard-listener
     " || true
   fi
   # Restore proxy TCP if we enabled it.
   if [[ "$PROXY_TCP_WAS_ZERO" -eq 1 ]]; then
     echo "==> [cleanup] Disabling proxy TCP ingress"
     lxc exec proxy -- bash -c "
-      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/bitcoin-shard-proxy/config.env
-      systemctl restart bitcoin-shard-proxy
+      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/shard-proxy/config.env
+      systemctl restart shard-proxy
     " || true
   fi
   # Kill socat inside the container first (so lxc exec exits), then wait.
@@ -63,13 +63,13 @@ trap restore_all EXIT
 
 # Ensure proxy TCP is enabled.
 PROXY_TCP_WAS_ZERO=$(lxc exec proxy -- bash -c "
-  grep -q '^TCP_LISTEN_PORT=0' /etc/bitcoin-shard-proxy/config.env && echo 1 || echo 0
+  grep -q '^TCP_LISTEN_PORT=0' /etc/shard-proxy/config.env && echo 1 || echo 0
 " 2>/dev/null || echo 0)
 if [[ "$PROXY_TCP_WAS_ZERO" -eq 1 ]]; then
   echo "==> Enabling proxy TCP ingress (port 9002)"
   lxc exec proxy -- bash -c "
-    sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/bitcoin-shard-proxy/config.env
-    systemctl restart bitcoin-shard-proxy
+    sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/shard-proxy/config.env
+    systemctl restart shard-proxy
   "
   sleep 3
 fi
@@ -78,7 +78,7 @@ fi
 
 # Check if header egress is already enabled.
 L1_HEADER_WAS_OFF=$(lxc exec listener1 -- bash -c "
-  grep -q '^HEADER_EGRESS_ENABLED=true' /etc/bitcoin-shard-listener/config.env && echo 0 || echo 1
+  grep -q '^HEADER_EGRESS_ENABLED=true' /etc/shard-listener/config.env && echo 0 || echo 1
 " 2>/dev/null || echo 1)
 
 # --- Setup: start a UDP sink on listener1 to count datagrams ------------------
@@ -99,13 +99,13 @@ sleep 1
 if [[ "$L1_HEADER_WAS_OFF" -eq 1 ]]; then
   echo "==> Enabling header egress on listener1 -> 127.0.0.1:$HEADER_SINK_PORT/udp"
   lxc exec listener1 -- bash -c "
-    sed -i '/^HEADER_EGRESS_ENABLED=/d' /etc/bitcoin-shard-listener/config.env
-    sed -i '/^HEADER_EGRESS_ADDR=/d' /etc/bitcoin-shard-listener/config.env
-    sed -i '/^HEADER_EGRESS_PROTO=/d' /etc/bitcoin-shard-listener/config.env
-    echo HEADER_EGRESS_ENABLED=true >> /etc/bitcoin-shard-listener/config.env
-    echo HEADER_EGRESS_ADDR=127.0.0.1:$HEADER_SINK_PORT >> /etc/bitcoin-shard-listener/config.env
-    echo HEADER_EGRESS_PROTO=udp >> /etc/bitcoin-shard-listener/config.env
-    systemctl restart bitcoin-shard-listener
+    sed -i '/^HEADER_EGRESS_ENABLED=/d' /etc/shard-listener/config.env
+    sed -i '/^HEADER_EGRESS_ADDR=/d' /etc/shard-listener/config.env
+    sed -i '/^HEADER_EGRESS_PROTO=/d' /etc/shard-listener/config.env
+    echo HEADER_EGRESS_ENABLED=true >> /etc/shard-listener/config.env
+    echo HEADER_EGRESS_ADDR=127.0.0.1:$HEADER_SINK_PORT >> /etc/shard-listener/config.env
+    echo HEADER_EGRESS_PROTO=udp >> /etc/shard-listener/config.env
+    systemctl restart shard-listener
   "
   sleep 3
 fi

@@ -1,7 +1,7 @@
 ---
-# Inventory for the bitcoin-listener playbook (github.com/lightwebinc/bitcoin-listener).
-# Invoke via:  cd ~/repo/bitcoin-listener/ansible &&
-#              ansible-playbook -i ~/repo/bitcoin-multicast-test/ansible/listener-hosts.yml site.yml
+# Inventory for the listener-infra playbook (github.com/lightwebinc/listener-infra).
+# Invoke via:  cd ~/repo/listener-infra/ansible &&
+#              ansible-playbook -i ~/repo/multicast-test/ansible/listener-hosts.yml site.yml
 #
 # Pinned subtree IDs (reproducibility):
 #   Generated with:
@@ -15,8 +15,8 @@ all:
       vars:
         # Lab: skip clone+build by pushing a pre-built binary from controller.
         # Build: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false \
-        #   -o /tmp/bitcoin-shard-listener .  (in ~/repo/bitcoin-shard-listener)
-        listener_local_binary: "/tmp/bitcoin-shard-listener"
+        #   -o /tmp/shard-listener .  (in ~/repo/shard-listener)
+        listener_local_binary: "/tmp/shard-listener"
         ansible_user: ubuntu
         ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GSSAPIAuthentication=no'
         ingress_mode: ethernet
@@ -26,7 +26,7 @@ all:
         enable_firewall: true
         enable_bgp: false
         # NOTE: mgmt_cidrs_v4/v6 and num_workers are set per-host below.
-        # They CANNOT be group-level here because bitcoin-listener's
+        # They CANNOT be group-level here because listener-infra's
         # group_vars/all.yml defines the same variables and group_vars/all
         # wins over inventory group vars in Ansible precedence.
         egress_addr: "127.0.0.1:9100"
@@ -37,7 +37,7 @@ all:
         beacon_port: 9300
         beacon_scope: site
         # NOTE: retry_endpoints and nack_max_retries MUST be set per-host
-        # (see precedence note above); bitcoin-listener's group_vars/all.yml
+        # (see precedence note above); listener-infra's group_vars/all.yml
         # defines the same variables and group_vars/all wins over inventory
         # group vars in Ansible precedence.
 

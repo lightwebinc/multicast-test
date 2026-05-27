@@ -81,5 +81,5 @@ flow; `HashKey=0` is treated as orphan and bypasses the chain limiter.
 ## Run
 
 ```bash
-bash ~/repo/bitcoin-multicast-test/scenarios/15-chain-ratelimit/run.sh
+bash ~/repo/multicast-test/scenarios/15-chain-ratelimit/run.sh
 ```

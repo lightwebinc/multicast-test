@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Deploy bitcoin-ingress (proxy), bitcoin-retransmission (retry1..N) and
-# bitcoin-listener (listener1..3) using inventories committed to this repo.
+# Deploy ingress-infra (proxy), retransmission-infra (retry1..N) and
+# listener-infra (listener1..3) using inventories committed to this repo.
 # Idempotent.
 #
-# All three Go services have `replace ../bitcoin-shard-common` in their go.mod,
+# All three Go services have `replace ../shard-common` in their go.mod,
 # which breaks remote builds (the parent repo is missing on the VMs). To work
 # around that, this script builds all three binaries locally and feeds them
 # to the roles via the {proxy,listener,retry}_local_binary opt-ins. Set
@@ -12,13 +12,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INGRESS_DIR=${BITCOIN_INGRESS_DIR:-$HOME/repo/bitcoin-ingress/ansible}
-LISTENER_DIR=${BITCOIN_LISTENER_DIR:-$HOME/repo/bitcoin-listener/ansible}
-RETRANS_DIR=${BITCOIN_RETRANSMISSION_DIR:-$HOME/repo/bitcoin-retransmission/ansible}
+INGRESS_DIR=${BITCOIN_INGRESS_DIR:-$HOME/repo/ingress-infra/ansible}
+LISTENER_DIR=${BITCOIN_LISTENER_DIR:-$HOME/repo/listener-infra/ansible}
+RETRANS_DIR=${BITCOIN_RETRANSMISSION_DIR:-$HOME/repo/retransmission-infra/ansible}
 
-PROXY_SRC=${BITCOIN_PROXY_SRC:-$HOME/repo/bitcoin-shard-proxy}
-LISTENER_SRC=${BITCOIN_LISTENER_SRC:-$HOME/repo/bitcoin-shard-listener}
-RETRY_SRC=${BITCOIN_RETRY_SRC:-$HOME/repo/bitcoin-retry-endpoint}
+PROXY_SRC=${BITCOIN_PROXY_SRC:-$HOME/repo/shard-proxy}
+LISTENER_SRC=${BITCOIN_LISTENER_SRC:-$HOME/repo/shard-listener}
+RETRY_SRC=${BITCOIN_RETRY_SRC:-$HOME/repo/retry-endpoint}
 
 for d in "$INGRESS_DIR" "$LISTENER_DIR" "$RETRANS_DIR"; do
   if [[ ! -f "$d/site.yml" ]]; then
@@ -44,22 +44,22 @@ if [[ -z "${SKIP_LOCAL_BUILD:-}" ]]; then
       go build -buildvcs=false -o "$out" .)
     echo "    built $name -> $out ($(stat -c%s "$out") bytes)"
   }
-  build_one "$PROXY_SRC"    /tmp/bitcoin-shard-proxy    bitcoin-shard-proxy
-  build_one "$LISTENER_SRC" /tmp/bitcoin-shard-listener bitcoin-shard-listener
-  build_one "$RETRY_SRC"    /tmp/bitcoin-retry-endpoint bitcoin-retry-endpoint
+  build_one "$PROXY_SRC"    /tmp/shard-proxy    shard-proxy
+  build_one "$LISTENER_SRC" /tmp/shard-listener shard-listener
+  build_one "$RETRY_SRC"    /tmp/retry-endpoint retry-endpoint
 
-  EXTRA_PROXY=(-e proxy_local_binary=/tmp/bitcoin-shard-proxy)
-  EXTRA_LISTENER=(-e listener_local_binary=/tmp/bitcoin-shard-listener)
-  EXTRA_RETRY=(-e retry_local_binary=/tmp/bitcoin-retry-endpoint)
+  EXTRA_PROXY=(-e proxy_local_binary=/tmp/shard-proxy)
+  EXTRA_LISTENER=(-e listener_local_binary=/tmp/shard-listener)
+  EXTRA_RETRY=(-e retry_local_binary=/tmp/retry-endpoint)
 fi
 
-echo "==> Deploying bitcoin-shard-proxy to proxy VM"
+echo "==> Deploying shard-proxy to proxy VM"
 (cd "$INGRESS_DIR" && ansible-playbook -i "$SCRIPT_DIR/ingress-hosts.yml" site.yml "${EXTRA_PROXY[@]}" "$@")
 
-echo "==> Deploying bitcoin-retry-endpoint to retry1..N"
+echo "==> Deploying retry-endpoint to retry1..N"
 (cd "$RETRANS_DIR" && ansible-playbook -i "$SCRIPT_DIR/retry-hosts.yml" site.yml "${EXTRA_RETRY[@]}" "$@")
 
-echo "==> Deploying bitcoin-shard-listener to listener1..3"
+echo "==> Deploying shard-listener to listener1..3"
 (cd "$LISTENER_DIR" && ansible-playbook -i "$SCRIPT_DIR/listener-hosts.yml" site.yml "${EXTRA_LISTENER[@]}" "$@")
 
 echo "==> Deploy complete."

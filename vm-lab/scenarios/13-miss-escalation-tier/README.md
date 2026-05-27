@@ -64,11 +64,11 @@ retry3: bre_frames_cached_total  > 0    (received multicast normally)
   (`ansible/listener-hosts.yml`) and beacon multicast firewall rule in place.
 - `beacon_interval: 5s` set on all retry endpoints.
 - `NACK_MAX_RETRIES=8` on listeners (default 5 is insufficient for a 6-entry
-  registry: 3 beacon + 3 static seeds). Set in `/etc/bitcoin-shard-listener/config.env`.
+  registry: 3 beacon + 3 static seeds). Set in `/etc/shard-listener/config.env`.
 
 ## nack.go bug fixes (2026-05-05)
 
-Two bugs were found and fixed in `bitcoin-shard-listener/nack/nack.go` while
+Two bugs were found and fixed in `shard-listener/nack/nack.go` while
 debugging this scenario:
 
 1. **Phantom gaps from retransmitted frames** — `Observe()` created a new gap

@@ -40,8 +40,8 @@ restore() {
   remove_listener_loss
   for vm in "${_TCP_RESTORED_VMS[@]+"${_TCP_RESTORED_VMS[@]}"}"; do
     lxc exec "$vm" -- bash -c "
-      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/bitcoin-shard-proxy/config.env
-      systemctl restart bitcoin-shard-proxy
+      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=0/' /etc/shard-proxy/config.env
+      systemctl restart shard-proxy
     " || true
   done
 }
@@ -49,13 +49,13 @@ trap restore EXIT
 
 for _pvm in "${PROXY_VMS[@]}"; do
   _was_zero=$(lxc exec "$_pvm" -- bash -c "
-    grep -q '^TCP_LISTEN_PORT=0' /etc/bitcoin-shard-proxy/config.env && echo 1 || echo 0
+    grep -q '^TCP_LISTEN_PORT=0' /etc/shard-proxy/config.env && echo 1 || echo 0
   " 2>/dev/null || echo 0)
   if [[ "$_was_zero" -eq 1 ]]; then
     echo "==> Enabling TCP ingress on $_pvm (port 9002)"
     lxc exec "$_pvm" -- bash -c "
-      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/bitcoin-shard-proxy/config.env
-      systemctl restart bitcoin-shard-proxy
+      sed -i 's/^TCP_LISTEN_PORT=.*/TCP_LISTEN_PORT=9002/' /etc/shard-proxy/config.env
+      systemctl restart shard-proxy
     "
     _TCP_RESTORED_VMS+=("$_pvm")
   fi
@@ -65,18 +65,18 @@ if [[ ${#_TCP_RESTORED_VMS[@]} -gt 0 ]]; then sleep 3; fi
 echo "==> Verifying listeners have SUBTREE_DATA_ENABLED=true"
 for vm in "${LISTENERS[@]}"; do
   enabled=$(lxc exec "$vm" -- bash -c "
-    grep -q 'SUBTREE_DATA_ENABLED=true' /etc/bitcoin-shard-listener/config.env \
+    grep -q 'SUBTREE_DATA_ENABLED=true' /etc/shard-listener/config.env \
       && echo yes || echo no
   " 2>/dev/null || echo no)
   if [[ "$enabled" != "yes" ]]; then
     echo "WARN  $vm: SUBTREE_DATA_ENABLED not set; enabling now"
     lxc exec "$vm" -- bash -c "
-      if grep -q '^SUBTREE_DATA_ENABLED=' /etc/bitcoin-shard-listener/config.env; then
-        sed -i 's/^SUBTREE_DATA_ENABLED=.*/SUBTREE_DATA_ENABLED=true/' /etc/bitcoin-shard-listener/config.env
+      if grep -q '^SUBTREE_DATA_ENABLED=' /etc/shard-listener/config.env; then
+        sed -i 's/^SUBTREE_DATA_ENABLED=.*/SUBTREE_DATA_ENABLED=true/' /etc/shard-listener/config.env
       else
-        echo 'SUBTREE_DATA_ENABLED=true' >> /etc/bitcoin-shard-listener/config.env
+        echo 'SUBTREE_DATA_ENABLED=true' >> /etc/shard-listener/config.env
       fi
-      systemctl restart bitcoin-shard-listener
+      systemctl restart shard-listener
     "
     sleep 3
   fi
@@ -85,18 +85,18 @@ done
 echo "==> Verifying retry endpoints have SUBTREE_DATA_ENABLED=true"
 for vm in "${RETRY_VMS[@]}"; do
   enabled=$(lxc exec "$vm" -- bash -c "
-    grep -q 'SUBTREE_DATA_ENABLED=true' /etc/bitcoin-retry-endpoint/config.env \
+    grep -q 'SUBTREE_DATA_ENABLED=true' /etc/retry-endpoint/config.env \
       && echo yes || echo no
   " 2>/dev/null || echo no)
   if [[ "$enabled" != "yes" ]]; then
     echo "WARN  $vm: SUBTREE_DATA_ENABLED not set; enabling now"
     lxc exec "$vm" -- bash -c "
-      if grep -q '^SUBTREE_DATA_ENABLED=' /etc/bitcoin-retry-endpoint/config.env; then
-        sed -i 's/^SUBTREE_DATA_ENABLED=.*/SUBTREE_DATA_ENABLED=true/' /etc/bitcoin-retry-endpoint/config.env
+      if grep -q '^SUBTREE_DATA_ENABLED=' /etc/retry-endpoint/config.env; then
+        sed -i 's/^SUBTREE_DATA_ENABLED=.*/SUBTREE_DATA_ENABLED=true/' /etc/retry-endpoint/config.env
       else
-        echo 'SUBTREE_DATA_ENABLED=true' >> /etc/bitcoin-retry-endpoint/config.env
+        echo 'SUBTREE_DATA_ENABLED=true' >> /etc/retry-endpoint/config.env
       fi
-      systemctl restart bitcoin-retry-endpoint
+      systemctl restart retry-endpoint
     "
     sleep 3
   fi

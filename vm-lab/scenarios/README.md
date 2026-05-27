@@ -15,25 +15,25 @@ target **1000 pps for 10 s** (10 000 frames).
 | `05-mc-egress-bridge/`           | MC egress domain bridge: listener1 re-emits ff05→ff02; listener4 receives                          | listener1 + listener4 | —                      |
 | `06-functional-brc128/`          | BRC-128 (BRC-30 EF) payloads, all shards — header parser is payload-agnostic                       | all                   | —                      |
 | `07-functional-brc128-mixed/`    | Mixed BRC-124 + BRC-128 payloads on the same multicast group                                       | all                   | —                      |
-| `08-nack-retransmit-brc128/`     | NACK/retransmit pipeline with BRC-128 payloads                                                     | all                   | bitcoin-retry-endpoint |
-| `10-single-endpoint-ack/`        | Low-PPS per-gap ACK recovery                                                                       | all                   | bitcoin-retry-endpoint |
-| `11-permanent-gap-miss/`         | Cache-empty MISS → unrecovered gaps                                                                | all                   | bitcoin-retry-endpoint |
-| `12-burst-gap-ratelimit/`        | Multi-frame bursts → rate limiter fires                                                            | all                   | bitcoin-retry-endpoint |
-| `13-miss-escalation-tier/`       | 2-hop MISS escalation: retry1→retry2→retry3 ACK                                                    | all                   | bitcoin-retry-endpoint |
-| `14-multi-endpoint-ratelimit/`   | Rogue + compromised-listener NACK flood; RL fires on all 3 endpoints                               | all                   | bitcoin-retry-endpoint |
-| `15-chain-ratelimit/`            | Fixed non-zero HashKey flood; chain RL fires; HashKey=0 bypasses (orphan)                          | all                   | bitcoin-retry-endpoint |
-| `16-group-ratelimit/`            | Dense gap injection; group RL fires post-lookup; ACK still sent on throttle                        | all                   | bitcoin-retry-endpoint |
+| `08-nack-retransmit-brc128/`     | NACK/retransmit pipeline with BRC-128 payloads                                                     | all                   | retry-endpoint |
+| `10-single-endpoint-ack/`        | Low-PPS per-gap ACK recovery                                                                       | all                   | retry-endpoint |
+| `11-permanent-gap-miss/`         | Cache-empty MISS → unrecovered gaps                                                                | all                   | retry-endpoint |
+| `12-burst-gap-ratelimit/`        | Multi-frame bursts → rate limiter fires                                                            | all                   | retry-endpoint |
+| `13-miss-escalation-tier/`       | 2-hop MISS escalation: retry1→retry2→retry3 ACK                                                    | all                   | retry-endpoint |
+| `14-multi-endpoint-ratelimit/`   | Rogue + compromised-listener NACK flood; RL fires on all 3 endpoints                               | all                   | retry-endpoint |
+| `15-chain-ratelimit/`            | Fixed non-zero HashKey flood; chain RL fires; HashKey=0 bypasses (orphan)                          | all                   | retry-endpoint |
+| `16-group-ratelimit/`            | Dense gap injection; group RL fires post-lookup; ACK still sent on throttle                        | all                   | retry-endpoint |
 | `20-subtree-group-announce/`     | BRC-127 dynamic group filtering via SubtreeAnnounce                                                | listener3             | —                      |
 | `21-subtree-group-ramp/`         | BRC-127+124 membership ramp over time: dashboard time-series + delivery assertions                 | listener3             | —                      |
 | `30-block-announce-delivery/`    | BRC-131 block announce + coinbase frames delivered to all listeners via FF0E::B:FFFE               | all                   | —                      |
-| `31-block-announce-retransmit/`  | BRC-131 with 10% loss; NACK recovery via retry endpoints' control-group cache                      | all                   | bitcoin-retry-endpoint |
+| `31-block-announce-retransmit/`  | BRC-131 with 10% loss; NACK recovery via retry endpoints' control-group cache                      | all                   | retry-endpoint |
 | `32-subtree-data-delivery/`      | BRC-132 inline SubtreeData frames delivered via FF0X::B:FFFB to all listeners                      | all                   | —                      |
 | `33-subtree-data-fragmentation/` | BRC-132 large payload (8 KB) fragmented into BRC-130; listeners reassemble via SubtreeDataCallback | all                   | —                      |
-| `34-subtree-data-retransmit/`    | BRC-132 with 10% loss; NACK recovery via retry endpoints caching V5 frames on 0xFFFB               | all                   | bitcoin-retry-endpoint |
-| `35-block-header-egress/`        | BRC-131 block headers egressed to listener1 via header_egress; sink counts datagrams               | listener1             | bitcoin-retry-endpoint |
+| `34-subtree-data-retransmit/`    | BRC-132 with 10% loss; NACK recovery via retry endpoints caching V5 frames on 0xFFFB               | all                   | retry-endpoint |
+| `35-block-header-egress/`        | BRC-131 block headers egressed to listener1 via header_egress; sink counts datagrams               | listener1             | retry-endpoint |
 | `36-anchor-delivery/`            | BRC-134 anchor frames (FrameVerV6) delivered to all listeners via FF0E::B:FFFE; bypasses shard filter | all                | —                      |
-| `37-anchor-retransmit/`          | BRC-134 with 10% loss; NACK recovery via retry endpoints caching V6 frames on CtrlGroupControl     | all                   | bitcoin-retry-endpoint |
-| `99-nack-retransmit/`            | NACK / deferred retransmit (aggregate)                                                             | all                   | bitcoin-retry-endpoint |
+| `37-anchor-retransmit/`          | BRC-134 with 10% loss; NACK recovery via retry endpoints caching V6 frames on CtrlGroupControl     | all                   | retry-endpoint |
+| `99-nack-retransmit/`            | NACK / deferred retransmit (aggregate)                                                             | all                   | retry-endpoint |
 
 
 ## How to add a scenario

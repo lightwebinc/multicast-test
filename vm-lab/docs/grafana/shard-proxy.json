@@ -1338,6 +1338,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Bitcoin Shard Proxy Metrics",
-  "uid": "bitcoin-shard-proxy",
+  "uid": "shard-proxy",
   "weekStart": ""
 }

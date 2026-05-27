@@ -1,10 +1,10 @@
 ---
-# Inventory for the bitcoin-ingress playbook (github.com/lightwebinc/bitcoin-ingress).
-# Invoke via:  cd ~/repo/bitcoin-ingress/ansible &&
-#              ansible-playbook -i ~/repo/bitcoin-multicast-test/ansible/ingress-hosts.yml site.yml
+# Inventory for the ingress-infra playbook (github.com/lightwebinc/ingress-infra).
+# Invoke via:  cd ~/repo/ingress-infra/ansible &&
+#              ansible-playbook -i ~/repo/multicast-test/ansible/ingress-hosts.yml site.yml
 #
 # NOTE: egress_iface MUST be a host-level var, not group-level — group_vars/all
-# in bitcoin-ingress would otherwise override it.
+# in ingress-infra would otherwise override it.
 
 all:
   children:
@@ -12,8 +12,8 @@ all:
       vars:
         # Lab: skip clone+build by pushing a pre-built binary from controller.
         # Build: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -buildvcs=false \
-        #   -o /tmp/bitcoin-shard-proxy .  (in ~/repo/bitcoin-shard-proxy)
-        proxy_local_binary: "/tmp/bitcoin-shard-proxy"
+        #   -o /tmp/shard-proxy .  (in ~/repo/shard-proxy)
+        proxy_local_binary: "/tmp/shard-proxy"
         ansible_user: ubuntu
         ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GSSAPIAuthentication=no'
         egress_mode: ethernet

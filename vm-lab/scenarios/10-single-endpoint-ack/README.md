@@ -48,5 +48,5 @@ Requires `retry1` to be reachable from listener1..3 on `10.10.10.34:9300`
 ## Run
 
 ```bash
-bash ~/repo/bitcoin-multicast-test/scenarios/10-single-endpoint-ack/run.sh
+bash ~/repo/multicast-test/scenarios/10-single-endpoint-ack/run.sh
 ```

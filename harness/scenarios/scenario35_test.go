@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/driver"
-	dockerdriver "github.com/lightwebinc/bitcoin-multicast-test/harness/driver/docker"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/env"
-	"github.com/lightwebinc/bitcoin-multicast-test/harness/metrics"
+	"github.com/lightwebinc/multicast-test/harness/driver"
+	dockerdriver "github.com/lightwebinc/multicast-test/harness/driver/docker"
+	"github.com/lightwebinc/multicast-test/harness/env"
+	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
 // Scenario 35 — Block header egress: stripped BRC-131 retransmission
@@ -25,7 +25,7 @@ func TestScenario35_BlockHeaderEgress(t *testing.T) {
 	penv["TCP_LISTEN_PORT"] = "9002"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s35-proxy",
-		Image:       "bitcoin-shard-proxy:harness",
+		Image:       "shard-proxy:harness",
 		IPv6:        "fd10::2",
 		Env:         penv,
 		MetricsPort: 9100,
@@ -38,7 +38,7 @@ func TestScenario35_BlockHeaderEgress(t *testing.T) {
 	l1env["HEADER_EGRESS_PROTO"] = "udp"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s35-listener1",
-		Image:       "bitcoin-shard-listener:harness",
+		Image:       "shard-listener:harness",
 		IPv6:        "fd10::11",
 		Env:         l1env,
 		MetricsPort: 9200,

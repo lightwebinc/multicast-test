@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verify that the bitcoin-listener firewall role is enforcing the expected rules.
+# Verify that the listener-infra firewall role is enforcing the expected rules.
 # Runs a mix of positive and negative probes from the LXD host.
 #
 # Positive probes:

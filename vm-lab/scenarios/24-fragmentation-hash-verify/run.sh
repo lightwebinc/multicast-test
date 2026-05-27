@@ -17,7 +17,7 @@ SCENARIO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${FRAG_MTU:=1500}"
 : "${PAYLOAD_SIZE:=2048}"
 source "$SCENARIO_DIR/../lib/common.sh"
-LISTENER_ENV_FILE="/etc/bitcoin-shard-listener/config.env"
+LISTENER_ENV_FILE="/etc/shard-listener/config.env"
 LISTENER_VM="listener1"
 
 BEFORE="$SCENARIO_DIR/metrics.before.tsv"
@@ -28,7 +28,7 @@ restore_all() {
   lxc exec "$LISTENER_VM" -- bash -c "
     if [ -f ${LISTENER_ENV_FILE}.bak ]; then
       mv ${LISTENER_ENV_FILE}.bak ${LISTENER_ENV_FILE}
-      systemctl restart bitcoin-shard-listener
+      systemctl restart shard-listener
     fi
   " || true
 }
@@ -41,7 +41,7 @@ echo "==> Enabling verify-payload-hash on $LISTENER_VM"
 lxc exec "$LISTENER_VM" -- bash -c "
   cp ${LISTENER_ENV_FILE} ${LISTENER_ENV_FILE}.bak
   sed -i 's|^VERIFY_PAYLOAD_HASH=.*|VERIFY_PAYLOAD_HASH=true|' ${LISTENER_ENV_FILE}
-  systemctl restart bitcoin-shard-listener
+  systemctl restart shard-listener
 "
 sleep 3
 

@@ -24,8 +24,8 @@ for vm in listener1 listener2 listener3 listener4; do
   lxc exec "$vm" -- ip maddr show dev enp6s0
   echo "  [$vm] ip -6 addr show enp6s0:"
   lxc exec "$vm" -- ip -6 addr show enp6s0
-  echo "  [$vm] bitcoin-shard-listener service state:"
-  lxc exec "$vm" -- systemctl is-active bitcoin-shard-listener.service || true
+  echo "  [$vm] shard-listener service state:"
+  lxc exec "$vm" -- systemctl is-active shard-listener.service || true
 done
 
 echo ""

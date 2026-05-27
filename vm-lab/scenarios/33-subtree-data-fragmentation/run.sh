@@ -40,7 +40,7 @@ enable_tcp_and_frag() {
       else
         echo 'FRAG_MTU=${FRAG_MTU}' >> ${PROXY_ENV_FILE}
       fi
-      systemctl restart bitcoin-shard-proxy
+      systemctl restart shard-proxy
     "
     echo "     $vm restarted with TCP_LISTEN_PORT=9002 FRAG_MTU=$FRAG_MTU"
   done
@@ -52,7 +52,7 @@ restore_proxy() {
     lxc exec "$vm" -- bash -c "
       if [ -f ${PROXY_ENV_FILE}.bak ]; then
         mv ${PROXY_ENV_FILE}.bak ${PROXY_ENV_FILE}
-        systemctl restart bitcoin-shard-proxy
+        systemctl restart shard-proxy
       fi
     " || true
   done
@@ -65,12 +65,12 @@ enable_tcp_and_frag
 echo "==> Ensuring listeners have SUBTREE_DATA_ENABLED=true and resetting state"
 for vm in "${LISTENERS[@]}"; do
   lxc exec "$vm" -- bash -c "
-    if grep -q '^SUBTREE_DATA_ENABLED=' /etc/bitcoin-shard-listener/config.env; then
-      sed -i 's/^SUBTREE_DATA_ENABLED=.*/SUBTREE_DATA_ENABLED=true/' /etc/bitcoin-shard-listener/config.env
+    if grep -q '^SUBTREE_DATA_ENABLED=' /etc/shard-listener/config.env; then
+      sed -i 's/^SUBTREE_DATA_ENABLED=.*/SUBTREE_DATA_ENABLED=true/' /etc/shard-listener/config.env
     else
-      echo 'SUBTREE_DATA_ENABLED=true' >> /etc/bitcoin-shard-listener/config.env
+      echo 'SUBTREE_DATA_ENABLED=true' >> /etc/shard-listener/config.env
     fi
-    systemctl restart bitcoin-shard-listener
+    systemctl restart shard-listener
   "
 done
 sleep 3

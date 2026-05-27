@@ -2,7 +2,7 @@
 # Full OS upgrade + conditional reboot for all lab VMs.
 #
 # Usage:
-#   cd ~/repo/bitcoin-multicast-test/ansible
+#   cd ~/repo/multicast-test/ansible
 #   ansible-playbook -i all-hosts.yml os-update.yml
 #
 # Dry-run:
