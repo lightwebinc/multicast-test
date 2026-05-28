@@ -56,7 +56,10 @@ func (e *Env) StartAll(ctx context.Context) {
 	for _, cfg := range e.nodes {
 		e.t.Logf("[env] starting %s (%s) at %s", cfg.Name, cfg.Image, cfg.IPv6)
 		if err := e.Driver.Start(ctx, cfg); err != nil {
-			// Stop already-started containers before failing.
+			// Remove the failing node's husk (docker may leave a Created
+			// record on network setup failure) plus any already-started
+			// containers before failing.
+			e.Driver.Stop(ctx, cfg.Name) //nolint:errcheck
 			for _, n := range started {
 				e.Driver.Stop(ctx, n) //nolint:errcheck
 			}

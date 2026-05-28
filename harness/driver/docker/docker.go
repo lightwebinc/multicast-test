@@ -41,6 +41,11 @@ func (d *Driver) Start(ctx context.Context, cfg driver.NodeConfig) error {
 
 	const maxRetries = 5
 	for attempt := 0; attempt <= maxRetries; attempt++ {
+		// Idempotently clear any prior container record with this name. Docker
+		// leaves a Created record when network setup fails (e.g. "Address
+		// already in use"), which would turn the next attempt into a name
+		// Conflict instead of retrying the underlying condition.
+		run(ctx, "docker", "rm", "-f", cfg.Name) //nolint:errcheck
 		out, err := run(ctx, "docker", args...)
 		if err == nil {
 			return nil
