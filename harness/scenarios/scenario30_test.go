@@ -13,7 +13,7 @@ import (
 // Mirrors scenarios/30-block-announce-delivery/run.sh.
 //
 // Sends block announcements via TCP to the proxy. All 3 listeners subscribe to
-// CtrlGroupControl and must receive every frame regardless of shard/subtree filters.
+// GroupBlockBroadcast and must receive every frame regardless of shard/subtree filters.
 func TestScenario30_BlockAnnounceDelivery(t *testing.T) {
 	ctx := context.Background()
 	e, _, _, _ := basicTopology(t, "s30")

@@ -2,7 +2,7 @@
 # Scenario 32 — BRC-132 subtree data: basic delivery
 #
 # Sends inline (unfragmented) BRC-132 SubtreeData frames via TCP to the proxy.
-# The proxy stamps HashKey/SeqNum and forwards to CtrlGroupSubtreeAnnounce
+# The proxy stamps HashKey/SeqNum and forwards to GroupSubtreeAnnounce
 # (FF0X::B:FFFB). All listeners with SUBTREE_DATA_ENABLED=true must receive
 # and forward every frame.
 #

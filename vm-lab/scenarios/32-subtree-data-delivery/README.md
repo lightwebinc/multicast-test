@@ -2,7 +2,7 @@
 
 Sends BRC-132 SubtreeData frames (hashes-only, inline payload ≤ MTU) via
 TCP to the proxy. The proxy stamps HashKey/SeqNum and forwards frames to
-`CtrlGroupSubtreeAnnounce` (FF0X::B:FFFB). All listeners that have
+`GroupSubtreeAnnounce` (FF0X::B:FFFB). All listeners that have
 `SUBTREE_DATA_ENABLED=true` join this group and must receive and forward
 every frame.
 

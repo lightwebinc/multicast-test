@@ -3,7 +3,7 @@
 #
 # Sends BlockAnnounce + CoinbaseTx frame pairs via TCP to the proxy.
 # The proxy stamps HashKey/SeqNum in-place and forwards them to
-# FF0E::B:FFFE (CtrlGroupControl). All three listeners subscribe to
+# FF0E::B:FFFE (GroupBlockBroadcast). All three listeners subscribe to
 # this group and must receive and forward every frame regardless of
 # their shard/subtree filter configuration.
 #

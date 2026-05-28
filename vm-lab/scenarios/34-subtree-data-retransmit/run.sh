@@ -3,7 +3,7 @@
 #
 # Injects 10% packet loss on listeners, sends BRC-132 SubtreeData frames,
 # then removes loss and waits for NACK/retransmit recovery. Retry endpoints
-# cache V5 frames because they join CtrlGroupSubtreeAnnounce (0xFFFB).
+# cache V5 frames because they join GroupSubtreeAnnounce (0xFFFB).
 # The retransmitter routes cached V5 frames back to 0xFFFB (not a shard group).
 #
 # Expectations:

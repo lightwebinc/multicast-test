@@ -32,7 +32,7 @@ target **1000 pps for 10 s** (10 000 frames).
 | `34-subtree-data-retransmit/`    | BRC-132 with 10% loss; NACK recovery via retry endpoints caching V5 frames on 0xFFFB               | all                   | retry-endpoint |
 | `35-block-header-egress/`        | BRC-131 block headers egressed to listener1 via header_egress; sink counts datagrams               | listener1             | retry-endpoint |
 | `36-anchor-delivery/`            | BRC-134 anchor frames (FrameVerV6) delivered to all listeners via FF0E::B:FFFE; bypasses shard filter | all                | —                      |
-| `37-anchor-retransmit/`          | BRC-134 with 10% loss; NACK recovery via retry endpoints caching V6 frames on CtrlGroupControl     | all                   | retry-endpoint |
+| `37-anchor-retransmit/`          | BRC-134 with 10% loss; NACK recovery via retry endpoints caching V6 frames on GroupBlockBroadcast     | all                   | retry-endpoint |
 | `99-nack-retransmit/`            | NACK / deferred retransmit (aggregate)                                                             | all                   | retry-endpoint |
 
 

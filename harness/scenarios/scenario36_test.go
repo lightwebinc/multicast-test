@@ -13,7 +13,7 @@ import (
 // Mirrors scenarios/36-anchor-delivery/run.sh.
 //
 // Sends anchor frames via TCP. All listeners must receive and forward them
-// on CtrlGroupControl (FF0E::B:FFFE).
+// on GroupBlockBroadcast (FF0E::B:FFFE).
 func TestScenario36_AnchorDelivery(t *testing.T) {
 	ctx := context.Background()
 	e, _, _, _ := basicTopology(t, "s36")

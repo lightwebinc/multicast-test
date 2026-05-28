@@ -3,7 +3,7 @@
 #
 # Sends anchor frames (FrameVerV6 = 0x06) via UDP to the proxy.
 # The proxy stamps HashKey/SeqNum in-place and forwards them to
-# FF0E::B:FFFE (CtrlGroupControl). All three listeners subscribe to
+# FF0E::B:FFFE (GroupBlockBroadcast). All three listeners subscribe to
 # this group and must receive every anchor frame regardless of their
 # shard/subtree filter configuration.
 #

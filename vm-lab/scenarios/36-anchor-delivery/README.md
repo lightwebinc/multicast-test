@@ -2,7 +2,7 @@
 
 Sends BRC-134 anchor frames (FrameVerV6 = 0x06) via UDP to the proxy. The
 proxy stamps HashKey and SeqNum in-place and forwards each frame to
-`FF0E::B:FFFE` (CtrlGroupControl). All listeners subscribe to this group and
+`FF0E::B:FFFE` (GroupBlockBroadcast). All listeners subscribe to this group and
 must receive every anchor frame regardless of their shard or subtree filter
 configuration.
 

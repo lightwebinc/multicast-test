@@ -14,7 +14,7 @@ import (
 // Mirrors scenarios/37-anchor-retransmit/run.sh.
 //
 // 10% loss on listeners + anchor frames. Retry endpoint caches V6 frames
-// and retransmits to CtrlGroupControl on NACK.
+// and retransmits to GroupBlockBroadcast on NACK.
 func TestScenario37_AnchorRetransmit(t *testing.T) {
 	ctx := context.Background()
 	e, _ := retryTopology(t, "s37")
