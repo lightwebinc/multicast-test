@@ -4,6 +4,14 @@
 > [`harness/`](../harness/); see the [top-level README](../README.md) for
 > quickstart. This VM lab is preserved for compatibility testing on real
 > distributions and for scenarios that need persistent state across runs.
+>
+> **SSM (RFC 4607) testing** lives in the Go harness — see
+> [`harness/scenarios/scenario_ssm_test.go`](../harness/scenarios/scenario_ssm_test.go)
+> for the loopback `(S,G)` join/leave check and the ASM-fallback startup
+> scenario. Full Posture C cross-host SSM delivery requires PIM-SSM in
+> the fabric and is validated on real fabric hosts (not in this VM lab).
+> See the
+> [bsv-multicast SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/SourceSpecificMulticast/ssm-support-plan.md).
 
 Linux LXD-based end-to-end test lab for the Bitcoin sharding pipeline. This
 provisions persistent Ubuntu VMs on a host machine and runs bash scenario
