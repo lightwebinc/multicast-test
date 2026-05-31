@@ -97,6 +97,20 @@ make test-one T=ScenarioNN
 | 52  | TxID dedup: Redis failure (fail-open)                      | `TestScenario52_TxIDDedupRedisFailure` | [harness](harness/scenarios/scenario52_test.go) · [vm-lab](vm-lab/scenarios/52-txid-dedup-redis-failure) |
 | 53  | TxID dedup: sentinel failover                              | `TestScenario53_TxIDDedupFailover`     | [harness](harness/scenarios/scenario53_test.go) · [vm-lab](vm-lab/scenarios/53-txid-dedup-failover)      |
 
+## 60–69 — Source-Specific Multicast (RFC 4607)
+
+`make test-ssm`
+
+Validates the [SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/SourceSpecificMulticast/ssm-support-plan.md)
+implementation. Full Posture C cross-host SSM data delivery requires
+PIM-SSM in the fabric (not provided by Docker's default bridge) and
+is validated on real fabric hosts; no vm-lab variants.
+
+| #   | Title                                         | Test                              | Files                                                          |
+| --- | --------------------------------------------- | --------------------------------- | -------------------------------------------------------------- |
+| 60  | SSM loopback Join/Leave (kernel sanity check) | `TestScenario60_SSMLoopback`      | [harness](harness/scenarios/scenario60_test.go) · harness only |
+| 61  | SSM ASM-fallback startup (scaffolding no-op)  | `TestScenario61_SSMASMFallback`   | [harness](harness/scenarios/scenario61_test.go) · harness only |
+
 ## 99 — End-to-end smoke
 
 | #   | Title                      | Test                            | Files                                                                                           |
@@ -112,4 +126,5 @@ make test-one T=ScenarioNN
 | `make test-retransmit`       | `Scenario(99\|1[0-6])`          | NACK / retransmit              |
 | `make test-frag`             | `Scenario2[2-6]`                | fragmentation                  |
 | `make test-bgp`              | `Scenario4[02]`                 | BGP                            |
+| `make test-ssm`              | `Scenario6[01]`                 | SSM (RFC 4607)                 |
 | `make test-one T=ScenarioNN` | single                          | run one scenario               |

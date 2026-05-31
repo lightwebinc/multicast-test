@@ -48,22 +48,26 @@ sudo go test ./harness/scenarios/... -v -run TestScenario01
 Two scenarios validate the SSM rollout (see
 [bsv-multicast SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/SourceSpecificMulticast/ssm-support-plan.md)):
 
-- `TestSSM_Loopback_JoinLeave` — process-local sanity check that
-  `shard-common/netjoin` issues `MCAST_JOIN_SOURCE_GROUP` (and the
-  matching leave) on lo. Also exercises `shard.Prefix(SSM, site)` →
-  `FF35`. Does not require Docker.
-- `TestSSM_Scenario_ASMFallback` — starts a proxy + listener with
-  `SOURCE_MODE=asm` to verify the SSM scaffolding is no-op when
-  disabled (the new env vars must be accepted without changing ASM
-  behavior).
+- **Scenario 60** — `TestScenario60_SSMLoopback`: process-local
+  sanity check that `shard-common/netjoin` issues
+  `MCAST_JOIN_SOURCE_GROUP` (and the matching leave) on lo. Also
+  exercises `shard.Prefix(SSM, site)` → `FF35`. Does not require
+  Docker.
+- **Scenario 61** — `TestScenario61_SSMASMFallback`: starts a proxy +
+  listener with `SOURCE_MODE=asm` to verify the SSM scaffolding is
+  no-op when disabled (the new env vars must be accepted without
+  changing ASM behavior).
 
 Full Posture C cross-container delivery requires PIM-SSM in the
 inter-container fabric, which Docker's default bridge does not
-provide; that lives in `vm-lab/` or a real fabric host.
+provide; that is validated on real fabric hosts (no vm-lab variants).
 
 ```bash
-# Loopback test — fast, no Docker required
-go test ./harness/scenarios/ -v -run TestSSM_Loopback_JoinLeave
+# Run both SSM scenarios
+make test-ssm
+
+# Just the loopback test — fast, no Docker required
+go test ./harness/scenarios/ -v -run TestScenario60_SSMLoopback
 ```
 
 ## Layout
