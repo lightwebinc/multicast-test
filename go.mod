@@ -3,7 +3,7 @@ module github.com/lightwebinc/multicast-test
 go 1.25.10
 
 require (
-	github.com/lightwebinc/shard-common v0.11.0
+	github.com/lightwebinc/shard-common v0.13.0
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/common v0.67.5
 )
@@ -14,5 +14,3 @@ require (
 	golang.org/x/sys v0.42.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
-
-replace github.com/lightwebinc/shard-common => ../shard-common
