@@ -111,6 +111,13 @@ is validated on real fabric hosts; no vm-lab variants.
 | 60  | SSM loopback Join/Leave (kernel sanity check) | `TestScenario60_SSMLoopback`      | [harness](harness/scenarios/scenario60_test.go) · harness only |
 | 61  | SSM ASM-fallback startup (scaffolding no-op)  | `TestScenario61_SSMASMFallback`   | [harness](harness/scenarios/scenario61_test.go) · harness only |
 
+## 70–79 — BRC-137 manifest / auto-shard-config
+
+| #   | Title                                       | Test                                   | Files                                                          |
+| --- | ------------------------------------------- | -------------------------------------- | -------------------------------------------------------------- |
+| 70  | BRC-137 wire-level manifest pipeline        | `TestScenario70_BRC137WirePipeline`    | [harness](harness/scenarios/scenario70_test.go) · harness only |
+| 71  | BRC-137 Successor block live-reshard signal | `TestScenario71_BRC137SuccessorSignal` | [harness](harness/scenarios/scenario70_test.go) · harness only |
+
 ## 99 — End-to-end smoke
 
 | #   | Title                      | Test                            | Files                                                                                           |
