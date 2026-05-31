@@ -1,4 +1,4 @@
-.PHONY: test test-quick test-retransmit test-frag test-bgp test-ssm test-one clean images help
+.PHONY: test test-quick test-retransmit test-frag test-bgp test-ssm test-manifest test-one clean images help
 
 GOTEST := sudo go test ./harness/scenarios/... -v -count=1
 
@@ -19,6 +19,9 @@ test-bgp: ## Run BGP scenarios
 
 test-ssm: ## Run SSM scenarios (RFC 4607)
 	$(GOTEST) -timeout 5m -run 'Scenario6[01]'
+
+test-manifest: ## Run BRC-137 manifest / auto-shard-config scenarios
+	$(GOTEST) -timeout 5m -run 'Scenario7[0-2]'
 
 test-one: ## Run a single scenario test by name: make test-one T=Scenario36
 	@if [ -z "$(T)" ]; then echo "usage: make test-one T=<TestName>"; exit 2; fi

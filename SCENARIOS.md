@@ -113,10 +113,11 @@ is validated on real fabric hosts; no vm-lab variants.
 
 ## 70–79 — BRC-137 manifest / auto-shard-config
 
-| #   | Title                                       | Test                                   | Files                                                          |
-| --- | ------------------------------------------- | -------------------------------------- | -------------------------------------------------------------- |
-| 70  | BRC-137 wire-level manifest pipeline        | `TestScenario70_BRC137WirePipeline`    | [harness](harness/scenarios/scenario70_test.go) · harness only |
-| 71  | BRC-137 Successor block live-reshard signal | `TestScenario71_BRC137SuccessorSignal` | [harness](harness/scenarios/scenario70_test.go) · harness only |
+| #  | Title                                       | Test                                       | Files                                                          |
+| -- | ------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| 70 | BRC-137 wire-level manifest pipeline        | `TestScenario70_BRC137WirePipeline`        | [harness](harness/scenarios/scenario70_test.go) · harness only |
+| 71 | BRC-137 Successor block live-reshard signal | `TestScenario71_BRC137SuccessorSignal`     | [harness](harness/scenarios/scenario70_test.go) · harness only |
+| 72 | BRC-137 adoption safety gates               | `TestScenario72_BRC137AdoptionSafetyGates` | [harness](harness/scenarios/scenario72_test.go) · harness only |
 
 ## 99 — End-to-end smoke
 
@@ -128,10 +129,11 @@ is validated on real fabric hosts; no vm-lab variants.
 
 | Target                       | Filter                          | Notes                          |
 | ---------------------------- | ------------------------------- | ------------------------------ |
-| `make test`                  | all                             | ~30 min, all 40 scenarios      |
+| `make test`                  | all                             | ~30 min, all 45 scenarios      |
 | `make test-quick`            | `Scenario0[1-3]\|Scenario0[67]` | tier-1 filter scenarios (~60s) |
 | `make test-retransmit`       | `Scenario(99\|1[0-6])`          | NACK / retransmit              |
 | `make test-frag`             | `Scenario2[2-6]`                | fragmentation                  |
 | `make test-bgp`              | `Scenario4[02]`                 | BGP                            |
 | `make test-ssm`              | `Scenario6[01]`                 | SSM (RFC 4607)                 |
+| `make test-manifest`         | `Scenario7[0-2]`                | BRC-137 / auto-shard-config    |
 | `make test-one T=ScenarioNN` | single                          | run one scenario               |

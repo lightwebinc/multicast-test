@@ -30,7 +30,7 @@ Two test frameworks are provided:
 Requires Docker and Go 1.25+. Tests run as root (for network namespaces).
 
 ```bash
-make test          # all 40 scenarios (~30 min)
+make test          # all 45 scenarios (~30 min)
 make test-quick    # tier-1 filter scenarios (~60s)
 make test-retransmit  # NACK/retransmit scenarios
 make test-frag     # fragmentation scenarios
