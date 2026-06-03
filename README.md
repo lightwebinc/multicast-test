@@ -70,6 +70,20 @@ make test-ssm
 go test ./harness/scenarios/ -v -run TestScenario60_SSMLoopback
 ```
 
+### Unified logging
+
+- **Scenario 73** — `TestScenario73_UnifiedLoggingContract`: builds and runs the
+  real `shard-manifest` binary with `LOG_FORMAT=json` and asserts the
+  [unified logging](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/UnifiedLogging/unified-logging-plan.md)
+  emit contract — one JSON object per line, the `service.{name,instance.id,version}`
+  identity triple on every line, and a single `host.inventory` event nesting
+  os/cpu/mem/net/build with both IPv4 and IPv6 address keys per interface. No
+  Docker fabric required.
+
+```bash
+go test ./harness/scenarios/ -v -run TestScenario73_UnifiedLoggingContract
+```
+
 ## Layout
 
 | Path | Purpose |
