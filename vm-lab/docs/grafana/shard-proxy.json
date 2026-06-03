@@ -24,7 +24,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -99,7 +99,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "rate(bsp_bytes_received_total[5m])",
           "interval": "",
@@ -109,7 +109,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "rate(bsp_bytes_forwarded_total[5m])",
           "interval": "",
@@ -123,7 +123,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -198,7 +198,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "rate(bsp_packets_received_total[5m])",
           "interval": "",
@@ -208,7 +208,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "rate(bsp_packets_forwarded_total[5m])",
           "interval": "",
@@ -222,7 +222,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -297,7 +297,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "rate(bsp_flow_bytes_total[5m])",
           "interval": "",
@@ -311,7 +311,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -386,7 +386,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "rate(bsp_flow_packets_total[5m])",
           "interval": "",
@@ -400,7 +400,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -451,7 +451,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "bsp_active_groups",
           "interval": "",
@@ -465,7 +465,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -516,7 +516,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "bsp_workers_active",
           "interval": "",
@@ -530,7 +530,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -581,7 +581,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "bsp_uptime_seconds",
           "interval": "",
@@ -595,7 +595,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -642,7 +642,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "bsp_flow_bytes_total",
           "interval": "",
@@ -656,7 +656,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -777,7 +777,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "histogram_quantile(0.50, rate(bsp_packet_size_bytes_bucket[5m]))",
           "interval": "",
@@ -787,7 +787,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "histogram_quantile(0.95, rate(bsp_packet_size_bytes_bucket[5m]))",
           "interval": "",
@@ -797,7 +797,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "histogram_quantile(0.99, rate(bsp_packet_size_bytes_bucket[5m]))",
           "interval": "",
@@ -811,7 +811,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "cfhtqgjh5tmgwe"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -886,7 +886,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "cfhtqgjh5tmgwe"
+            "uid": "prometheus"
           },
           "expr": "rate(bsp_bytes_forwarded_total[5m]) / rate(bsp_bytes_received_total[5m]) * 100",
           "interval": "",
@@ -1325,8 +1325,11 @@
   "style": "dark",
   "tags": [
     "bitcoin",
+    "bsv",
+    "networking",
+    "multicast-lab",
     "shard-proxy",
-    "networking"
+    "proxy"
   ],
   "templating": {
     "list": []
@@ -1337,7 +1340,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Bitcoin Shard Proxy Metrics",
+  "title": "shard-proxy",
   "uid": "shard-proxy",
   "weekStart": ""
 }

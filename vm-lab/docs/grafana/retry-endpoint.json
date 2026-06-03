@@ -2,7 +2,7 @@
   "title": "retry-endpoint",
   "uid": "retry-endpoint",
   "schemaVersion": 39,
-  "tags": ["bitcoin", "retry-endpoint", "multicast-lab"],
+  "tags": ["bitcoin", "bsv", "networking", "multicast-lab", "retry-endpoint"],
   "timezone": "browser",
   "editable": true,
   "graphTooltip": 1,
