@@ -119,6 +119,19 @@ is validated on real fabric hosts; no vm-lab variants.
 | 71 | BRC-137 Successor block live-reshard signal | `TestScenario71_BRC137SuccessorSignal`     | [harness](harness/scenarios/scenario70_test.go) · harness only |
 | 72 | BRC-137 adoption safety gates               | `TestScenario72_BRC137AdoptionSafetyGates` | [harness](harness/scenarios/scenario72_test.go) · harness only |
 
+## 73 — Unified logging
+
+| #  | Title                                | Test                                    | Files                                                          |
+| -- | ------------------------------------ | --------------------------------------- | -------------------------------------------------------------- |
+| 73 | Unified logging emit contract (e2e)  | `TestScenario73_UnifiedLoggingContract` | [harness](harness/scenarios/scenario73_test.go) · no fabric    |
+
+Builds and runs the real `shard-manifest` binary with `LOG_FORMAT=json` and
+asserts the [unified logging](../bsv-multicast/docs/UnifiedLogging/unified-logging-plan.md)
+emit contract: one JSON object per line, the `service.{name,instance.id,version}`
+identity triple on every line, and a single `host.inventory` event nesting
+os/cpu/mem/net/build groups with both IPv4 and IPv6 address keys per interface.
+Needs only `go` + loopback (no Docker fabric).
+
 ## 99 — End-to-end smoke
 
 | #   | Title                      | Test                            | Files                                                                                           |
