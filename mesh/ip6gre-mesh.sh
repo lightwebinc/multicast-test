@@ -34,8 +34,11 @@ GROUP="ff05::b:1"          # a BRC-129 site-scoped shard group (idx 0x0001)
 PORT=9001
 WAN_PREFIX="fd00:a"        # outer transport subnet (scenario-specific; lab only)
 LOC_PREFIX="fd00:b"        # local multicast segment inner addrs (lab only)
-GRE_PREFIX="fd00:f"        # tunnel inner addrs (lab only)
-NS=() ; for i in $(seq 1 "$N"); do NS+=("mcmesh$i"); done
+GRE_PREFIX="fd00:f"        # fabric tunnel inner addrs (lab only)
+COUT_PREFIX="fd00:ac"      # consumer-tunnel OUTER link (node<->miner) (lab only)
+CIN_PREFIX="fd00:c0"       # consumer-tunnel inner addrs (lab only)
+INGRESS_PORT=9000          # proxy unicast txn ingress (UP-path check)
+NS=() ; for i in $(seq 1 "$N"); do NS+=("mcmesh$i" "mccons$i"); done
 
 log()  { printf '\033[1;34m[mesh]\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31m[FAIL]\033[0m %s\n' "$*"; }
@@ -111,6 +114,31 @@ build() {
       ip -n "$ns" link set "gre6-$j" up mtu 1400 multicast on
     done
   done
+  # consumer leaf per node: a miner namespace reached over an ip6gre tunnel.
+  # node side = gre6-c1 (mc_egress leaf); miner side = gre6-up. The miner joins
+  # the shard groups over gre6-up (DOWN) and sends txns to the node by unicast
+  # (UP). Mirrors a `mc_egress: true` consumer tunnel in integrated-infra.
+  for i in $(seq 1 "$N"); do
+    cns="mccons$i"
+    ip netns add "$cns" ; ip -n "$cns" link set lo up
+    ip link add "cu$i" type veth peer name "cup$i"
+    ip link set "cu$i" netns "mcmesh$i" ; ip link set "cup$i" netns "$cns"
+    ip -n "mcmesh$i" addr add "$COUT_PREFIX:$i::1/64" dev "cu$i" nodad
+    ip -n "$cns"     addr add "$COUT_PREFIX:$i::2/64" dev "cup$i" nodad
+    ip -n "mcmesh$i" link set "cu$i" up ; ip -n "$cns" link set "cup$i" up
+    # node side consumer-leaf tunnel
+    ip -n "mcmesh$i" link add gre6-c1 type ip6gre \
+      local "$COUT_PREFIX:$i::1" remote "$COUT_PREFIX:$i::2" ttl 64
+    ip -n "mcmesh$i" addr add "$CIN_PREFIX:$i::1/64" dev gre6-c1 nodad
+    ip -n "mcmesh$i" link set gre6-c1 up mtu 1400 multicast on
+    # miner side tunnel
+    ip -n "$cns" link add gre6-up type ip6gre \
+      local "$COUT_PREFIX:$i::2" remote "$COUT_PREFIX:$i::1" ttl 64
+    ip -n "$cns" addr add "$CIN_PREFIX:$i::2/64" dev gre6-up nodad
+    ip -n "$cns" link set gre6-up up mtu 1400 multicast on
+    ip -n "$cns" -6 route add ff05::/16 dev gre6-up
+    ip -n "$cns" -6 route add ff0e::/16 dev gre6-up
+  done
 }
 
 # --- smcroute (mirrors roles/mc-router/templates/smcroute.conf.j2) --------
@@ -123,9 +151,13 @@ start_routers() {
       # Register the VIFs explicitly so route parsing always finds them.
       echo "phyint mc-local enable"
       for t in "${tuns[@]}"; do echo "phyint $t enable"; done
+      echo "phyint gre6-c1 enable"   # consumer leaf
       for g in ff05::/16 ff0e::/16; do
-        echo "mroute from mc-local group $g to ${tuns[*]}"          # fan-out
-        for t in "${tuns[@]}"; do echo "mroute from $t group $g to mc-local"; done  # fan-in
+        # fan-out: local emit -> fabric tunnels + consumer leaf
+        echo "mroute from mc-local group $g to ${tuns[*]} gre6-c1"
+        # fan-in: each fabric tunnel -> local + consumer leaf (miner also gets
+        # frames originated on other nodes). No rule *from* gre6-c1 (leaf).
+        for t in "${tuns[@]}"; do echo "mroute from $t group $g to mc-local gre6-c1"; done
       done
     } > "$conf"
     ip netns exec "$ns" smcrouted -n -f "$conf" &
@@ -241,12 +273,64 @@ diagnose() {
   mroute_dump
 }
 
+# --- consumer leaf full-duplex (miner) ------------------------------------
+URECV_PY='
+import socket,sys
+addr,port,secs=sys.argv[1],int(sys.argv[2]),float(sys.argv[3])
+s=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM); s.bind((addr,port)); s.settimeout(secs)
+got=0
+try:
+  while True: s.recvfrom(2048); got+=1
+except socket.timeout: pass
+print(got)
+'
+USEND_PY='
+import socket,sys,time
+addr,port,n=sys.argv[1],int(sys.argv[2]),int(sys.argv[3])
+s=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM)
+for _ in range(n): s.sendto(b"txn",(addr,port)); time.sleep(0.02)
+'
+
+consumer_test() {
+  log "consumer leaf full-duplex: miners join shard groups (DOWN) + send txns (UP)"
+  local rc=0
+  # DOWN: node1 emits on its local segment; every miner must receive on gre6-up,
+  # incl. miners on OTHER nodes (relayed across the fabric then fanned to the leaf).
+  declare -A dpid dout
+  for i in $(seq 1 "$N"); do
+    dout[$i]="/tmp/mccons$i-down.out"
+    ip netns exec "mccons$i" python3 -c "$RECV_PY" "$GROUP" "$PORT" gre6-up 2.5 > "${dout[$i]}" &
+    dpid[$i]=$!
+  done
+  sleep 0.5
+  ip netns exec mcmesh1 python3 -c "$SEND_PY" "$GROUP" "$PORT" mc-local 30
+  for i in $(seq 1 "$N"); do
+    wait "${dpid[$i]}" || true
+    local g; g=$(cat "${dout[$i]}" 2>/dev/null || echo 0)
+    if [ "${g:-0}" -gt 0 ]; then ok "DOWN node1 emit -> miner$i (join over tunnel): $g"
+    else fail "DOWN node1 emit -> miner$i: 0"; rc=1; fi
+  done
+  # UP: miner1 sends txns by unicast to node1's proxy ingress over its tunnel.
+  local uout="/tmp/mcmesh1-ingress.out"
+  ip netns exec mcmesh1 python3 -c "$URECV_PY" "$CIN_PREFIX:1::1" "$INGRESS_PORT" 2.0 > "$uout" &
+  local up=$!
+  sleep 0.4
+  ip netns exec mccons1 python3 -c "$USEND_PY" "$CIN_PREFIX:1::1" "$INGRESS_PORT" 20
+  wait "$up" || true
+  local gu; gu=$(cat "$uout" 2>/dev/null || echo 0)
+  if [ "${gu:-0}" -gt 0 ]; then ok "UP miner1 txns -> node1 ingress (unicast): $gu"
+  else fail "UP miner1 -> node1 ingress: 0"; rc=1; fi
+  return "$rc"
+}
+
 require_root ; preflight ; build ; start_routers
 diagnose
 log "testing full-duplex multicast replication on $GROUP"
 overall=0
 for s in $(seq 1 "$N"); do probe "$s" || overall=1; done
 echo
-if [ "$overall" -eq 0 ]; then ok "MESH REPLICATION VERIFIED (all directions)"; else
-  fail "some directions failed — inspect the L1-L5 diagnostics and MFC dump above (transport / MULTICAST flag / phyint / global source)"; fi
+consumer_test || overall=1
+echo
+if [ "$overall" -eq 0 ]; then ok "MESH + CONSUMER FULL-DUPLEX VERIFIED"; else
+  fail "some checks failed — inspect the L1-L5 diagnostics and MFC dump above (transport / MULTICAST flag / phyint / global source)"; fi
 exit "$overall"

@@ -46,6 +46,21 @@ confirming `Iif: mc-local → Oifs: <tunnels>` fan-out on the source and
 
 The diagnostics (`L1`–`L5` + the MFC dump) localize any failure by layer.
 
+### Consumer leaf full-duplex
+
+The script also attaches a **miner namespace per node** over an ip6gre consumer
+tunnel (node side = `gre6-c1`, an `mc_egress` leaf; miner side = `gre6-up`) and
+verifies both directions:
+
+- **DOWN** — node1 emits; every miner (on every node) receives by joining the
+  shard group over its tunnel. The mc-router fans the groups onto the consumer
+  leaf on both the local-emit and fan-in paths, so a miner sees transactions
+  ingested at any node.
+- **UP** — miner1 sends txns by unicast to node1's proxy ingress over its tunnel.
+
+There is no rule accepting multicast *from* a consumer leaf — consumers are
+leaves that send by unicast and receive by multicast.
+
 **FRR `pim6d`** remains the path for **partial meshes**: transit relay
 (tunnel→tunnel) needs PIM RPF, which smcroute does not provide.
 
