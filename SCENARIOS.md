@@ -132,6 +132,24 @@ identity triple on every line, and a single `host.inventory` event nesting
 os/cpu/mem/net/build groups with both IPv4 and IPv6 address keys per interface.
 Needs only `go` + loopback (no Docker fabric).
 
+## 74 — Cross-domain NACK proxying
+
+| #  | Title                          | Test                                  | Files                                                          |
+| -- | ------------------------------ | ------------------------------------- | -------------------------------------------------------------- |
+| 74 | Cross-domain NACK proxying     | `TestScenario74_NACKProxyCrossDomain` | [harness](harness/scenarios/scenario74_test.go) · harness only |
+
+Two domains on one fabric (isolated by mc-group-id): a proxy + upstream
+retry-endpoint feed a bridge `shard-listener` whose multicast egress re-emits
+into a downstream domain (consumer + downstream retry-endpoint). The bridge runs
+with ingress netem loss and **no** retry config, so frames it never receives are
+absent from the entire downstream domain — only the upstream retry has them. The
+downstream retry (`PROXY_ENABLED`) recovers those misses from the upstream
+endpoint via a `Proxied`-flagged NACK (unicast frame return), re-caches, and
+multicast-retransmits into the downstream domain so the consumer's gap fills.
+Asserts the full chain: downstream `bre_proxy_recovered_total`, upstream
+`bre_unicast_retransmits_total`, and consumer `bsl_gaps_suppressed_total`. See
+[BRC-126](../bsv-multicast/docs/brc-126-retransmission-protocol.md).
+
 ## 99 — End-to-end smoke
 
 | #   | Title                      | Test                            | Files                                                                                           |
