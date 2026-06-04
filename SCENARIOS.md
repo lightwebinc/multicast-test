@@ -150,6 +150,27 @@ Asserts the full chain: downstream `bre_proxy_recovered_total`, upstream
 `bre_unicast_retransmits_total`, and consumer `bsl_gaps_suppressed_total`. See
 [BRC-126](../bsv-multicast/docs/brc-126-retransmission-protocol.md).
 
+## 80–89 — Multicast mesh (ip6gre fabric)
+
+| #  | Title                              | Test                                  | Files                                                                                      |
+| -- | ---------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 80 | ip6gre fabric mesh replication     | `TestScenario80_IP6GREMeshReplication` | [harness](harness/scenarios/scenario80_test.go) · [repro](mesh/ip6gre-mesh.sh) · privileged |
+
+Phase 0 proof for the [node-mesh roadmap](../bsv-multicast/docs/NodeMesh/roadmap.md):
+full-duplex IPv6 multicast replication across a mesh of point-to-point `ip6gre`
+tunnels, the transport the [integrated-infra `mc-router` role](https://github.com/lightwebinc/integrated-infra/blob/main/docs/mesh.md)
+configures. The scenario drives the privileged netns repro
+([`mesh/ip6gre-mesh.sh`](mesh/ip6gre-mesh.sh)), which builds an N-node full mesh,
+installs the same smcroute `(iif,G)->oifs` rules the role generates, and verifies
+replication in every direction. Skipped unless `MESH_REPRO=1` (needs root, the
+`ip6_gre` module, `smcroute >= 2.5`, and `python3`) so unit CI stays unprivileged:
+
+```bash
+sudo MESH_REPRO=1 go test ./harness/scenarios/ -run TestScenario80 -v
+# or directly:
+sudo ./mesh/ip6gre-mesh.sh 3
+```
+
 ## 99 — End-to-end smoke
 
 | #   | Title                      | Test                            | Files                                                                                           |
