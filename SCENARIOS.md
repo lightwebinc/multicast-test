@@ -126,7 +126,7 @@ is validated on real fabric hosts; no vm-lab variants.
 | 73 | Unified logging emit contract (e2e)  | `TestScenario73_UnifiedLoggingContract` | [harness](harness/scenarios/scenario73_test.go) · no fabric    |
 
 Builds and runs the real `shard-manifest` binary with `LOG_FORMAT=json` and
-asserts the [unified logging](../bsv-multicast/docs/UnifiedLogging/unified-logging-plan.md)
+asserts the [unified logging](https://github.com/lightwebinc/shard-common/blob/main/docs/logging.md)
 emit contract: one JSON object per line, the `service.{name,instance.id,version}`
 identity triple on every line, and a single `host.inventory` event nesting
 os/cpu/mem/net/build groups with both IPv4 and IPv6 address keys per interface.
