@@ -155,6 +155,7 @@ Asserts the full chain: downstream `bre_proxy_recovered_total`, upstream
 | #  | Title                              | Test                                  | Files                                                                                      |
 | -- | ---------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------ |
 | 80 | ip6gre fabric mesh replication     | `TestScenario80_IP6GREMeshReplication` | [harness](harness/scenarios/scenario80_test.go) · [repro](mesh/ip6gre-mesh.sh) · privileged |
+| 81 | collapsed-mesh full-duplex demo    | `TestScenario81_CollapsedMeshFullDuplex` | [harness](harness/scenarios/scenario81_test.go) · [demo](mesh/collapsed-mesh.sh) · privileged |
 
 Phase 0 proof for the [node-mesh roadmap](../bsv-multicast/docs/NodeMesh/roadmap.md):
 full-duplex IPv6 multicast replication across a mesh of point-to-point `ip6gre`
@@ -169,6 +170,19 @@ replication in every direction. Skipped unless `MESH_REPRO=1` (needs root, the
 sudo MESH_REPRO=1 go test ./harness/scenarios/ -run TestScenario80 -v
 # or directly:
 sudo ./mesh/ip6gre-mesh.sh 3
+```
+
+**Scenario 81** is the **success demo**: N independent collapsed nodes running
+the real `shard-proxy` + `shard-listener` + `retry-endpoint`, in the same
+ip6gre mesh, each with one connected miner. Real BSV frames are injected at
+every node's proxy via `subtx-gen`; the demo asserts every miner receives
+traffic ingested at every node — full-duplex through the actual binaries. Runs
+host-native in each node's netns (`MESH_DEMO=1`):
+
+```bash
+sudo MESH_DEMO=1 go test ./harness/scenarios/ -run TestScenario81 -v
+# or directly:
+sudo ./mesh/collapsed-mesh.sh 3
 ```
 
 ## 99 — End-to-end smoke

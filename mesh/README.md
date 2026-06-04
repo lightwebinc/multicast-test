@@ -64,7 +64,24 @@ leaves that send by unicast and receive by multicast.
 **FRR `pim6d`** remains the path for **partial meshes**: transit relay
 (tunnel→tunnel) needs PIM RPF, which smcroute does not provide.
 
-## Scenario 80 (Go harness)
+## `collapsed-mesh.sh` — the success demo (real binaries)
+
+Builds on the proven topology to run **real** collapsed nodes: `shard-proxy` +
+`shard-listener` + `retry-endpoint` in each node's netns, in a full ip6gre mesh
+with mc-router, each with one connected miner (a `subtx-gen` sender + a UDP
+sink the listener egresses to). Real BSV frames are injected at every node's
+proxy; the demo asserts every miner receives traffic ingested at every node —
+full-duplex across the mesh through the actual binaries.
+
+```sh
+sudo ./collapsed-mesh.sh 3       # 3 nodes, 3 miners
+```
+
+Builds the binaries host-native from the workspace (`GOWORK`), so it needs `go`
+plus the same root / `ip6_gre` / `smcroute` / `python3` prerequisites. Per-node
+service logs land in `/tmp/mesh-run/`.
+
+## Scenario 80 / 81 (Go harness)
 
 `harness/scenarios/scenario80_test.go` drives this repro and is skipped unless
 `MESH_REPRO=1` (keeps unit CI unprivileged):
