@@ -18,13 +18,13 @@ spikes, returning the registry to empty.
 |---|---|
 | Negative delivery | During the initial 30min window (0 subtrees), all BRC-124 frames are dropped (`subtree_include_miss ≈ received`) |
 | Positive delivery | During the stable phase (all 8 subtrees), all BRC-124 frames are forwarded (`forwarded ≈ received`) |
-| Control plane | `bsl_subtree_announces_received_total > 0` |
+| Control plane | `bsl_subtree_group_announces_received_total > 0` |
 | TTL eviction | `bsl_subtree_group_evictions_total > 0` after drain; live gauge returns to 0 |
 
 ## Dashboard metrics
 
 - `bsl_subtree_group_entries` — gauge ramps 0 → 8 over ~8 hours, drops to 0 after drain
-- `bsl_subtree_announces_received_total` — monotonically rising with each re-announce tick
+- `bsl_subtree_group_announces_received_total` — monotonically rising with each re-announce tick
 - `bsl_subtree_group_evictions_total` — spikes at end when TTL expires
 - `bsl_frames_dropped_total{reason="subtree_include_miss"}` — high early, falls as subtrees join
 - `bsl_frames_forwarded_total{proto="udp"}` — rises to ~100% during stable phase

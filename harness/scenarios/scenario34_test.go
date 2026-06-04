@@ -29,7 +29,7 @@ func TestScenario34_SubtreeDataRetransmit(t *testing.T) {
 		e.PatchEnv(l, map[string]string{"SUBTREE_DATA_ENABLED": "true"})
 	}
 	// Retry endpoint must also opt in to cache BRC-132 V5 frames; without
-	// this it joins only shard groups and never caches GroupSubtreeAnnounce.
+	// this it joins only shard groups and never caches GroupSubtreeDataAnnounce.
 	e.PatchEnv("s34-retry1", map[string]string{"SUBTREE_DATA_ENABLED": "true"})
 	e.StartAll(ctx)
 	e.Sleep(4*time.Second, "MLD querier settle")

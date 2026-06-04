@@ -25,7 +25,7 @@ all:
         proxy:
           ansible_host: 10.10.10.20
           egress_iface: enp6s0
-          tcp_listen_port: 9002   # TCP ingress for BRC-127 SubtreeAnnounce forwarding
+          tcp_listen_port: 9002   # TCP ingress for BRC-127 SubtreeGroupAnnounce forwarding
           # BGP peering with router2 (iBGP, AS 65001)
           enable_bgp: true
           bgp_daemon: bird2

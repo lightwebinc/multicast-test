@@ -2,7 +2,7 @@
 # Scenario 20 — BRC-127 Subtree Group Announcement Dynamic Filtering
 #
 # End-to-end test of the BRC-127 control plane:
-#   source VM → TCP SubtreeAnnounce → proxy → ff05::b:fffc:9001 (multicast) →
+#   source VM → TCP SubtreeGroupAnnounce → proxy → ff05::b:fffc:9001 (multicast) →
 #   listener3 registry → group-based forwarding of all 8 subtrees.
 #
 # Prerequisites:
@@ -23,7 +23,7 @@ AFTER="$SCENARIO_DIR/metrics.after.tsv"
 
 # Well-known test group ID — matches subtree_groups in listener-hosts.yml.
 TEST_GROUP_ID="bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf"
-# Proxy TCP address for SubtreeAnnounce injection.
+# Proxy TCP address for SubtreeGroupAnnounce injection.
 : "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 
 # ---------------------------------------------------------------------------
@@ -94,7 +94,7 @@ fi
 echo "==> Snapshot metrics (before)"
 snapshot_metrics "$BEFORE"
 
-echo "==> Run generator with SubtreeAnnounce (all 8 subtrees → $TEST_GROUP_ID)"
+echo "==> Run generator with SubtreeGroupAnnounce (all 8 subtrees → $TEST_GROUP_ID)"
 gen_output=$(lxc exec "$SOURCE_VM" -- subtx-gen \
   -addr           "$PROXY_ADDR" \
   -shard-bits     "$SHARD_BITS" \

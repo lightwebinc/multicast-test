@@ -1,10 +1,10 @@
 # Scenario 34 — BRC-132 subtree data: NACK retransmission
 
 Injects packet loss on listeners while sending inline BRC-132 SubtreeData
-frames. Retry endpoints join `GroupSubtreeAnnounce` (FF0X::B:FFFB) and
+frames. Retry endpoints join `GroupSubtreeDataAnnounce` (FF0X::B:FFFB) and
 cache V5 frames by `HashKey ∥ SeqNum`. Listeners detect SeqNum gaps on the
 `brc132` flow and dispatch NACKs. Retry endpoints retransmit back to
-`GroupSubtreeAnnounce`.
+`GroupSubtreeDataAnnounce`.
 
 ## Expectations
 

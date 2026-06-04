@@ -37,7 +37,7 @@ AFTER_DRAIN="$SCENARIO_DIR/metrics.after-drain.tsv"
 
 # Well-known group ID — matches listener3 SUBTREE_GROUPS in listener-hosts.yml.
 TEST_GROUP_ID="bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf"
-# Proxy TCP address for SubtreeAnnounce injection.
+# Proxy TCP address for SubtreeGroupAnnounce injection.
 : "${PROXY_TCP_ADDR:=[2001:db8:ffff::1]:9002}"
 
 # Timing parameters (overrideable).
@@ -188,7 +188,7 @@ echo "===== Assertion results ====="
 echo ""
 
 # 1. Control plane: announces were received
-ann_received=$(diff_metric "$BEFORE" "$AFTER" listener3 bsl_subtree_announces_received_total)
+ann_received=$(diff_metric "$BEFORE" "$AFTER" listener3 bsl_subtree_group_announces_received_total)
 echo "listener3: subtree_announces_received=$ann_received"
 if (( ann_received > 0 )); then
   echo "PASS  control plane: subtree_announces_received > 0 ($ann_received)"

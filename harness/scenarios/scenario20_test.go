@@ -15,7 +15,7 @@ import (
 //
 // Mirrors scenarios/20-subtree-group-announce/run.sh.
 //
-// source → TCP SubtreeAnnounce → proxy → ff05::b:fffc → listener3 registry.
+// source → TCP SubtreeGroupAnnounce → proxy → ff05::b:fffc → listener3 registry.
 // listener3 has SUBTREE_GROUPS configured and no SUBTREE_INCLUDE, relying on
 // the announce to populate its subtree registry for forwarding.
 func TestScenario20_SubtreeGroupAnnounce(t *testing.T) {
@@ -49,7 +49,7 @@ func TestScenario20_SubtreeGroupAnnounce(t *testing.T) {
 	e.StartAll(ctx)
 	e.Sleep(4*time.Second, "MLD querier settle")
 
-	// Send SubtreeAnnounce so listener3 populates its registry.
+	// Send SubtreeGroupAnnounce so listener3 populates its registry.
 	announceCmd := subtxGenCmd("[fd10::2]:9000")
 	announceCmd = append(announceCmd,
 		"-announce-addr", "[fd10::2]:9002",

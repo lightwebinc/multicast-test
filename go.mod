@@ -1,9 +1,9 @@
 module github.com/lightwebinc/multicast-test
 
-go 1.25.10
+go 1.25.11
 
 require (
-	github.com/lightwebinc/shard-common v0.13.0
+	github.com/lightwebinc/shard-common v0.13.5
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/common v0.67.5
 )
