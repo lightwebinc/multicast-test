@@ -156,6 +156,7 @@ Asserts the full chain: downstream `bre_proxy_recovered_total`, upstream
 | -- | ---------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------ |
 | 80 | ip6gre fabric mesh replication     | `TestScenario80_IP6GREMeshReplication` | [harness](harness/scenarios/scenario80_test.go) · [repro](mesh/ip6gre-mesh.sh) · privileged |
 | 81 | collapsed-mesh full-duplex demo    | `TestScenario81_CollapsedMeshFullDuplex` | [harness](harness/scenarios/scenario81_test.go) · [demo](mesh/collapsed-mesh.sh) · privileged |
+| 82 | WireGuard admin overlay            | `TestScenario82_WireGuardAdminOverlay` | [harness](harness/scenarios/scenario82_test.go) · [repro](mesh/admin-overlay.sh) · privileged |
 
 Phase 0 proof for the [node-mesh roadmap](../bsv-multicast/docs/NodeMesh/roadmap.md):
 full-duplex IPv6 multicast replication across a mesh of point-to-point `ip6gre`
