@@ -159,7 +159,7 @@ Asserts the full chain: downstream `bre_proxy_recovered_total`, upstream
 | 82 | WireGuard admin overlay            | `TestScenario82_WireGuardAdminOverlay` | [harness](harness/scenarios/scenario82_test.go) · [repro](mesh/admin-overlay.sh) · privileged |
 | 83 | consumer-edge scale-out            | `TestScenario83_ConsumerEdgeScaleOut` | [harness](harness/scenarios/scenario83_test.go) · [repro](mesh/consumer-edge.sh) · privileged |
 
-Phase 0 proof for the [node-mesh roadmap](../bsv-multicast/docs/NodeMesh/roadmap.md):
+Proof of the node mesh fabric:
 full-duplex IPv6 multicast replication across a mesh of point-to-point `ip6gre`
 tunnels, the transport the [integrated-infra `mc-router` role](https://github.com/lightwebinc/integrated-infra/blob/main/docs/mesh.md)
 configures. The scenario drives the privileged netns repro

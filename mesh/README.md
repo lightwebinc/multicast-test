@@ -1,6 +1,6 @@
 # Multicast mesh testing
 
-Phase 0 proof for the meshed-node roadmap: IPv6 multicast replication across a
+Proof for the meshed-node fabric: IPv6 multicast replication across a
 mesh of point-to-point `ip6gre` tunnels, the transport the
 [integrated-infra `mc-router` role](https://github.com/lightwebinc/integrated-infra/blob/main/docs/mesh.md)
 configures.
