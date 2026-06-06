@@ -20,6 +20,24 @@ import (
 func TestScenario13_MissEscalationTier(t *testing.T) {
 	ctx := context.Background()
 	e := multiRetryTopology(t, "s13")
+
+	// This scenario exercises miss-escalation recovery, not rate limiting. All
+	// NACK traffic originates from just 3 listener IPs, so the default per-IP
+	// limiter (RL_IP_RATE=100/s, burst 10) throttles the recovery burst and
+	// silently drops NACKs (no MISS response). Listeners cannot distinguish a
+	// throttled endpoint from a dead one: they time out, back off, and exhaust
+	// retries before reaching retry3, leaving gaps unrecovered. In a real fleet
+	// NACKs are spread across many IPs so per-IP limits never bite. Raise the
+	// IP/chain limits (as scenario16 does) so escalation is not throttled here.
+	for _, name := range []string{"s13-retry1", "s13-retry2", "s13-retry3"} {
+		e.PatchEnv(name, map[string]string{
+			"RL_IP_RATE":      "50000",
+			"RL_IP_BURST":     "10000",
+			"RL_CHAIN_RATE":   "10000",
+			"RL_CHAIN_WINDOW": "60s",
+		})
+	}
+
 	e.StartAll(ctx)
 	e.Sleep(4*time.Second, "MLD querier settle")
 
@@ -45,8 +63,16 @@ func TestScenario13_MissEscalationTier(t *testing.T) {
 	beforeL := snapshotListeners(t, e, ctx, "s13")
 	beforeR := snapshotRetries(t, e, ctx, "s13")
 
+	// 150 pps keeps the single in-order listener worker (NUM_WORKERS=1, required
+	// so SO_REUSEPORT spreading does not manufacture false gaps) from falling
+	// behind under Docker CPU contention. At 1000 pps the harness reorders and
+	// drops far above the injected 1%, inflating gaps and producing correlated
+	// loss bursts that strand recovery; aggressive retrying only adds load and
+	// makes it worse. At this rate every gap escalates cleanly through all three
+	// tiers (nacks ≈ 3×gaps, matching the VM reference) and recovers within the
+	// 4% budget.
 	genCmd := subtxGenCmd("[fd10::2]:9000")
-	genCmd = append(genCmd, "-duration", "15s")
+	genCmd = append(genCmd, "-duration", "15s", "-pps", "150")
 	startGenerator(t, ctx, "s13", genCmd)
 	waitGenerator(t, ctx, "s13")
 
