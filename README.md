@@ -7,12 +7,15 @@ End-to-end test suite for the Bitcoin multicast sharding pipeline. Validates
 and [`subtx-generator`](https://github.com/lightwebinc/subtx-generator)
 working together over an IPv6 multicast fabric.
 
-Two test frameworks are provided:
+This repo is the **integration** test suite — the Go Docker harness:
 
 | Framework | Location | Runtime | Description |
 |-----------|----------|---------|-------------|
-| **Go Docker harness** | `harness/` | Docker containers on `fd10::/64` | Primary. 40 scenario tests driven by `go test`. |
-| **LXD VM lab** | `vm-lab/` | LXD VMs on `fd20::/64` | Legacy. Bash `run.sh` scripts against persistent VMs. |
+| **Go Docker harness** | `harness/` | Docker containers on `fd10::/64` | Scenario tests driven by `go test`. |
+
+> Deployment / applied-infrastructure testing (the LXD VM lab, the privileged
+> netns mesh repros, and the real-host deployment tooling) is maintained
+> separately from this public integration suite.
 
 ```
  source ──► proxy (ingress) ──► multicast fabric ──► listener1 / listener2 / listener3
@@ -94,10 +97,3 @@ go test ./harness/scenarios/ -v -run TestScenario73_UnifiedLoggingContract
 | `harness/driver/` | Docker driver (container lifecycle, network) |
 | `harness/env/` | Network emulation (`tc netem`) and firewall (`ip6tables`) helpers |
 | `harness/metrics/` | Prometheus scraper and assertion helpers |
-| `vm-lab/` | LXD VM lab — see [`vm-lab/README.md`](vm-lab/README.md) |
-
-## LXD VM lab
-
-The legacy test lab provisions persistent LXD VMs and runs bash scenario
-scripts against them. See [`vm-lab/README.md`](vm-lab/README.md) for the
-VM quickstart, topology, and scenario index.
