@@ -1,5 +1,7 @@
 # multicast-test
 
+> Part of the [**BSV Layered Multicast**](https://github.com/lightwebinc/bsv-multicast) open-source project — see the main repository for the full architecture, design docs, and BRC specifications.
+
 End-to-end test suite for the Bitcoin multicast sharding pipeline. Validates
 [`shard-proxy`](https://github.com/lightwebinc/shard-proxy),
 [`shard-listener`](https://github.com/lightwebinc/shard-listener),
