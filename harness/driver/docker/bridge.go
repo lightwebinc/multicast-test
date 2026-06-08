@@ -62,11 +62,33 @@ func CreateMcastBridge(ctx context.Context) error {
 			fmt.Fprintf(os.Stderr, "[bridge] WARN ip %v: %v (%s)\n", args, err2, out2)
 		}
 	}
-	// mcast_querier6 is not exposed via `ip link set type bridge`; write sysfs
+	// The kernel default query intervals are far longer than a scenario runs
+	// (startup 31.25s, periodic 125s). With snooping on but no general query
+	// inside the test window, the multicast mdb is populated only by each
+	// listener's single unsolicited MLD join report at container start; if that
+	// report races the veth/snooping attach and is missed, the bridge drops ALL
+	// multicast to that listener for the whole run (intermittent received=0),
+	// with no follow-up query to recover. Tighten the query cadence so the
+	// bridge continuously re-solicits membership reports — any listener joining
+	// at any point in any scenario is refreshed within the settle window,
+	// making mdb population deterministic across the whole run.
+	//
+	// These knobs are not exposed via `ip link set type bridge`; write sysfs
 	// directly, falling back to sudo tee if the process lacks the privilege.
-	q6path := fmt.Sprintf("/sys/class/net/%s/bridge/mcast_querier6", BridgeName)
-	if err2 := writeSysfs(ctx, q6path, "1"); err2 != nil {
-		fmt.Fprintf(os.Stderr, "[bridge] WARN mcast_querier6: %v (non-fatal)\n", err2)
+	// (Note: there is no `mcast_querier6` sysfs file on modern kernels — the
+	// single `multicast_querier` toggle set above covers both IGMP and MLD.)
+	// Values are in centiseconds.
+	sysfsSets := map[string]string{
+		"multicast_query_interval":          "200", // periodic general query every 2s
+		"multicast_query_response_interval": "100", // listeners report within 1s
+		"multicast_startup_query_interval":  "100", // first queries 1s apart
+		"multicast_startup_query_count":     "2",
+	}
+	for name, val := range sysfsSets {
+		path := fmt.Sprintf("/sys/class/net/%s/bridge/%s", BridgeName, name)
+		if err2 := writeSysfs(ctx, path, val); err2 != nil {
+			fmt.Fprintf(os.Stderr, "[bridge] WARN %s: %v (non-fatal)\n", name, err2)
+		}
 	}
 
 	// 4. Settle delay — only on first creation.
