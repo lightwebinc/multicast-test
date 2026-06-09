@@ -20,7 +20,7 @@ test-bgp: ## Run BGP scenarios
 test-ssm: ## Run SSM scenarios (RFC 4607)
 	$(GOTEST) -timeout 5m -run 'Scenario6[01]'
 
-test-manifest: ## Run BRC-137 manifest / auto-shard-config scenarios
+test-manifest: ## Run BRC-139 manifest / auto-shard-config scenarios
 	$(GOTEST) -timeout 5m -run 'Scenario7[0-2]'
 
 test-one: ## Run a single scenario test by name: make test-one T=Scenario36

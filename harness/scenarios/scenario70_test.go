@@ -12,9 +12,9 @@ import (
 	"github.com/lightwebinc/shard-common/manifest"
 )
 
-// Scenario 70 — BRC-137 wire-level manifest pipeline
+// Scenario 70 — BRC-139 wire-level manifest pipeline
 //
-// Process-local sanity check that the BRC-137 sender → receiver →
+// Process-local sanity check that the BRC-139 sender → receiver →
 // registry → evaluator pipeline works end-to-end on loopback. Does not
 // require the Docker fabric; serves as the lower-cost smoke test before
 // the full posture-aware E2E scenarios (which require PIM-SSM in the
@@ -29,7 +29,7 @@ import (
 //
 // Posture C (SSM) end-to-end across containers is exercised by the
 // out-of-tree fabric tests; the same wire format runs unchanged here.
-func TestScenario70_BRC137WirePipeline(t *testing.T) {
+func TestScenario70_BRC139WirePipeline(t *testing.T) {
 	t.Parallel()
 	addr, err := net.ResolveUDPAddr("udp6", "[::1]:0")
 	if err != nil {
@@ -136,7 +136,7 @@ func TestScenario70_BRC137WirePipeline(t *testing.T) {
 	wg.Wait()
 }
 
-// Scenario 71 — BRC-137 Successor block live-reshard signal
+// Scenario 71 — BRC-139 Successor block live-reshard signal
 //
 // Same pipeline as Scenario 70 but with a Successor block on each
 // authoritative manifest. Verifies the evaluator surfaces a
@@ -144,7 +144,7 @@ func TestScenario70_BRC137WirePipeline(t *testing.T) {
 // behavior (proxy dual-emit, listener union-join) is exercised in the
 // per-component unit tests (shard-proxy/forwarder bridging tests, etc.)
 // and would be confirmed end-to-end on a posture-C fabric.
-func TestScenario71_BRC137SuccessorSignal(t *testing.T) {
+func TestScenario71_BRC139SuccessorSignal(t *testing.T) {
 	t.Parallel()
 	addr, err := net.ResolveUDPAddr("udp6", "[::1]:0")
 	if err != nil {

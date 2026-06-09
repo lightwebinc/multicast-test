@@ -12,7 +12,7 @@ import (
 	"github.com/lightwebinc/shard-common/manifest"
 )
 
-// Scenario 72 — BRC-137 adoption safety gates
+// Scenario 72 — BRC-139 adoption safety gates
 //
 // Companion to Scenario 70 (happy-path quorum adoption). Where 70 proves
 // the sender → socket → registry → evaluator pipeline ADOPTS when quorum
@@ -30,7 +30,7 @@ import (
 //
 // Posture-agnostic; the same wire format runs unchanged on a posture-C
 // fabric.
-func TestScenario72_BRC137AdoptionSafetyGates(t *testing.T) {
+func TestScenario72_BRC139AdoptionSafetyGates(t *testing.T) {
 	t.Parallel()
 
 	// runPipeline ships manifests over a real loopback UDP socket into a

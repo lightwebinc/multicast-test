@@ -100,7 +100,7 @@ make test-one T=ScenarioNN
 
 `make test-ssm`
 
-Validates the [SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/SourceSpecificMulticast/ssm-support-plan.md)
+Validates the [SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm)
 implementation. Full Posture C cross-host SSM data delivery requires
 PIM-SSM in the fabric (not provided by Docker's default bridge) and
 is validated on real fabric hosts; no vm-lab variants.
@@ -110,13 +110,13 @@ is validated on real fabric hosts; no vm-lab variants.
 | 60  | SSM loopback Join/Leave (kernel sanity check) | `TestScenario60_SSMLoopback`      | [harness](harness/scenarios/scenario60_test.go) · harness only |
 | 61  | SSM ASM-fallback startup (scaffolding no-op)  | `TestScenario61_SSMASMFallback`   | [harness](harness/scenarios/scenario61_test.go) · harness only |
 
-## 70–79 — BRC-137 manifest / auto-shard-config
+## 70–79 — BRC-139 manifest / auto-shard-config
 
 | #  | Title                                       | Test                                       | Files                                                          |
 | -- | ------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
-| 70 | BRC-137 wire-level manifest pipeline        | `TestScenario70_BRC137WirePipeline`        | [harness](harness/scenarios/scenario70_test.go) · harness only |
-| 71 | BRC-137 Successor block live-reshard signal | `TestScenario71_BRC137SuccessorSignal`     | [harness](harness/scenarios/scenario70_test.go) · harness only |
-| 72 | BRC-137 adoption safety gates               | `TestScenario72_BRC137AdoptionSafetyGates` | [harness](harness/scenarios/scenario72_test.go) · harness only |
+| 70 | BRC-139 wire-level manifest pipeline        | `TestScenario70_BRC139WirePipeline`        | [harness](harness/scenarios/scenario70_test.go) · harness only |
+| 71 | BRC-139 Successor block live-reshard signal | `TestScenario71_BRC139SuccessorSignal`     | [harness](harness/scenarios/scenario70_test.go) · harness only |
+| 72 | BRC-139 adoption safety gates               | `TestScenario72_BRC139AdoptionSafetyGates` | [harness](harness/scenarios/scenario72_test.go) · harness only |
 
 ## 73 — Unified logging
 
@@ -202,5 +202,5 @@ sudo ./mesh/collapsed-mesh.sh 3
 | `make test-frag`             | `Scenario2[2-6]`                | fragmentation                  |
 | `make test-bgp`              | `Scenario4[02]`                 | BGP                            |
 | `make test-ssm`              | `Scenario6[01]`                 | SSM (RFC 4607)                 |
-| `make test-manifest`         | `Scenario7[0-2]`                | BRC-137 / auto-shard-config    |
+| `make test-manifest`         | `Scenario7[0-2]`                | BRC-139 / auto-shard-config    |
 | `make test-one T=ScenarioNN` | single                          | run one scenario               |

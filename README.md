@@ -51,7 +51,7 @@ sudo go test ./harness/scenarios/... -v -run TestScenario01
 ### SSM (Source-Specific Multicast)
 
 Two scenarios validate the SSM rollout (see
-[bsv-multicast SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/SourceSpecificMulticast/ssm-support-plan.md)):
+[bsv-multicast SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm)):
 
 - **Scenario 60** — `TestScenario60_SSMLoopback`: process-local
   sanity check that `shard-common/netjoin` issues
