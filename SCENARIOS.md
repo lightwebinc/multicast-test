@@ -149,42 +149,14 @@ Asserts the full chain: downstream `bre_proxy_recovered_total`, upstream
 `bre_unicast_retransmits_total`, and consumer `bsl_gaps_suppressed_total`. See
 [BRC-126](../bsv-multicast/docs/brc-126-retransmission-protocol.md).
 
-## 80–89 — Multicast mesh (ip6gre fabric)
+## 80–89 — Multicast mesh (ip6gre fabric) — moved to private ops
 
-| #  | Title                              | Test                                  | Files                                                                                      |
-| -- | ---------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------ |
-| 80 | ip6gre fabric mesh replication     | `TestScenario80_IP6GREMeshReplication` | [harness](harness/scenarios/scenario80_test.go) · [repro](mesh/ip6gre-mesh.sh) · privileged |
-| 81 | collapsed-mesh full-duplex demo    | `TestScenario81_CollapsedMeshFullDuplex` | [harness](harness/scenarios/scenario81_test.go) · [demo](mesh/collapsed-mesh.sh) · privileged |
-| 82 | WireGuard admin overlay            | `TestScenario82_WireGuardAdminOverlay` | [harness](harness/scenarios/scenario82_test.go) · [repro](mesh/admin-overlay.sh) · privileged |
-| 83 | consumer-edge scale-out            | `TestScenario83_ConsumerEdgeScaleOut` | [harness](harness/scenarios/scenario83_test.go) · [repro](mesh/consumer-edge.sh) · privileged |
-
-Proof of the node mesh fabric:
-full-duplex IPv6 multicast replication across a mesh of point-to-point `ip6gre`
-tunnels, the transport the [integrated-infra `mc-router` role](https://github.com/lightwebinc/integrated-infra/blob/main/docs/mesh.md)
-configures. The scenario drives the privileged netns repro
-([`mesh/ip6gre-mesh.sh`](mesh/ip6gre-mesh.sh)), which builds an N-node full mesh,
-installs the same smcroute `(iif,G)->oifs` rules the role generates, and verifies
-replication in every direction. Skipped unless `MESH_REPRO=1` (needs root, the
-`ip6_gre` module, `smcroute >= 2.5`, and `python3`) so unit CI stays unprivileged:
-
-```bash
-sudo MESH_REPRO=1 go test ./harness/scenarios/ -run TestScenario80 -v
-# or directly:
-sudo ./mesh/ip6gre-mesh.sh 3
-```
-
-**Scenario 81** is the **success demo**: N independent collapsed nodes running
-the real `shard-proxy` + `shard-listener` + `retry-endpoint`, in the same
-ip6gre mesh, each with one connected miner. Real BSV frames are injected at
-every node's proxy via `subtx-gen`; the demo asserts every miner receives
-traffic ingested at every node — full-duplex through the actual binaries. Runs
-host-native in each node's netns (`MESH_DEMO=1`):
-
-```bash
-sudo MESH_DEMO=1 go test ./harness/scenarios/ -run TestScenario81 -v
-# or directly:
-sudo ./mesh/collapsed-mesh.sh 3
-```
+Scenarios 80–83 (ip6gre mesh replication, collapsed-mesh full-duplex demo,
+WireGuard admin overlay, consumer-edge scale-out) and their privileged netns
+repro scripts now live in a private repo. They were removed from this public
+harness. The 80–89 decade stays **reserved** for mesh scenarios so the numbering
+registry never collides. The transport they exercise is the
+[integrated-infra `mc-router` role](https://github.com/lightwebinc/integrated-infra/blob/main/docs/mesh.md).
 
 ## 99 — End-to-end smoke
 
@@ -196,7 +168,7 @@ sudo ./mesh/collapsed-mesh.sh 3
 
 | Target                       | Filter                          | Notes                          |
 | ---------------------------- | ------------------------------- | ------------------------------ |
-| `make test`                  | all                             | ~30 min, all 45 scenarios      |
+| `make test`                  | all                             | ~30 min, all harness scenarios |
 | `make test-quick`            | `Scenario0[1-3]\|Scenario0[67]` | tier-1 filter scenarios (~60s) |
 | `make test-retransmit`       | `Scenario(99\|1[0-6])`          | NACK / retransmit              |
 | `make test-frag`             | `Scenario2[2-6]`                | fragmentation                  |
