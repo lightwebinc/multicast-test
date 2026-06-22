@@ -35,7 +35,7 @@ func TestScenario25_FragmentationLoss(t *testing.T) {
 		t.Cleanup(func() { env.RemoveNetemLoss(ctx, l) }) //nolint:errcheck
 	}
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-payload-size", "2048")
 	startGenerator(t, ctx, "s25", genCmd)
 	waitGenerator(t, ctx, "s25")

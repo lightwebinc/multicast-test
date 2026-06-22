@@ -16,7 +16,7 @@ import (
 // (EF payload does not change the BRC-124 frame header).
 func TestScenario06_FunctionalBRC128(t *testing.T) {
 	e, _, _, _ := basicTopology(t, "s06")
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-payload-format", "brc128")
 
 	beforeL1, afterL1, beforeL2, afterL2, beforeL3, afterL3 :=

@@ -45,7 +45,7 @@ func TestScenario16_GroupRatelimit(t *testing.T) {
 
 	beforeR := e.Snapshot(ctx, "s16-retry1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd,
 		"-pps", "500",
 		"-duration", "15s",

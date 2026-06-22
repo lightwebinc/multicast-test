@@ -75,7 +75,7 @@ func TestScenario53_TxIDDedupFailover(t *testing.T) {
 	e.Sleep(5*time.Second, "MLD + Redis replication settle")
 
 	// Phase 1: traffic with primary up.
-	genCmd1 := subtxGenCmd("[fd10::2]:9000")
+	genCmd1 := subtxGenCmd("[fd10::2]:8725")
 	genCmd1 = append(genCmd1, "-duration", "5s")
 	startGenerator(t, ctx, "s53", genCmd1)
 	waitGenerator(t, ctx, "s53")
@@ -90,7 +90,7 @@ func TestScenario53_TxIDDedupFailover(t *testing.T) {
 	// Phase 2: traffic with only replica.
 	beforeL := snapshotListeners(t, e, ctx, "s53")
 
-	genCmd2 := subtxGenCmd("[fd10::2]:9000")
+	genCmd2 := subtxGenCmd("[fd10::2]:8725")
 	genCmd2 = append(genCmd2, "-duration", "5s")
 	startGenerator(t, ctx, "s53-phase2", genCmd2)
 	waitGenerator(t, ctx, "s53-phase2")

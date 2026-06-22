@@ -55,7 +55,7 @@ func TestScenario51_TxIDDedupCollision(t *testing.T) {
 
 	beforeL1 := e.Snapshot(ctx, "s51-listener1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	startGenerator(t, ctx, "s51", genCmd)
 	waitGenerator(t, ctx, "s51")
 

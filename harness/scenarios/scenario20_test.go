@@ -50,7 +50,7 @@ func TestScenario20_SubtreeGroupAnnounce(t *testing.T) {
 	e.Sleep(4*time.Second, "MLD querier settle")
 
 	// Send SubtreeGroupAnnounce so listener3 populates its registry.
-	announceCmd := subtxGenCmd("[fd10::2]:9000")
+	announceCmd := subtxGenCmd("[fd10::2]:8725")
 	announceCmd = append(announceCmd,
 		"-announce-addr", "[fd10::2]:9002",
 		"-subtree-group", "bfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbf",

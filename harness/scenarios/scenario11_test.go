@@ -41,7 +41,7 @@ func TestScenario11_PermanentGapMISS(t *testing.T) {
 	beforeL := snapshotListeners(t, e, ctx, "s11")
 	beforeR := e.Snapshot(ctx, "s11-retry1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-pps", "500", "-duration", "10s")
 	startGenerator(t, ctx, "s11", genCmd)
 	waitGenerator(t, ctx, "s11")

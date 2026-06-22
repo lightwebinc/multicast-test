@@ -32,7 +32,7 @@ func TestScenario08_NackRetransmitBRC128(t *testing.T) {
 	beforeL := snapshotListeners(t, e, ctx, "s08")
 	beforeR := e.Snapshot(ctx, "s08-retry1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd,
 		"-payload-format", "brc128",
 		"-seq-gap-every", "200",

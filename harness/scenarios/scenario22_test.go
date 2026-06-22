@@ -16,7 +16,7 @@ func TestScenario22_FragmentationDelivery(t *testing.T) {
 	e, _, _, _ := basicTopology(t, "s22")
 	e.PatchEnv("s22-proxy", map[string]string{"FRAG_MTU": "1500"})
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-payload-size", "2048")
 
 	beforeL1, afterL1, _, _, _, _ :=

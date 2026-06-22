@@ -49,7 +49,7 @@ func TestScenario09_ListenerPayloadVerification(t *testing.T) {
 
 	beforeL1 := e.Snapshot(ctx, "s09-listener1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-corrupt-txid-rate", "50")
 	startGenerator(t, ctx, "s09", genCmd)
 	waitGenerator(t, ctx, "s09")

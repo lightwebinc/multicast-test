@@ -16,7 +16,7 @@ func TestScenario23_FragmentationShardFilter(t *testing.T) {
 	e, _, _, _ := basicTopology(t, "s23")
 	e.PatchEnv("s23-proxy", map[string]string{"FRAG_MTU": "1500"})
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-payload-size", "2048")
 
 	beforeL1, afterL1, beforeL2, afterL2, beforeL3, afterL3 :=

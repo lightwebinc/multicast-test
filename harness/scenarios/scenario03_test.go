@@ -16,7 +16,7 @@ import (
 //   - dropped (subtree_include_miss) ≈ received × 7/8
 func TestScenario03_FunctionalSubtreeFilter(t *testing.T) {
 	e, _, _, _ := basicTopology(t, "s03")
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 
 	_, _, _, _, beforeL3, afterL3 :=
 		runTrafficAndSnapshot(t, e, "s03", genCmd)

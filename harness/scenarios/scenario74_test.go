@@ -128,7 +128,7 @@ func TestScenario74_NACKProxyCrossDomain(t *testing.T) {
 	beforeDS := e.Snapshot(ctx, dsRetry)
 	beforeUS := e.Snapshot(ctx, usRetry)
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-duration", "15s")
 	startGenerator(t, ctx, "s74", genCmd)
 	waitGenerator(t, ctx, "s74")

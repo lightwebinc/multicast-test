@@ -47,7 +47,7 @@ func TestScenario14_MultiEndpointRatelimit(t *testing.T) {
 
 	beforeR := snapshotRetries(t, e, ctx, "s14")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd,
 		"-pps", "500",
 		"-duration", "15s",

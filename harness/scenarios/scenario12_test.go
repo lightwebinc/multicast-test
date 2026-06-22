@@ -34,7 +34,7 @@ func TestScenario12_BurstGapRatelimit(t *testing.T) {
 	beforeL := snapshotListeners(t, e, ctx, "s12")
 	beforeR := e.Snapshot(ctx, "s12-retry1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd,
 		"-pps", "500",
 		"-duration", "15s",

@@ -45,7 +45,7 @@ func TestScenario01_FunctionalAllShards(t *testing.T) {
 		IPv6:  "fd10::2",
 		Env: map[string]string{
 			"MULTICAST_IF":    "eth0",
-			"UDP_LISTEN_PORT": "9000",
+			"UDP_LISTEN_PORT": "8725",
 			"EGRESS_PORT":     "9001",
 			"SHARD_BITS":      "2",
 			"MC_SCOPE":        "site",
@@ -118,7 +118,7 @@ func TestScenario01_FunctionalAllShards(t *testing.T) {
 	// --- Start generator ------------------------------------------------------
 	// Cmd contains only flags; the ENTRYPOINT in the image is /subtx-gen.
 	sourceCmd := []string{
-		"-addr", "[fd10::2]:9000",
+		"-addr", "[fd10::2]:8725",
 		"-shard-bits", "2",
 		"-subtrees", "8",
 		"-subtree-seed", "multicast-lab-bsv",

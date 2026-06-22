@@ -32,7 +32,7 @@ func TestScenario10_SingleEndpointACK(t *testing.T) {
 	beforeL := snapshotListeners(t, e, ctx, "s10")
 	beforeR := e.Snapshot(ctx, "s10-retry1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd,
 		"-pps", "200",
 		"-duration", "10s",

@@ -64,7 +64,7 @@ func TestScenario52_TxIDDedupRedisFailure(t *testing.T) {
 	e.Sleep(4*time.Second, "MLD querier + Redis settle")
 
 	// Phase 1: traffic with Redis up.
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-duration", "5s")
 	startGenerator(t, ctx, "s52", genCmd)
 	waitGenerator(t, ctx, "s52")
@@ -79,7 +79,7 @@ func TestScenario52_TxIDDedupRedisFailure(t *testing.T) {
 	// Phase 2: traffic with Redis down. Snapshot before this phase.
 	beforeL := snapshotListeners(t, e, ctx, "s52")
 
-	genCmd2 := subtxGenCmd("[fd10::2]:9000")
+	genCmd2 := subtxGenCmd("[fd10::2]:8725")
 	genCmd2 = append(genCmd2, "-duration", "5s")
 	startGenerator(t, ctx, "s52-phase2", genCmd2)
 	waitGenerator(t, ctx, "s52-phase2")

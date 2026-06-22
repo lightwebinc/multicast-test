@@ -34,7 +34,7 @@ func TestScenario99_NACKRetransmit(t *testing.T) {
 	beforeL := snapshotListeners(t, e, ctx, "s99")
 	beforeR := e.Snapshot(ctx, "s99-retry1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd,
 		"-seq-gap-every", "200",
 		"-seq-gap-size", "1",

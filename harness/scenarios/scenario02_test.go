@@ -15,7 +15,7 @@ import (
 // and that subtree-exclude filtering still works within the shard-filtered set.
 func TestScenario02_FunctionalShardFilter(t *testing.T) {
 	e, _, _, _ := basicTopology(t, "s02")
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 
 	beforeL1, afterL1, beforeL2, afterL2, _, _ :=
 		runTrafficAndSnapshot(t, e, "s02", genCmd)

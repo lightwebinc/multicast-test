@@ -15,7 +15,7 @@ import (
 // ratios from scenario 01 must hold and bad_frame drops must be 0.
 func TestScenario07_FunctionalBRC128Mixed(t *testing.T) {
 	e, _, _, _ := basicTopology(t, "s07")
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-payload-format", "mixed")
 
 	beforeL1, afterL1, beforeL2, afterL2, beforeL3, afterL3 :=

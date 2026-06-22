@@ -33,7 +33,7 @@ func TestScenario61_SSMASMFallback(t *testing.T) {
 		IPv6:  "fd10::2",
 		Env: map[string]string{
 			"MULTICAST_IF":    "eth0",
-			"UDP_LISTEN_PORT": "9000",
+			"UDP_LISTEN_PORT": "8725",
 			"EGRESS_PORT":     "9001",
 			"SHARD_BITS":      "2",
 			"MC_SCOPE":        "site",

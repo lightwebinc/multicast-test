@@ -70,7 +70,7 @@ func TestScenario50_TxIDDedupBasic(t *testing.T) {
 
 	beforeL := snapshotListeners(t, e, ctx, "s50")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	startGenerator(t, ctx, "s50", genCmd)
 	waitGenerator(t, ctx, "s50")
 

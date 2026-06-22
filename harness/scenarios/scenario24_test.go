@@ -48,7 +48,7 @@ func TestScenario24_FragmentationHashVerify(t *testing.T) {
 
 	beforeL1 := e.Snapshot(ctx, "s24-listener1")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-payload-size", "2048")
 	startGenerator(t, ctx, "s24", genCmd)
 	waitGenerator(t, ctx, "s24")

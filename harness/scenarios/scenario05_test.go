@@ -60,7 +60,7 @@ func TestScenario05_McEgressBridge(t *testing.T) {
 	beforeL1 := e.Snapshot(ctx, "s05-listener1")
 	beforeL4 := e.Snapshot(ctx, "s05-listener4")
 
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	startGenerator(t, ctx, "s05", genCmd)
 	waitGenerator(t, ctx, "s05")
 

@@ -71,7 +71,7 @@ func TestScenario13_MissEscalationTier(t *testing.T) {
 	// makes it worse. At this rate every gap escalates cleanly through all three
 	// tiers (nacks ≈ 3×gaps, matching the VM reference) and recovers within the
 	// 4% budget.
-	genCmd := subtxGenCmd("[fd10::2]:9000")
+	genCmd := subtxGenCmd("[fd10::2]:8725")
 	genCmd = append(genCmd, "-duration", "15s", "-pps", "150")
 	startGenerator(t, ctx, "s13", genCmd)
 	waitGenerator(t, ctx, "s13")
