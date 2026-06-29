@@ -158,6 +158,21 @@ harness. The 80–89 decade stays **reserved** for mesh scenarios so the numberi
 registry never collides. The transport they exercise is the
 [integrated-infra `mc-router` role](https://github.com/lightwebinc/integrated-infra/blob/main/docs/mesh.md).
 
+## 90–91 — BRC-142 coalescing (bundle frame)
+
+| #  | Title                          | Test                               | Files                                                                          |
+| -- | ------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------ |
+| 90 | Coalesce → decoalesce delivery | `TestScenario90_CoalesceDelivery`  | [harness](harness/scenarios/scenario90_test.go) · proxy `COALESCE` → listener  |
+| 91 | Coalesce loss / NACK recovery  | `TestScenario91_CoalesceLossRecovery` | [harness](harness/scenarios/scenario91_test.go) · bundle-unit retry recovery |
+
+Scenario 90 enables `-coalesce` on the proxy over a shard-dense flow and proves
+the proxy packs many small transactions into bundle datagrams (FrameVer 0x08,
+`bsp_coalesce_*`) while the listener edge-decoalesces every member back out
+(100% delivery — coalescing conserves transactions). Scenario 91 induces
+multicast loss and proves bundle-unit recovery: the listener gap-tracks the
+bundle SeqNum stream and NACKs, the retry endpoint serves the cached bundle
+whole and retransmits it, and the re-decoalesced bundle closes the gap.
+
 ## 99 — End-to-end smoke
 
 | #   | Title                      | Test                            | Files                                                                                           |
@@ -175,4 +190,5 @@ registry never collides. The transport they exercise is the
 | `make test-bgp`              | `Scenario4[02]`                 | BGP                            |
 | `make test-ssm`              | `Scenario6[01]`                 | SSM (RFC 4607)                 |
 | `make test-manifest`         | `Scenario7[0-2]`                | BRC-139 / auto-shard-config    |
+| `make test-coalesce`         | `Scenario9[01]`                 | BRC-142 coalescing / bundle    |
 | `make test-one T=ScenarioNN` | single                          | run one scenario               |
