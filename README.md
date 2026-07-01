@@ -39,6 +39,9 @@ make test          # all harness scenarios (~30 min)
 make test-quick    # tier-1 filter scenarios (~60s)
 make test-retransmit  # NACK/retransmit scenarios
 make test-frag     # fragmentation scenarios
+make test-bgp      # BGP ingress / anycast scenarios
+make test-manifest # BRC-139 manifest / auto-shard-config scenarios
+make test-coalesce # BRC-142 coalescing / bundle-frame scenarios
 make help          # show all targets
 ```
 
@@ -87,6 +90,29 @@ go test ./harness/scenarios/ -v -run TestScenario60_SSMLoopback
 
 ```bash
 go test ./harness/scenarios/ -v -run TestScenario73_UnifiedLoggingContract
+```
+
+### BRC-142 coalescing (bundle frame)
+
+Two scenarios validate the [BRC-142 coalescing frame](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/brc-142-coalescing-frame.md)
+(pps-reduction bundle format, `FrameVer 0x08`):
+
+- **Scenario 90** — `TestScenario90_CoalesceDelivery`: enables `-coalesce` on
+  the proxy over a shard-dense flow and proves the proxy packs many small
+  transactions into bundle datagrams (`bsp_coalesce_*`) while the listener
+  edge-decoalesces every member back out (100% delivery — coalescing conserves
+  transactions).
+- **Scenario 91** — `TestScenario91_CoalesceLossRecovery`: induces multicast
+  loss and proves bundle-unit recovery — the listener gap-tracks the bundle
+  `SeqNum` stream and NACKs, the retry endpoint serves the cached bundle whole
+  and retransmits it, and the re-decoalesced bundle closes the gap.
+
+Coalescing happens at the origin proxy, not at the spine; billing meters the
+receiver's wire-pps so the saving reaches the consumer's bill.
+
+```bash
+# Run both coalescing scenarios
+make test-coalesce
 ```
 
 ## Layout

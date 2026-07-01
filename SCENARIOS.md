@@ -147,7 +147,7 @@ endpoint via a `Proxied`-flagged NACK (unicast frame return), re-caches, and
 multicast-retransmits into the downstream domain so the consumer's gap fills.
 Asserts the full chain: downstream `bre_proxy_recovered_total`, upstream
 `bre_unicast_retransmits_total`, and consumer `bsl_gaps_suppressed_total`. See
-[BRC-126](../bsv-multicast/docs/brc-126-retransmission-protocol.md).
+[BRC-126](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/brc-126-retransmission-protocol.md).
 
 ## 80–89 — Multicast mesh (ip6gre fabric) — moved to private ops
 
@@ -159,6 +159,9 @@ registry never collides. The transport they exercise is the
 [integrated-infra `mc-router` role](https://github.com/lightwebinc/integrated-infra/blob/main/docs/mesh.md).
 
 ## 90–91 — BRC-142 coalescing (bundle frame)
+
+Validates the [BRC-142 coalescing frame](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/brc-142-coalescing-frame.md)
+(bundle format, `FrameVer 0x08`) — origin-side packing to cut fabric pps.
 
 | #  | Title                          | Test                               | Files                                                                          |
 | -- | ------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------ |
