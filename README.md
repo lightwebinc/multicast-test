@@ -36,7 +36,7 @@ This repo is the **integration** test suite — the Go Docker harness:
 
 ### Prerequisites
 
-Docker, Go 1.25+, and root (tests create network namespaces). The harness
+Docker, Go 1.26.2+ (the `go.mod` floor), and root (tests create network namespaces). The harness
 compiles component binaries from **sibling checkouts** — clone the component
 repos side by side under one parent directory:
 
@@ -89,10 +89,13 @@ test names, make-target filters). Highlights:
 - **60/61 — SSM (RFC 4607)** (`make test-ssm`): `netjoin` source-group
   join/leave sanity plus ASM-fallback startup; see the
   [SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm).
-- **70–73 — BRC-139 manifest + unified logging**: `make test-manifest` runs
-  70–72 (wire pipeline, live-reshard signal, adoption safety gates); 73 — the
-  `shard-manifest` [unified logging](https://github.com/lightwebinc/shard-common/blob/main/docs/logging.md)
-  emit contract — runs standalone (`make test-one T=Scenario73`).
+- **70–75 — BRC-139 manifest, unified logging, NACK proxying**:
+  `make test-manifest` (filter `Scenario7[0-5]`) runs 70–72 (wire pipeline,
+  live-reshard signal, adoption safety gates), 73 — the `shard-manifest`
+  [unified logging](https://github.com/lightwebinc/shard-common/blob/main/docs/logging.md)
+  emit contract (needs only `go` + loopback) — and 74–75 (cross-domain NACK
+  proxying, inter-fabric RTT repair); any one runs alone via
+  `make test-one T=Scenario73`.
 - **92–98 — BRC-148 BEEF object plane** (`make test-beef`): submission-record
   ingress (open port + dedicated lane), topic/version filtered delivery,
   fragmentation, NACK recovery, per-domain manifest coordination, and
@@ -112,3 +115,4 @@ test names, make-target filters). Highlights:
 | `harness/driver/` | Docker driver (container lifecycle, network) |
 | `harness/env/` | Network emulation (`tc netem`) and firewall (`ip6tables`) helpers |
 | `harness/metrics/` | Prometheus scraper and assertion helpers |
+| `vm-lab/scenarios/` | Archived before/after metrics snapshots (TSV) from the former VM-lab runs — reference data only; nothing in the harness reads them |

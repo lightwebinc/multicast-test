@@ -225,7 +225,7 @@ per-domain quorum/hysteresis/divergence with BRC-139-only back-compat.
 | ---------------------------- | ------------------------------- | ------------------------------ |
 | `make test`                  | all                             | ~30 min, all harness scenarios |
 | `make test-quick`            | `Scenario0[1-3]\|Scenario0[67]` | tier-1 filter scenarios (~60s) |
-| `make test-retransmit`       | `Scenario(99\|08\|1[0-8])`      | NACK / retransmit              |
+| `make test-retransmit`       | `Scenario(99\|08\|1[0-9])`      | NACK / retransmit              |
 | `make test-subtree-announce` | `Scenario2[01]`                 | BRC-127 subtree announce       |
 | `make test-frag`             | `Scenario2[2-6]`                | fragmentation                  |
 | `make test-block`            | `Scenario3[0-7]`                | BRC-131/132/134/135 lanes      |
