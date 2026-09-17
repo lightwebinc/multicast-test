@@ -157,14 +157,14 @@ Asserts the full chain: downstream `bre_proxy_recovered_total`, upstream
 `bre_unicast_retransmits_total`, and consumer `bsl_gaps_suppressed_total`. See
 [BRC-126](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/brc-126-retransmission-protocol.md).
 
-## 80–88 — Multicast mesh (ip6gre fabric) — moved to private ops
+## 80–88 — Multicast mesh (ip6gre fabric) — not in this harness
 
 Scenarios 80–83 (ip6gre mesh replication, collapsed-mesh full-duplex demo,
 WireGuard admin overlay, consumer-edge scale-out) and their privileged netns
-repro scripts now live in a private repo. They were removed from this public
-harness. The 80–88 range stays **reserved** for mesh scenarios so the numbering
-registry never collides. The transport they exercise is the private ops mesh
-(`mc-router`) automation.
+repro scripts are not part of this harness: they need a routed multi-host
+fabric rather than the single-host bridge the suite builds. The 80–88 range
+stays **reserved** for mesh scenarios so the numbering registry never
+collides.
 
 ## 89–91 — BRC-142 coalescing (bundle frame)
 

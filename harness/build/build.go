@@ -73,7 +73,7 @@ func Build(ctx context.Context, s ImageSpec, force bool) error {
 	// without the workspace (e.g. CI agents that check out a single repo).
 	workFile := filepath.Join(filepath.Dir(s.RepoDir), "go.work")
 	// PWD must match cmd.Dir: when the repo root is reached through a
-	// symlink (e.g. ~/repo → SyncWork/repo), a stale/absent PWD makes the
+	// symlink (e.g. ~/repo pointing elsewhere on disk), a stale/absent PWD makes the
 	// go tool resolve the physical working directory, which then fails the
 	// lexical workspace-membership match against go.work's use paths. A
 	// consistent PWD (what an interactive shell provides) keeps the logical
