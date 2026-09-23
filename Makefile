@@ -36,7 +36,7 @@ test-coalesce: ## Run BRC-142 coalescing / bundle scenarios
 	$(GOTEST) -timeout 12m -run 'Scenario(89|9[01])'
 
 test-beef: ## Run BRC-148 BEEF object plane scenarios
-	$(GOTEST) -timeout 30m -run 'Scenario9[2-8]'
+	$(GOTEST) -timeout 30m -run 'Scenario(9[2-8]|100)'
 
 test-one: ## Run a single scenario test by name: make test-one T=Scenario36
 	@if [ -z "$(T)" ]; then echo "usage: make test-one T=<TestName>"; exit 2; fi

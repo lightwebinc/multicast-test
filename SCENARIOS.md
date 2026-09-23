@@ -204,10 +204,13 @@ BRC-126 recovery, and the per-domain BRC-139 manifest extension.
 | 96 | NACK recovery on the BEEF plane         | `TestScenario96_BeefNackRecovery`       | [harness](harness/scenarios/scenario96_test.go) |
 | 97 | Per-domain manifest coordination        | `TestScenario97_BeefDomainAdoption`     | [harness](harness/scenarios/scenario97_test.go) · harness only |
 | 98 | Plane independence (concurrent tx+BEEF) | `TestScenario98_PlaneIndependence`      | [harness](harness/scenarios/scenario98_test.go) |
+| 100 | Multi-topic record on the open path: one frame, first topic delivered, later names are labels, overlapping election delivers once | `TestScenario100_BeefMultiTopicOpenPath` | [harness](harness/scenarios/scenario100_test.go) |
 
-The OSS BEEF harness covers the single-topic stance only; multi-topic fan-out
-requires an authenticated submit policy and is tested elsewhere (the OSS proxy rejects a submission
-record naming more than one topic — `bsp_beef_submissions_total{result="multi_topic"}`).
+A record names 1..15 topics on every path and is never rejected for its
+count. The OSS (open) path delivers the first topic only and carries every
+name to the subscriber in the delivery payload; delivering more than the
+first requires an authenticated submit policy (`shard-proxy-1bsv`) and is
+tested in the commercial suite.
 Scenario 94 includes the real BRC-62 specification
 example with listener ContentID verification (byte-identical carriage).
 Scenario 97 is in-process (wire encode → decode → registry → evaluator):
