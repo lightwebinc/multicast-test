@@ -176,11 +176,17 @@ func waitGenerator(t *testing.T, ctx context.Context, prefix string) {
 	// generator genuinely hangs.
 	exitCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
+	start := time.Now()
 	code, err := dockerdriver.New().WaitExit(exitCtx, prefix+"-source")
+	elapsed := time.Since(start).Round(time.Millisecond)
 	if err != nil {
-		t.Logf("source wait: %v", err)
+		// The 2m bound only bites when a generator genuinely hangs; name the
+		// scenario and the wait so a hung generator is unmistakable in -v output
+		// instead of silently costing 2 minutes of the suite budget.
+		t.Logf("[timing] source wait HIT BOUND after %s: %v", elapsed, err)
+		return
 	}
-	t.Logf("source exited with code %d", code)
+	t.Logf("source exited with code %d after %s", code, elapsed)
 }
 
 // runTrafficAndSnapshot runs the standard traffic generation flow:

@@ -38,6 +38,13 @@ type Env struct {
 // New creates an Env bound to t with the given Driver.
 func New(t *testing.T, d driver.Driver) *Env {
 	t.Helper()
+	// Every scenario builds its Env through New, so this is the one place that
+	// yields a per-scenario wall-clock line for free. It surfaces slow or
+	// hung scenarios in -v output without touching each test.
+	start := time.Now()
+	t.Cleanup(func() {
+		t.Logf("[timing] scenario %s took %s", t.Name(), time.Since(start).Round(time.Millisecond))
+	})
 	return &Env{t: t, Driver: d}
 }
 

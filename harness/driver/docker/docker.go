@@ -129,10 +129,20 @@ func (d *Driver) WaitExit(ctx context.Context, name string) (int, error) {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 	for {
+		// Honor cancellation before each inspect. select picks a ready case at
+		// random, so without this a fired ctx can still land on ticker.C and
+		// issue a doomed `docker inspect` whose killed exec leaks a watchCtx
+		// goroutine. Checking here (and in the ticker branch) returns promptly.
+		if err := ctx.Err(); err != nil {
+			return -1, err
+		}
 		select {
 		case <-ctx.Done():
 			return -1, ctx.Err()
 		case <-ticker.C:
+			if err := ctx.Err(); err != nil {
+				return -1, err
+			}
 			out, err := run(ctx, "docker", "inspect",
 				"--format", "{{.State.Status}}",
 				name,
