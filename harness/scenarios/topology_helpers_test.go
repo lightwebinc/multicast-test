@@ -22,6 +22,11 @@ func proxyEnv() map[string]string {
 		"MC_SCOPE":        "site",
 		"MC_GROUP_ID":     "0x000B",
 		"METRICS_ADDR":    ":9100",
+		// subtx-gen -seq-gap-* pre-stamps SeqNums so it can inject gaps; the
+		// proxy's stamped-ingress gate (default off) would drop every such
+		// frame as "stamped_ingress" and the NACK scenarios would see no
+		// traffic at all. Unstamped frames are still stamped by the proxy.
+		"ALLOW_STAMPED_INGRESS": "true",
 	}
 }
 
