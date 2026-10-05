@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -51,7 +52,18 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	// 3. Create the multicast bridge (idempotent).
+	// 3. Remove scenario containers stranded by a previously killed run; they
+	// hold the fixed fabric addresses every scenario reuses.
+	stale, err := dockerdriver.RemoveStaleNodes(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "stale container sweep failed: %v\n", err)
+		os.Exit(1)
+	}
+	if len(stale) > 0 {
+		fmt.Fprintf(os.Stderr, "[sweep] removed %d stale containers: %s\n", len(stale), strings.Join(stale, " "))
+	}
+
+	// 4. Create the multicast bridge (idempotent).
 	if err := dockerdriver.CreateMcastBridge(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "bridge setup failed: %v\n", err)
 		os.Exit(1)

@@ -114,6 +114,26 @@ func DestroyMcastBridge(ctx context.Context) error {
 	return nil
 }
 
+// RemoveStaleNodes force-removes scenario containers (names s<digit>...) left
+// by a previous run that was killed before t.Cleanup ran (test -timeout panic,
+// Ctrl-C). Scenarios reuse fixed fabric addresses, so one leftover container
+// fails every later start with "Address already in use". Returns the names
+// removed.
+func RemoveStaleNodes(ctx context.Context) ([]string, error) {
+	out, err := run(ctx, "docker", "ps", "-a", "--filter", "name=^s[0-9]", "--format", "{{.Names}}")
+	if err != nil {
+		return nil, fmt.Errorf("docker ps: %w\n%s", err, out)
+	}
+	names := strings.Fields(out)
+	if len(names) == 0 {
+		return nil, nil
+	}
+	if out, err := run(ctx, "docker", append([]string{"rm", "-f"}, names...)...); err != nil {
+		return nil, fmt.Errorf("docker rm: %w\n%s", err, out)
+	}
+	return names, nil
+}
+
 // waitForIface polls until /sys/class/net/<name> exists or timeout expires.
 func waitForIface(ctx context.Context, name string, timeout time.Duration) error {
 	path := fmt.Sprintf("/sys/class/net/%s", name)
