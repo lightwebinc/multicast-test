@@ -160,7 +160,9 @@ func TestScenario72_BRC139AdoptionSafetyGates(t *testing.T) {
 		// Two announcers, but neither carries the Authoritative flag.
 		mk := func(id uint32) *frame.ShardManifest {
 			m := authoritative(id, 8)
-			m.Flags &^= frame.ShardManifestFlagAuthoritative // strip authority
+			// Strip authority. PilotOnly goes too: the encoder rejects
+			// PilotOnly without Authoritative as an invalid combination.
+			m.Flags &^= frame.ShardManifestFlagAuthoritative | frame.ShardManifestFlagPilotOnly
 			return m
 		}
 		adopted := runPipeline(t, 2, []*frame.ShardManifest{
