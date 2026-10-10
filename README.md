@@ -48,7 +48,7 @@ repos side by side under one parent directory:
 ├── shard-listener
 ├── retry-endpoint
 ├── subtx-generator
-├── beef-generator      (BEEF scenarios 92–98)
+├── beef-generator      (BEEF scenarios 92–98, 100)
 └── shard-manifest      (scenario 73)
 ```
 
@@ -71,6 +71,7 @@ make test-ssm      # SSM scenarios (RFC 4607)
 make test-manifest # BRC-139 manifest / auto-shard-config scenarios
 make test-coalesce # BRC-142 coalescing / bundle-frame scenarios
 make test-beef     # BRC-148 BEEF object plane scenarios
+make test-misc     # baseline scenarios outside a themed group
 make test-one T=Scenario36  # a single scenario test by name
 make help          # show all targets
 ```
@@ -116,3 +117,7 @@ test names, make-target filters). Highlights:
 | `harness/env/` | Network emulation (`tc netem`) and firewall (`ip6tables`) helpers |
 | `harness/metrics/` | Prometheus scraper and assertion helpers |
 | `vm-lab/scenarios/` | Archived before/after metrics snapshots (TSV) from the former VM-lab runs — reference data only; nothing in the harness reads them |
+
+## Releases
+
+Releases and release notes live on [GitHub Releases](https://github.com/lightwebinc/multicast-test/releases); there is no CHANGELOG.

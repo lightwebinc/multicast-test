@@ -185,7 +185,7 @@ multicast loss and proves bundle-unit recovery: the listener gap-tracks the
 bundle SeqNum stream and NACKs, the retry endpoint serves the cached bundle
 whole and retransmits it, and the re-decoalesced bundle closes the gap.
 
-## 92–98 — BRC-148 BEEF object plane
+## 92–98, 100 — BRC-148 BEEF object plane
 
 Validates the [BRC-148 shard domain partition + BEEF object plane](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/brc-148-shard-domain-beef-plane.md)
 (`FrameVer 0x09` on the `0x1000` band; topic-sharded, open ingress class):
@@ -236,7 +236,8 @@ per-domain quorum/hysteresis/divergence with BRC-139-only back-compat.
 | `make test-ssm`              | `Scenario6[01]`                 | SSM (RFC 4607)                 |
 | `make test-manifest`         | `Scenario7[0-5]`                | BRC-139 / auto-shard-config    |
 | `make test-coalesce`         | `Scenario(89\|9[01])`           | BRC-142 coalescing / bundle    |
-| `make test-beef`             | `Scenario9[2-8]`                | BRC-148 BEEF object plane      |
+| `make test-beef`             | `Scenario(9[2-8]\|100)`         | BRC-148 BEEF object plane      |
+| `make test-misc`             | `Scenario0[0459]`               | baseline (firewall, dashboard, egress bridge, payload verify) |
 | `make test-one T=ScenarioNN` | single                          | run one scenario               |
 
 ## Formerly-red scenarios (resolved 2026-07-24)
