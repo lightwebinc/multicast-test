@@ -209,8 +209,7 @@ BRC-126 recovery, and the per-domain BRC-139 manifest extension.
 A record names 1..15 topics on every path and is never rejected for its
 count. The OSS (open) path delivers the first topic only and carries every
 name to the subscriber in the delivery payload; delivering more than the
-first requires an authenticated submit policy (`shard-proxy-1bsv`) and is
-tested in the commercial suite.
+first requires an authenticated submit policy, which is outside this suite.
 Scenario 94 includes the real BRC-62 specification
 example with listener ContentID verification (byte-identical carriage).
 Scenario 97 is in-process (wire encode → decode → registry → evaluator):
