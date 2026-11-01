@@ -11,7 +11,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 09 — Listener payload hash verification
+// Scenario 09: Listener payload hash verification
 //
 // Ported from the retired bash scenario 09.
 //
@@ -51,7 +51,7 @@ func TestScenario09_ListenerPayloadVerification(t *testing.T) {
 
 	genCmd := subtxGenCmd("[fd10::2]:8725")
 	// Pin brc124: the listener's -verify-payload-hash is EF-aware (it checks
-	// the canonical TxID — SHA256d(payload) for raw, objfmt.TxID for EF), so
+	// the canonical TxID: SHA256d(payload) for raw, objfmt.TxID for EF), so
 	// either format would pass honestly; the pin keeps deterministic RAW-lane
 	// coverage of the corrupt-TxID drop path here (the EF verify path is
 	// covered by shard-listener listener/reassembly unit tests).

@@ -8,12 +8,12 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 94 — BRC-148 version filter + verbatim carriage
+// Scenario 94: BRC-148 version filter + verbatim carriage
 //
 // The version (encoding-capability) filter: a listener electing only the
 // BRC-62 v1 encoding forwards BEEF-v1 objects and drops BEEF-V2 and Atomic
 // BEEF ones. Then the REAL BRC-62 specification example is submitted with
-// listener-side ContentID verification enabled — byte-identical delivery of
+// listener-side ContentID verification enabled: byte-identical delivery of
 // a genuine proof-carrying object (verbatim carriage, no re-encoding).
 func TestScenario94_BeefVersionFilterVerbatim(t *testing.T) {
 	ctx := context.Background()
@@ -60,7 +60,7 @@ func TestScenario94_BeefVersionFilterVerbatim(t *testing.T) {
 		metrics.AssertNear(t, label+" received all encodings", recv, 31, 0.10)
 		metrics.AssertNear(t, label+" v1-capable forwards", fwd+egrErr, 11, 0.10)
 		metrics.AssertNear(t, label+" version-filter drops", dropped, 20, 0.10)
-		// ContentID verification was ON for every forwarded object — zero
+		// ContentID verification was ON for every forwarded object; zero
 		// mismatches proves byte-identical carriage (incl. the real vector).
 		metrics.AssertZero(t, label+" content verification mismatches", invalid)
 	}

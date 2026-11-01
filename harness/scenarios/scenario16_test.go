@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 16 — Per-group retransmit rate limit (ACK preserved)
+// Scenario 16: Per-group retransmit rate limit (ACK preserved)
 //
 // Ported from the retired bash scenario 16.
 //
@@ -35,7 +35,7 @@ func TestScenario16_GroupRatelimit(t *testing.T) {
 	e.StartAll(ctx)
 	e.Sleep(4*time.Second, "MLD querier settle")
 
-	// 5% loss on listeners — more gaps = more NACKs to hit the group limiter.
+	// 5% loss on listeners: more gaps = more NACKs to hit the group limiter.
 	for _, l := range []string{"s16-listener1", "s16-listener2", "s16-listener3"} {
 		if err := env.ApplyNetemLoss(ctx, l, 5.0); err != nil {
 			t.Fatalf("netem loss %s: %v", l, err)

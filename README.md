@@ -1,6 +1,6 @@
 # multicast-test
 
-> Part of the [**BSV Layered Multicast**](https://github.com/lightwebinc/bsv-multicast) open-source project — see the main repository for the full architecture, design docs, and BRC specifications.
+> Part of the [**BSV Layered Multicast**](https://github.com/lightwebinc/bsv-multicast) open-source project; see the main repository for the full architecture, design docs, and BRC specifications.
 
 End-to-end test suite for the Bitcoin multicast sharding pipeline. Validates
 [`shard-proxy`](https://github.com/lightwebinc/shard-proxy),
@@ -11,7 +11,7 @@ End-to-end test suite for the Bitcoin multicast sharding pipeline. Validates
 and [`shard-manifest`](https://github.com/lightwebinc/shard-manifest)
 working together over an IPv6 multicast fabric.
 
-This repo is the **integration** test suite — the Go Docker harness:
+This repo is the **integration** test suite, the Go Docker harness:
 
 | Framework | Location | Runtime | Description |
 |-----------|----------|---------|-------------|
@@ -32,12 +32,12 @@ This repo is the **integration** test suite — the Go Docker harness:
                                     listener4 ◄─────────┘  (link-local subscriber, scenario 05)
 ```
 
-## Quickstart — Go Docker harness
+## Quickstart: Go Docker harness
 
 ### Prerequisites
 
 Docker, Go 1.26.2+ (the `go.mod` floor), and root (tests create network namespaces). The harness
-compiles component binaries from **sibling checkouts** — clone the component
+compiles component binaries from **sibling checkouts**; clone the component
 repos side by side under one parent directory:
 
 ```
@@ -59,13 +59,13 @@ sibling `shard-common` checkout.
 ### Running
 
 ```bash
-make test          # all harness scenarios (~30 min)
+make test          # all harness scenarios (over an hour; 90 min timeout)
 make test-quick    # tier-1 filter scenarios (~60s)
 make test-retransmit  # NACK/retransmit scenarios
 make test-subtree-announce  # BRC-127 subtree announce scenarios
 make test-frag     # fragmentation scenarios
 make test-block    # BRC-131/132/134/135 block / subtree / anchor / header scenarios
-make test-bgp      # BGP ingress / anycast scenarios (currently all skip — deferred)
+make test-bgp      # BGP ingress / anycast scenarios (all skip: deferred)
 make test-dedup    # TxID dedup scenarios
 make test-ssm      # SSM scenarios (RFC 4607)
 make test-manifest # BRC-139 manifest / auto-shard-config scenarios
@@ -87,21 +87,21 @@ sudo go test ./harness/scenarios/... -v -run TestScenario01
 [`SCENARIOS.md`](SCENARIOS.md) is the canonical per-scenario index (titles,
 test names, make-target filters). Highlights:
 
-- **60/61 — SSM (RFC 4607)** (`make test-ssm`): `netjoin` source-group
+- **60/61: SSM (RFC 4607)** (`make test-ssm`): `netjoin` source-group
   join/leave sanity plus ASM-fallback startup; see the
-  [SSM Support Plan](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm).
-- **70–75 — BRC-139 manifest, unified logging, NACK proxying**:
+  [Source-Specific Multicast design](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm).
+- **70–75: BRC-139 manifest, unified logging, NACK proxying**:
   `make test-manifest` (filter `Scenario7[0-5]`) runs 70–72 (wire pipeline,
-  live-reshard signal, adoption safety gates), 73 — the `shard-manifest`
+  live-reshard signal, adoption safety gates), 73 (the `shard-manifest`
   [unified logging](https://github.com/lightwebinc/shard-common/blob/main/docs/logging.md)
-  emit contract (needs only `go` + loopback) — and 74–75 (cross-domain NACK
+  emit contract; needs only `go` + loopback), and 74–75 (cross-domain NACK
   proxying, inter-fabric RTT repair); any one runs alone via
   `make test-one T=Scenario73`.
-- **92–98 — BRC-148 BEEF object plane** (`make test-beef`): submission-record
+- **92–98, 100: BRC-148 BEEF object plane** (`make test-beef`): submission-record
   ingress (open port + dedicated lane), topic/version filtered delivery,
-  fragmentation, NACK recovery, per-domain manifest coordination, and
-  concurrent-plane independence
-- **89–91 — BRC-142 coalescing** (`make test-coalesce`): origin-proxy bundle
+  fragmentation, NACK recovery, per-domain manifest coordination,
+  concurrent-plane independence, and multi-topic records on the open path.
+- **89–91: BRC-142 coalescing** (`make test-coalesce`): origin-proxy bundle
   packing, listener edge-decoalescing, and bundle-unit NACK recovery; see the
   [BRC-142 spec](https://github.com/lightwebinc/bsv-multicast/blob/main/docs/brc-142-coalescing-frame.md).
 
@@ -111,12 +111,11 @@ test names, make-target filters). Highlights:
 |------|---------|
 | `Makefile` | `make test` targets for the Go Docker harness |
 | `SCENARIOS.md` | Canonical scenario index (per-scenario descriptions) |
-| `harness/scenarios/` | Go test files — one per scenario |
+| `harness/scenarios/` | Go test files, one per scenario |
 | `harness/build/` | Docker image builder (compiles binaries, creates minimal images) |
 | `harness/driver/` | Docker driver (container lifecycle, network) |
 | `harness/env/` | Network emulation (`tc netem`) and firewall (`ip6tables`) helpers |
 | `harness/metrics/` | Prometheus scraper and assertion helpers |
-| `vm-lab/scenarios/` | Archived before/after metrics snapshots (TSV) from the former VM-lab runs — reference data only; nothing in the harness reads them |
 
 ## Releases
 

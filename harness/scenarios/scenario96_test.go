@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 96 — BRC-148 NACK recovery on the BEEF plane
+// Scenario 96: BRC-148 NACK recovery on the BEEF plane
 //
 // BEEF flows are per (sender, group) with in-frame HashKey/SeqNum, so the
 // standard BRC-126 machinery recovers plane loss unchanged: netem loss opens
@@ -39,7 +39,7 @@ func TestScenario96_BeefNackRecovery(t *testing.T) {
 	beforeR := e.Snapshot(ctx, "s96-retry1")
 
 	// One topic ⇒ one band group ⇒ one contiguous (sender, group) SeqNum
-	// stream — gaps are unambiguous.
+	// stream; gaps are unambiguous.
 	startGenerator(t, ctx, "s96", []string{
 		"beef-gen", "-addr", "[fd10::2]:9002", "-topics", "tm_s96",
 		"-count", "400", "-interval", "10ms",

@@ -12,12 +12,12 @@ import (
 	"github.com/lightwebinc/shard-common/manifest"
 )
 
-// Scenario 72 — BRC-139 adoption safety gates
+// Scenario 72: BRC-139 adoption safety gates
 //
 // Companion to Scenario 70 (happy-path quorum adoption). Where 70 proves
 // the sender → socket → registry → evaluator pipeline ADOPTS when quorum
 // agrees, this scenario proves it REFUSES to adopt from insufficient or
-// conflicting signal — the load-bearing safety property of
+// conflicting signal, the load-bearing safety property of
 // auto-shard-config. A bug here means a single rogue or misconfigured
 // announcer could reshard the fleet.
 //
@@ -37,7 +37,7 @@ func TestScenario72_BRC139AdoptionSafetyGates(t *testing.T) {
 	// Registry, then evaluates with the given quorum. It waits until all
 	// distinct (src,InstanceID) entries land before evaluating. Returns the
 	// adopted view. Evaluate is called twice (hysteresis 1ns) so an eligible
-	// candidate would clear the hysteresis floor — mirroring Scenario 70.
+	// candidate would clear the hysteresis floor, mirroring Scenario 70.
 	runPipeline := func(t *testing.T, quorum int, manifests []*frame.ShardManifest) manifest.Adopted {
 		t.Helper()
 		addr, err := net.ResolveUDPAddr("udp6", "[::1]:0")

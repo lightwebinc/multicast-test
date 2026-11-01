@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 34 — BRC-132 subtree data: NACK retransmission
+// Scenario 34: BRC-132 subtree data: NACK retransmission
 //
 // Ported from the retired bash scenario 34.
 //

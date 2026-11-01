@@ -8,7 +8,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 36 — BRC-134 anchor frame: basic delivery
+// Scenario 36: BRC-134 anchor frame: basic delivery
 //
 // Ported from the retired bash scenario 36.
 //

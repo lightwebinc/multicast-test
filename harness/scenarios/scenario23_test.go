@@ -6,7 +6,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 23 — BRC-130 fragmentation: shard filter
+// Scenario 23: BRC-130 fragmentation: shard filter
 //
 // Ported from the retired bash scenario 23.
 //

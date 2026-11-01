@@ -66,7 +66,7 @@ func (d *Driver) Start(ctx context.Context, cfg driver.NodeConfig) error {
 
 // Stop stops and removes the named container. Idempotent.
 func (d *Driver) Stop(ctx context.Context, name string) error {
-	// Stop (ignore error — container may already be stopped or not exist).
+	// Stop (ignore error; the container may already be stopped or not exist).
 	run(ctx, "docker", "stop", "--time", "5", name) //nolint:errcheck
 	// Remove.
 	out, err := run(ctx, "docker", "rm", "-f", name)

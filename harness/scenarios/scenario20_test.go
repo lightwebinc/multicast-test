@@ -11,7 +11,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 20 — BRC-127 subtree group announce: dynamic filtering
+// Scenario 20: BRC-127 subtree group announce: dynamic filtering
 //
 // Ported from the retired bash scenario 20.
 //
@@ -64,7 +64,7 @@ func TestScenario20_SubtreeGroupAnnounce(t *testing.T) {
 	beforeL3 := e.Snapshot(ctx, "s20-listener3")
 
 	// s20-source runs both announce + traffic (subtxGenCmd included);
-	// wait for it to finish — traffic runs for the remaining ~5 s.
+	// wait for it to finish; traffic runs for the remaining ~5 s.
 	waitGenerator(t, ctx, "s20")
 
 	e.Sleep(3*time.Second, "pipeline drain")

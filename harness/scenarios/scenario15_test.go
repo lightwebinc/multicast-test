@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 15 — Per-chain NACK rate limit
+// Scenario 15: Per-chain NACK rate limit
 //
 // Ported from the retired bash scenario 15.
 //

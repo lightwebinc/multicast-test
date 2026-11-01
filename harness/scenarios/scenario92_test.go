@@ -8,10 +8,10 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 92 — BRC-148 BEEF plane: submit → deliver
+// Scenario 92: BRC-148 BEEF plane: submit → deliver
 //
 // A beef-gen source submits BEEF submission records over the proxy's OPEN tx
-// TCP port (the 0xBEEF record-tag grammar beside framed/bare-tx — BEEF is an
+// TCP port (the 0xBEEF record-tag grammar beside framed/bare-tx; BEEF is an
 // open class, no dedicated port required), then again over the optional
 // dedicated BEEF lane. The proxy expands each record into a stamped FrameVer
 // 0x09 frame on the plane band (0x1000+) and every electing listener
@@ -30,7 +30,7 @@ func TestScenario92_BeefSubmitDeliver(t *testing.T) {
 	e.Sleep(4*time.Second, "MLD querier settle")
 	e.Sleep(3*time.Second, "drain residual")
 
-	// Phase 1: the open-port path (primary — least-friction public ingress).
+	// Phase 1: the open-port path (primary: least-friction public ingress).
 	beforeP := e.Snapshot(ctx, "s92-proxy")
 	beforeL := snapshotListeners(t, e, ctx, "s92")
 	startGenerator(t, ctx, "s92", []string{

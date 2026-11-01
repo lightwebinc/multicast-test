@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 37 — BRC-134 anchor frame: NACK retransmission
+// Scenario 37: BRC-134 anchor frame: NACK retransmission
 //
 // Ported from the retired bash scenario 37.
 //

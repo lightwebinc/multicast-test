@@ -6,7 +6,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 03 — Functional subtree filter
+// Scenario 03: Functional subtree filter
 //
 // Ported from the retired bash scenario 03.
 //

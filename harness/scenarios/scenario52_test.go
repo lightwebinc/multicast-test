@@ -12,7 +12,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 52 — TxID dedup: Redis failure (fail-open)
+// Scenario 52: TxID dedup: Redis failure (fail-open)
 //
 // Ported from the retired bash scenario 52.
 //

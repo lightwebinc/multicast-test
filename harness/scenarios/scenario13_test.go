@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 13 — MISS escalation by tier
+// Scenario 13: MISS escalation by tier
 //
 // Ported from the retired bash scenario 13.
 //

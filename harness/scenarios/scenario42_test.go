@@ -2,7 +2,7 @@ package scenarios
 
 import "testing"
 
-// Scenario 42 — BGP multi-proxy anycast: ECMP + failover
+// Scenario 42: BGP multi-proxy anycast: ECMP + failover
 //
 // Ported from the retired bash scenario 42.
 //

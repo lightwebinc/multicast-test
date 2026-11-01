@@ -2,7 +2,7 @@ package scenarios
 
 import "testing"
 
-// Scenario 40 — BGP ingress announce: AnyCast prefix propagation
+// Scenario 40: BGP ingress announce: AnyCast prefix propagation
 //
 // Ported from the retired bash scenario 40.
 //

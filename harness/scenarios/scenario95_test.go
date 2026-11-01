@@ -8,11 +8,11 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 95 — BRC-148 large-object fragmentation
+// Scenario 95: BRC-148 large-object fragmentation
 //
 // Objects exceeding the proxy's fragmentation MTU leave as BRC-130 fragments
 // (OrigFrameVer 0x09, ContentID/TopicID in every fragment). Listeners
-// reassemble before fan-out — filters evaluate on whole objects — and the
+// reassemble before fan-out (filters evaluate on whole objects) and the
 // ContentID doubles as the BRC-130 verification hash, checked on completion.
 func TestScenario95_BeefFragmentation(t *testing.T) {
 	ctx := context.Background()

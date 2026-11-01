@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 12 — Burst gap + rate limiting
+// Scenario 12: Burst gap + rate limiting
 //
 // Ported from the retired bash scenario 12.
 //

@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 11 — Permanent gap / MISS (cache-empty)
+// Scenario 11: Permanent gap / MISS (cache-empty)
 //
 // Ported from the retired bash scenario 11.
 //

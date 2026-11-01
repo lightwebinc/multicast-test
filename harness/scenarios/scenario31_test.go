@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 31 — BRC-131 block announcement: NACK retransmission
+// Scenario 31: BRC-131 block announcement: NACK retransmission
 //
 // Ported from the retired bash scenario 31.
 //

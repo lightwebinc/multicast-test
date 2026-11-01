@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/shard-common/manifest"
 )
 
-// Scenario 97 — BRC-148 per-domain manifest coordination (harness only)
+// Scenario 97: BRC-148 per-domain manifest coordination (harness only)
 //
 // The BRC-139 Domains extension end to end in-process: authoritative
 // manifests carrying a BEEF-plane descriptor are wire-encoded, decoded,

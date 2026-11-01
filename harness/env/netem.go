@@ -25,7 +25,7 @@ func containerPID(ctx context.Context, name string) (string, error) {
 
 // nsenterRun executes cmd inside the network namespace of the named container
 // using nsenter. This avoids needing tc/ip6tables binaries inside distroless
-// images — we use the host's copies via the container's network namespace.
+// images; the host's copies are used via the container's network namespace.
 func nsenterRun(ctx context.Context, containerName string, args ...string) error {
 	pid, err := containerPID(ctx, containerName)
 	if err != nil {
@@ -109,8 +109,8 @@ func ApplyNetemLoss(ctx context.Context, containerName string, lossPct float64) 
 
 // ApplyNetemWAN emulates an INTER-FABRIC path on the host-side veth peer of the
 // container's eth0: a one-way propagation delay (so RTT is 2x delayMs when both
-// directions are shaped) plus loss. This is the posture NACK timing must survive
-// — a lab veth RTT is ~0.8ms, three orders of magnitude below a production
+// directions are shaped) plus loss. This is the posture NACK timing must survive:
+// a lab veth RTT is ~0.8ms, three orders of magnitude below a production
 // region-to-region path, so timing tuned on an unshaped lab is untested for the
 // deployment it is meant for. jitterMs feeds netem's delay jitter, which also
 // reorders, exercising the tracker's forward-jump handling.

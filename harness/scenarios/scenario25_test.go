@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 25 — BRC-130 fragmentation: fragment loss / reassembly abandonment
+// Scenario 25: BRC-130 fragmentation: fragment loss / reassembly abandonment
 //
 // Ported from the retired bash scenario 25.
 //

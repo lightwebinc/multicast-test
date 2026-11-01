@@ -11,11 +11,13 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 35 — Block header egress: stripped BRC-131 retransmission
+// Scenario 35: Block header egress (BRC-135) via the block push lane
 //
 // Ported from the retired bash scenario 35.
 //
-// listener1 has HEADER_EGRESS_ENABLED=true. Sends block announcements via TCP.
+// listener1 has HEADER_EGRESS_ENABLED=true. Pushes BRC-144 blocks over the
+// proxy's block push lane (port 8727); each becomes one BRC-131 block frame
+// whose 80-byte header the listener egresses (BRC-135).
 // Asserts bsl_header_forwarded_total > 0 and errors == 0.
 func TestScenario35_BlockHeaderEgress(t *testing.T) {
 	ctx := context.Background()

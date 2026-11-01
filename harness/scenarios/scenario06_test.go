@@ -6,7 +6,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 06 — Functional BRC-128 (Extended Format payload)
+// Scenario 06: Functional BRC-128 (Extended Format payload)
 //
 // Ported from the retired bash scenario 06.
 //

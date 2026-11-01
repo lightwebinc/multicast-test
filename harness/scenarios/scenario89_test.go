@@ -19,7 +19,7 @@ import (
 // unrecoverable (zero gaps). Now the listener gap-tracks the PARENT bundle
 // stream (survivorship-gated) on the identity the origin's retry cached, so:
 //   - the guard fires: bsl_rebucket_unguarded_total > 0 (listener is NOT a
-//     declared -rebucket-relay — the mismatch is flagged loudly), and
+//     declared -rebucket-relay; the mismatch is flagged loudly), and
 //   - upstream loss is DETECTED on the parent stream and NACK-recovered through
 //     the retry, exactly as the matched-generation path (scenario 91).
 //
@@ -44,7 +44,7 @@ func TestScenario89_RebucketLossRecovery(t *testing.T) {
 		Role:        driver.RoleProxy,
 	})
 
-	// Listener runs SHARD_BITS=2 — a MISMATCH vs the proxy's coarse bundles, so
+	// Listener runs SHARD_BITS=2, a MISMATCH vs the proxy's coarse bundles, so
 	// every received bundle is re-bucketed. NOT declared a relay (default), so the
 	// unguarded-rebucket alarm must fire. RETRY_ENDPOINTS points at the retry that
 	// caches the parent bundles.
@@ -61,7 +61,7 @@ func TestScenario89_RebucketLossRecovery(t *testing.T) {
 	})
 
 	// Retry receives the proxy's parent bundles and caches them by (HashKey,
-	// SeqNum) — the identity the listener NACKs after re-bucketing.
+	// SeqNum), the identity the listener NACKs after re-bucketing.
 	renv := retryEnv()
 	e.AddNode(driver.NodeConfig{
 		Name:        "s89-retry1",

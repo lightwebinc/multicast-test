@@ -11,7 +11,7 @@ import (
 // TestScenario90_CoalesceDelivery exercises BRC-142 within-batch coalescing end
 // to end on real binaries: the proxy packs many small same-(group, subtree)
 // transactions into bundle datagrams (FrameVer 0x08), and the listener
-// edge-decoalesces them back into individual frames before fan-out — coalescing
+// edge-decoalesces them back into individual frames before fan-out; coalescing
 // conserves transactions, so the consumer contract is unchanged.
 //
 // Density knobs so coalescing actually packs members per bundle: proxy
@@ -24,7 +24,7 @@ import (
 // The proxy's bsp_coalesce_* counters prove bundles were produced and packed;
 // the listener's (forwarded + egress_errors) ≈ members proves every coalesced
 // member was received and decoalesced (the listener→sink egress hop is out of
-// BRC-142 scope — at high member rates the harness's bare 127.0.0.1 sink returns
+// BRC-142 scope; at high member rates the harness's bare 127.0.0.1 sink returns
 // ICMP-unreachable races, counted here as "decoalesced and attempted").
 func TestScenario90_CoalesceDelivery(t *testing.T) {
 	ctx := context.Background()

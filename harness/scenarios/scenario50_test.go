@@ -12,7 +12,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 50 — TxID dedup basic: cross-listener deduplication
+// Scenario 50: TxID dedup basic: cross-listener deduplication
 //
 // Ported from the retired bash scenario 50.
 //

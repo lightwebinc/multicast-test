@@ -8,7 +8,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 100 — BRC-148 BEEF plane: a record naming several topics on the
+// Scenario 100: BRC-148 BEEF plane: a record naming several topics on the
 // OPEN path.
 //
 // One record naming three topics is ONE frame on the fabric: the first topic

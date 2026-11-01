@@ -10,11 +10,11 @@ import (
 	"github.com/lightwebinc/shard-common/shard"
 )
 
-// Scenario 60 — SSM loopback Join/Leave
+// Scenario 60: SSM loopback Join/Leave
 //
 // Process-local sanity check that shard-common/netjoin's branched
 // ASM/SSM join/leave path works on this kernel. Does not require the
-// Docker fabric — it operates on lo, so it also serves as an
+// Docker fabric; it operates on lo, so it also serves as an
 // early-warning if the test host lacks SSM kernel support (e.g.
 // MCAST_JOIN_SOURCE_GROUP rejected, mld_max_msf at default 64).
 //

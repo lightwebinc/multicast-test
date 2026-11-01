@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 08 — NACK retransmit with BRC-128 (Extended Format) payloads
+// Scenario 08: NACK retransmit with BRC-128 (Extended Format) payloads
 //
 // Ported from the retired bash scenario 08.
 //

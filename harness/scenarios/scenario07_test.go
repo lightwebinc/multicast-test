@@ -6,7 +6,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 07 — Functional BRC-128 + BRC-124 coexistence
+// Scenario 07: Functional BRC-128 + BRC-124 coexistence
 //
 // Ported from the retired bash scenario 07.
 //

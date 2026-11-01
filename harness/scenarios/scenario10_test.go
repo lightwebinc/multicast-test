@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 10 — Single endpoint ACK (tightened)
+// Scenario 10: Single endpoint ACK (tightened)
 //
 // Ported from the retired bash scenario 10.
 //
@@ -33,7 +33,7 @@ func TestScenario10_SingleEndpointACK(t *testing.T) {
 	beforeR := e.Snapshot(ctx, "s10-retry1")
 
 	// No -seq-gap-* injection: injected seqnums are pre-stamped, PRESERVED by
-	// the proxy, and never actually sent — each is a phantom permanent gap
+	// the proxy, and never actually sent; each is a phantom permanent gap
 	// that would trip the unrecovered==0 assert once its ~11s retry budget
 	// expires (a latent flake this scenario carried until 2026-08). Netem is
 	// the only loss source.

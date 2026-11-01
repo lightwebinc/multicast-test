@@ -11,7 +11,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 24 — BRC-130 fragmentation: payload hash verification
+// Scenario 24: BRC-130 fragmentation: payload hash verification
 //
 // Ported from the retired bash scenario 24.
 //
@@ -50,7 +50,7 @@ func TestScenario24_FragmentationHashVerify(t *testing.T) {
 
 	genCmd := subtxGenCmd("[fd10::2]:8725")
 	// Pin brc124: the reassembly hash check (armed by VERIFY_PAYLOAD_HASH)
-	// is EF-aware (canonical TxID — SHA256d(payload) for raw, objfmt.TxID
+	// is EF-aware (canonical TxID: SHA256d(payload) for raw, objfmt.TxID
 	// for EF), so either format would pass honestly; the pin keeps
 	// deterministic RAW-lane coverage of fragmentation + reassembly verify
 	// (the EF verify path is covered by shard-listener unit tests).

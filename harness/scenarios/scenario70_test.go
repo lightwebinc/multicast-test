@@ -12,7 +12,7 @@ import (
 	"github.com/lightwebinc/shard-common/manifest"
 )
 
-// Scenario 70 — BRC-139 wire-level manifest pipeline
+// Scenario 70: BRC-139 wire-level manifest pipeline
 //
 // Process-local sanity check that the BRC-139 sender → receiver →
 // registry → evaluator pipeline works end-to-end on loopback. Does not
@@ -136,7 +136,7 @@ func TestScenario70_BRC139WirePipeline(t *testing.T) {
 	wg.Wait()
 }
 
-// Scenario 71 — BRC-139 Successor block live-reshard signal
+// Scenario 71: BRC-139 Successor block live-reshard signal
 //
 // Same pipeline as Scenario 70 but with a Successor block on each
 // authoritative manifest. Verifies the evaluator surfaces a

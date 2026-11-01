@@ -8,7 +8,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 32 — BRC-132 subtree data: basic delivery
+// Scenario 32: BRC-132 subtree data: basic delivery
 //
 // Ported from the retired bash scenario 32.
 //

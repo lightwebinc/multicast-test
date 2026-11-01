@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 99 — NACK retransmit end-to-end
+// Scenario 99: NACK retransmit end-to-end
 //
 // Ported from the retired bash scenario 99.
 //

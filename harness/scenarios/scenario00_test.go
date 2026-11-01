@@ -2,7 +2,7 @@ package scenarios
 
 import "testing"
 
-// Scenario 00 — Firewall rules validation
+// Scenario 00: Firewall rules validation
 //
 // Tests nftables rules specific to LXD VM systemd services.
 // Not portable to Docker.

@@ -8,7 +8,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 30 — BRC-131 block announcement: basic delivery
+// Scenario 30: BRC-131 block announcement: basic delivery
 //
 // Ported from the retired bash scenario 30.
 //

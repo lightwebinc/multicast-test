@@ -6,7 +6,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 26 — BRC-130 fragmentation: high-throughput delivery ratio
+// Scenario 26: BRC-130 fragmentation: high-throughput delivery ratio
 //
 // Ported from the retired bash scenario 26.
 //

@@ -8,7 +8,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 33 — BRC-132 subtree data: fragmentation
+// Scenario 33: BRC-132 subtree data: fragmentation
 //
 // Ported from the retired bash scenario 33.
 //

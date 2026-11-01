@@ -11,7 +11,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 51 — TxID dedup: collision (single listener, no dedup expected)
+// Scenario 51: TxID dedup: collision (single listener, no dedup expected)
 //
 // Ported from the retired bash scenario 51.
 //

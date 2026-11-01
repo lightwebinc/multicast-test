@@ -11,7 +11,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 05 — Multicast egress bridge (group re-mapping)
+// Scenario 05: Multicast egress bridge (group re-mapping)
 //
 // Ported from the retired bash scenario 05.
 //

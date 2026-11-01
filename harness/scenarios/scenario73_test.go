@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// Scenario 73 — Unified logging emit contract (end-to-end, no fabric)
+// Scenario 73: Unified logging emit contract (end-to-end, no fabric)
 //
 // Builds and runs the real shard-manifest binary with LOG_FORMAT=json and
 // asserts that the structured logs it emits at startup satisfy the unified
@@ -27,7 +27,7 @@ import (
 // This exercises the shipped shard-common/logging + hostinfo packages through
 // an actual daemon binary, so it catches wiring regressions (missing init,
 // wrong service name, text-instead-of-json) that a package unit test cannot.
-// It needs only `go` and a loopback stack — no Docker fabric — matching the
+// It needs only `go` and a loopback stack (no Docker fabric), matching the
 // process-local scenarios (60/61).
 func TestScenario73_UnifiedLoggingContract(t *testing.T) {
 	if runtime.GOOS != "linux" {

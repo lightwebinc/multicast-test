@@ -278,7 +278,7 @@ func retryTopology(t *testing.T, prefix string) (*env.Env, map[string]string) {
 
 // retryTopologyNACKEnv is retryTopology with per-listener NACK timing overrides.
 // The listener reads NACK_* from the environment, so a scenario can compare
-// timing profiles without rebuilding an image — which is what makes measuring
+// timing profiles without rebuilding an image, which is what makes measuring
 // LAN-tuned against inter-fabric-tuned timing on one rig possible (scenario 75).
 func retryTopologyNACKEnv(t *testing.T, prefix string, nackEnv map[string]string) *env.Env {
 	t.Helper()
@@ -521,11 +521,11 @@ func settleRecovery(t *testing.T, e *env.Env, ctx context.Context, prefix string
 
 // assertRecoveryIdentity asserts the criterion-#1 shortfall identity from
 // testing.md on ONE unfiltered listener: every frame the proxy put on the
-// fabric was either delivered onward (forwarded, or attempted — the harness
+// fabric was either delivered onward (forwarded, or attempted; the harness
 // egress target is a blackhole, so alternating refused writes land in
 // bsl_egress_errors_total and count as delivery attempts, the same accounting
 // scenario 30 pins) or is booked as a permanently unrecovered gap. Exact, no
-// tolerance. Only valid on a listener with NO shard/subtree filters — filter
+// tolerance. Only valid on a listener with NO shard/subtree filters; filter
 // drops happen before gap tracking, so a filtered listener's expected count is
 // unknowable from proxy metrics.
 func assertRecoveryIdentity(t *testing.T, label string, before, after map[string]float64, sent float64) {

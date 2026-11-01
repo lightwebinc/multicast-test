@@ -10,7 +10,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 98 — plane independence: concurrent tx + BEEF traffic
+// Scenario 98: plane independence: concurrent tx + BEEF traffic
 //
 // The transaction plane and the BEEF plane run through one proxy and one
 // listener set simultaneously. Both deliver in full and no plane perturbs
