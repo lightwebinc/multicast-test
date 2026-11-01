@@ -1,7 +1,7 @@
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/lightwebinc/shard-common v0.22.0 h1:s+Dn1vlROTh1J11bATlaxOWHKr/1tg+BG3na2x4Ll6g=
-github.com/lightwebinc/shard-common v0.22.0/go.mod h1:rZ0oHHPAKUr9aF13QvNiLzUvCG4/Mec+cQGdkuDoNgU=
+github.com/lightwebinc/shard-common v0.22.2 h1:08Ez9iYglQ9NiBfKt5KYMZPTvebXgj0rvqEfFsQlvuA=
+github.com/lightwebinc/shard-common v0.22.2/go.mod h1:bjLHAHIJw0aIaqRLs6dOjcht3+WhwhVccPxJri3dYMc=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/prometheus/client_model v0.6.3 h1:O0jaTVAYNxTHYInEPFJt5I3+sN8zqBtVMPTB1qyxiEo=

@@ -3,7 +3,7 @@ module github.com/lightwebinc/multicast-test
 go 1.26.2
 
 require (
-	github.com/lightwebinc/shard-common v0.22.0
+	github.com/lightwebinc/shard-common v0.22.2
 	github.com/prometheus/client_model v0.6.3
 	github.com/prometheus/common v0.72.1
 )
