@@ -110,6 +110,7 @@ test names, make-target filters). Highlights:
 | `harness/driver/` | Docker driver (container lifecycle, network) |
 | `harness/env/` | Network emulation (`tc netem`) and firewall (`ip6tables`) helpers |
 | `harness/metrics/` | Prometheus scraper and assertion helpers |
+| `tpnil/` | [TPNIL](https://github.com/p2ppsr/interop) component qualification: the pinned component closure and the command a qualification plan runs |
 
 ## Releases
 
