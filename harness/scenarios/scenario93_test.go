@@ -9,12 +9,12 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 93 — fragmented BEEF under loss: fragment-level NACK recovery
+// Scenario 93: fragmented BEEF under loss: fragment-level NACK recovery
 //
 // The missing composition of 95 (BEEF fragmentation) and 96 (BEEF NACK
 // recovery): large objects leave the proxy as BRC-130 fragments
 // (OrigFrameVer 0x09), 10% netem loss drops individual FRAGMENTS on the
-// listeners, and recovery must operate at fragment granularity — the
+// listeners, and recovery must operate at fragment granularity, the
 // listeners feed every fragment to the gap tracker, NACK the missing SeqNums
 // with a ZERO SubtreeID (the V9 flow contract, blocker B1), and the
 // BEEF-enabled retry serves the cached fragments back. Reassembly then
@@ -22,7 +22,7 @@ import (
 // delivered with wrong bytes would fail loudly rather than pass silently.
 //
 // Tail losses (final fragments of the train, with nothing behind them to
-// expose the gap) time out rather than recover — same as scenario 34 — so
+// expose the gap) time out rather than recover, same as scenario 34, so
 // completion asserts near-total delivery, not exactness, while every
 // recovery counter must move.
 func TestScenario93_BeefFragmentLossRecovery(t *testing.T) {
@@ -58,7 +58,7 @@ func TestScenario93_BeefFragmentLossRecovery(t *testing.T) {
 
 	// 4 KiB objects at FRAG_MTU 1280 → 4 fragments each; 40 objects ≈ 160
 	// fragments per listener, so 10% loss yields dozens of fragment gaps per
-	// run — zero recoveries can never pass by luck.
+	// run, zero recoveries can never pass by luck.
 	startGenerator(t, ctx, "s93", []string{
 		"beef-gen", "-addr", "[fd10::2]:9002", "-topics", "tm_s93",
 		"-object-bytes", "4096", "-count", "40", "-interval", "80ms",
@@ -101,7 +101,7 @@ func TestScenario93_BeefFragmentLossRecovery(t *testing.T) {
 	metrics.AssertGT(t, "retry retransmits served", retransmits)
 	// ...and convert into COMPLETED objects: at 10% fragment loss with no
 	// recovery, P(all 4 fragments arrive) ≈ 0.9⁴ ≈ 0.656, so ~34% of
-	// reassemblies would fail per listener — ≥90% of the 3×40 expected
+	// reassemblies would fail per listener, ≥90% of the 3×40 expected
 	// completions is unreachable without working retransmission, while still
 	// tolerating tail-loss timeouts.
 	metrics.AssertNear(t, "objects reassembled across listeners", completed, 3*objects, 0.10)
@@ -117,18 +117,18 @@ func TestScenario93_BeefFragmentLossRecovery(t *testing.T) {
 	// defaults: multicast repair on, unicast off. One listener's request is
 	// therefore answered to the whole band and the other two members each
 	// receive a fragment they already consumed. (The shipped ops posture is the
-	// opposite — unicast-only — so this is the harness's default, not the
+	// opposite, unicast-only, so this is the harness's default, not the
 	// fabric's; the invariant below is the listener's to hold either way,
 	// because which one applies is the responder's choice.)
 	//
 	// The listener used to open a fresh reassembly slot for that copy (the
 	// live-slot duplicate check dies with the slot), which re-REASSEMBLED the
-	// object — the pre-fix control run logged completed=95 against delivered=40
+	// object, the pre-fix control run logged completed=95 against delivered=40
 	// per listener, so the egress claim on (ContentID, TopicID) was catching the
 	// duplicates before the wire; it is optional (-egress-dedup-local-cap 0) and
 	// shorter-lived than the recovery horizon, so that is a cushion, not the
 	// invariant. Worse, the never-fillable slot expired into an onIncomplete
-	// NACK for fragments the listener already had — repair feeding repair.
+	// NACK for fragments the listener already had, repair feeding repair.
 	// Suppressing the late copy against a completion memory is the fix;
 	// `late_frags > 0` keeps the ceiling from passing vacuously by proving the
 	// copies really do arrive.
@@ -142,20 +142,20 @@ func TestScenario93_BeefFragmentLossRecovery(t *testing.T) {
 	}
 }
 
-// Scenario 93b — fragmented BEEF under loss, UNICAST-ONLY repair
+// Scenario 93b: fragmented BEEF under loss, UNICAST-ONLY repair
 //
 // The variant above runs the retry on its BINARY defaults (multicast repair
 // on, unicast off), which is NOT the shipped ops posture: the fabric sets
 // beacon_flags_multicast=false, so every repair is a unicast reply to the
 // requesting listener. Until this test existed that path had no coverage at
-// all — the flags are set by no other scenario.
+// all, the flags are set by no other scenario.
 //
 // It matters because unicast repair has a failure mode multicast does not: the
 // reply is a socket read on the requester, so it only becomes a delivered
 // frame if the listener re-injects it into the worker that owns the flow.
 // A control run before shard-listener v1.20.0 booked every gap as recovered
 // (bsl_gaps_unrecovered_total = 0) while completions sat at 22-30 of 40 per
-// listener — the books balanced while the objects never finished, because
+// listener, the books balanced while the objects never finished, because
 // reassembly state is per-worker and nothing registered the re-injection.
 // v1.20.0 wires RegisterRecover per worker.
 //
@@ -241,7 +241,7 @@ func TestScenario93b_BeefFragmentLossRecoveryUnicast(t *testing.T) {
 
 	// Late fragments are still expected and must still be SUPPRESSED. They do
 	// not come from band copies here (there are none) but from the requester's
-	// own raced replies — a re-NACK or tail probe answered after the first copy
+	// own raced replies, a re-NACK or tail probe answered after the first copy
 	// already completed the slot. The invariant is therefore the ceiling, not
 	// absence: a late copy must never re-open a completed slot and reassemble
 	// the object a second time.

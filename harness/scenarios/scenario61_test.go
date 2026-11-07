@@ -10,12 +10,12 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/env"
 )
 
-// Scenario 61 — SSM ASM-fallback startup
+// Scenario 61: SSM ASM-fallback startup
 //
 // Validates that a proxy + listener configured with sourceMode=asm
 // still pass startup health checks when the SSM scaffolding is
 // present in the image. The new SOURCE_MODE env var must be accepted
-// without changing ASM behavior — this is the non-skipping
+// without changing ASM behavior, this is the non-skipping
 // counterpart to Scenario 60 (loopback Join/Leave) and the
 // regression guard against accidentally making the SSM code path
 // non-optional.
@@ -39,7 +39,7 @@ func TestScenario61_SSMASMFallback(t *testing.T) {
 			"MC_SCOPE":        "site",
 			"MC_GROUP_ID":     "0x000B",
 			"METRICS_ADDR":    ":9100",
-			// SSM scaffolding present but mode=asm — must not affect behavior.
+			// SSM scaffolding present but mode=asm, must not affect behavior.
 			"SOURCE_MODE": "asm",
 		},
 		MetricsPort: 9100,
@@ -74,6 +74,6 @@ func TestScenario61_SSMASMFallback(t *testing.T) {
 	urlProxy := e.MetricsURL(ctx, "s61-proxy")
 	urlListener := e.MetricsURL(ctx, "s61-listener")
 	if urlProxy == "" || urlListener == "" {
-		t.Fatal("metrics URL missing — container failed to start")
+		t.Fatal("metrics URL missing, container failed to start")
 	}
 }

@@ -86,7 +86,7 @@ func TestScenario90_CoalesceDelivery(t *testing.T) {
 		"listener1 decoalesced %.0f/%.0f members (%.0f%%)",
 		members, bundles, ratio, decoalesced, members, 100*decoalesced/members)
 	if ratio < 1.5 {
-		t.Logf("note: low members/bundle — the single worker was not saturated enough to fill batches; " +
+		t.Logf("note: low members/bundle, the single worker was not saturated enough to fill batches; " +
 			"within-batch coalescing packs more under heavier ingress load (see sims in brc-142-coalescing-frame.md)")
 	}
 }

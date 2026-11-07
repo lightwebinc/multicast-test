@@ -10,11 +10,11 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 75 — NACK repair across an INTER-FABRIC path
+// Scenario 75: NACK repair across an INTER-FABRIC path
 //
 // Why this exists: every prior NACK proof (scenario 99) ran on an unshaped
 // container veth at ~0.8ms RTT. Production, and the current standard ops posture,
-// join regions over an interconnect at 60-160ms RTT — three orders of magnitude
+// join regions over an interconnect at 60-160ms RTT, three orders of magnitude
 // slower. Timing that repairs perfectly on a LAN can misbehave there for a reason
 // that never appears unshaped: the retry interval is compared against the round
 // trip, not against the loss rate.
@@ -27,7 +27,7 @@ import (
 // drains the socket INLINE for respTimeout (300ms, not configurable) before the
 // gap is ever rescheduled, so the next attempt cannot be issued until 300ms have
 // passed no matter how small BackoffBase is. A 60-160ms round trip is absorbed
-// whole. The race needs RTT > 300ms — half a second of round trip, which is not
+// whole. The race needs RTT > 300ms, half a second of round trip, which is not
 // an interconnect, it is a satellite hop.
 //
 // What the rig CAN resolve, and what actually decides the defaults, is whether
@@ -38,12 +38,12 @@ import (
 // the reason to prefer the slower ladder once recovery is shown to be equal.
 //
 // Shaping: netem is attached to the HOST-SIDE veth root qdisc, which delays and
-// drops traffic INTO the container — the listener's ingress only. So the data
+// drops traffic INTO the container, the listener's ingress only. So the data
 // path carries owDelayMs of latency and lossPct of loss, while the listener's
 // NACK leaves unshaped and only the reply is delayed: a NACK exchange costs ONE
 // leg, ~owDelayMs, not 2*owDelayMs. Naming it an 80ms RTT (as this scenario did)
 // overstates it by 2x. Shaping the retry endpoint as well to close that gap was
-// tried and rejected — see the note at the qdisc below; it is why the numbers
+// tried and rejected, see the note at the qdisc below; it is why the numbers
 // here are quoted against owDelayMs, and why the header's claim about what the
 // path costs is stated once, here, rather than implied by the constant's name.
 func TestScenario75_NACKRepairInterFabric(t *testing.T) {
@@ -51,7 +51,7 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 		owDelayMs = 40  // one-way, INGRESS ONLY: ~40ms per NACK exchange (see header)
 		lossPct   = 3.0 // enough gaps to measure a ratio, not enough to swamp
 		// Jitter and rate are set together, and both were reduced (8ms/1000pps)
-		// because the pair had made this scenario BISTABLE — the single reason it
+		// because the pair had made this scenario BISTABLE, the single reason it
 		// was flaky. netem jitter reorders whenever it exceeds the inter-packet
 		// gap, and 8ms of jitter on a 1ms gap reordered constantly: runs recorded
 		// ~12000 detected gaps against ~2700 real losses, so four fifths of the
@@ -61,7 +61,7 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 		// the retries became more drops: three runs collapsed into that mode
 		// (ratio 0.49-0.84, up to 34k rate-limit drops) while three stayed healthy
 		// (ratio 0.95-0.99, <600 drops), and WHICH variant collapsed was random.
-		// No threshold can be set across a bimodal distribution — the mode had to
+		// No threshold can be set across a bimodal distribution, the mode had to
 		// go. 2ms of jitter on a 4ms gap leaves reordering present but occasional,
 		// which is all this scenario needs; deliberate forward-jump coverage is
 		// scenario 13's subject, not this one's.
@@ -107,7 +107,7 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 					t.Fatalf("netem wan %s: %v", l, err)
 				}
 				name := l
-				// Always restore — a scenario must never leave the rig shaped.
+				// Always restore, a scenario must never leave the rig shaped.
 				t.Cleanup(func() { env.RemoveNetemLoss(ctx, name) }) //nolint:errcheck
 			}
 			// The retry endpoint is deliberately NOT shaped, and that is a
@@ -127,7 +127,7 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 			beforeR := e.Snapshot(ctx, prefix+"-retry1")
 
 			gen := subtxGenCmd("[fd10::2]:8725")
-			// Later flag wins — the -duration override on the same line is the
+			// Later flag wins, the -duration override on the same line is the
 			// trick this scenario already relied on. 250pps over 30s is 7500 frames per
 			// listener, ~225 real losses each: enough that the recovery ratio's
 			// binomial noise is under a percentage point, few enough that the
@@ -147,7 +147,7 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 			// = 6.8s; interfabric-tuned 8*0.3 + (0.4+0.8+1.6+3.2+5+5+5) = 23.4s.
 			// The 15s this used to wait sat BETWEEN the two, so the interfabric
 			// variant was scraped mid-ladder and scored unrecovered for gaps it
-			// was still repairing — a systematic bias toward the shorter backoff,
+			// was still repairing, a systematic bias toward the shorter backoff,
 			// i.e. the exact artefact the comment above warns about.
 			e.Sleep(30*time.Second, "NACK ladder (interfabric worst case 23.4s) + RTT drain")
 
@@ -166,7 +166,7 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 			inflight[v.name] = detected - suppressed - unrecovered
 
 			if detected == 0 {
-				t.Fatalf("no gaps detected at %.1f%% loss — netem not applied?", lossPct)
+				t.Fatalf("no gaps detected at %.1f%% loss, netem not applied?", lossPct)
 			}
 			r := suppressed / detected
 			// NACKs the retry endpoint had to answer per gap. It sits WELL BELOW
@@ -211,7 +211,7 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 	//     seqnums, so the quotient sits near 0.3 whatever the timing.
 	//  2. A SUPERIORITY guard on the recovery ratio (itf >= lan + 0.02). Not
 	//     supported by the rig. Paired runs at the old settings: (lan 0.865, itf
-	//     0.845), (0.906, 0.886), (0.975, 0.967), (0.964, 0.972) — the two
+	//     0.845), (0.906, 0.886), (0.975, 0.967), (0.964, 0.972), the two
 	//     distributions sit on top of each other and the sign of the difference
 	//     is not stable, so the guard failed on most runs and passed on some. It
 	//     was not a tolerance that needed widening: the mechanism it assumed
@@ -225,7 +225,7 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 	//
 	// maxLoss is derived from measurement, not chosen: three paired runs at the
 	// settings above gave (lan 1.000, itf 0.976), (0.993, 0.993), (0.971, 0.989)
-	// — a worst observed |itf-lan| of 0.024, with each variant spanning 0.03
+	//, a worst observed |itf-lan| of 0.024, with each variant spanning 0.03
 	// across runs. 0.08 is ~3x that, and still an order of magnitude tighter than
 	// any regression worth catching: when the ladder genuinely fails it does not
 	// slip a few points, it falls to 0.49-0.71 (the rate-limit collapse the
@@ -239,17 +239,17 @@ func TestScenario75_NACKRepairInterFabric(t *testing.T) {
 			"defaults rather than keeping them",
 			owDelayMs, itf, lan, lan-maxLoss)
 	}
-	// And recovery must hold up outright, on both timings — the absolute claim
+	// And recovery must hold up outright, on both timings, the absolute claim
 	// this scenario exists to keep true at inter-fabric RTT.
 	for name, got := range map[string]float64{"interfabric-tuned": itf, "lan-tuned": lan} {
 		if got < 0.80 {
-			t.Errorf("%s repaired only %.1f%% of gaps over a %dms shaped leg / %.1f%% loss — too low",
+			t.Errorf("%s repaired only %.1f%% of gaps over a %dms shaped leg / %.1f%% loss, too low",
 				name, got*100, owDelayMs, lossPct)
 		}
 	}
 	// The reason to prefer the slower ladder is LOAD, not recovery: it asks the
 	// retry endpoint less often for the same repair (1.20-1.35 vs 1.23-1.25
-	// nacks/gap across the three runs above — the direction is right but the
+	// nacks/gap across the three runs above, the direction is right but the
 	// intervals overlap). Logged rather than guarded: three paired runs is not
 	// enough to fix a threshold on, and the point of this block is that an
 	// under-evidenced threshold is what put this scenario in the flaky column to

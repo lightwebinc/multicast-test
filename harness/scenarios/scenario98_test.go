@@ -12,7 +12,7 @@ import (
 
 // Scenario 98: plane independence: concurrent tx + BEEF traffic
 //
-// The transaction plane and the BEEF plane run through one proxy and one
+// The settlement plane (tx) and the BEEF plane run through one proxy and one
 // listener set simultaneously. Both deliver in full and no plane perturbs
 // the other's sequencing: HashKeys are domain-tagged (banded groupIdx), so
 // the interleaved planes produce zero gaps.

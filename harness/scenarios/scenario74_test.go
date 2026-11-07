@@ -11,7 +11,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 74 — Cross-domain NACK proxying (BRC-126 Proxied flag)
+// Scenario 74: Cross-domain NACK proxying (BRC-126 Proxied flag)
 //
 // Validates that a retry-endpoint serving a downstream multicast domain
 // recovers a domain-wide hole from an upstream endpoint.
@@ -25,7 +25,7 @@ import (
 //	                                                                      (proxy-enabled → upstream-retry)
 //
 // The bridge listener has netem loss on its ingress and no NACK recovery, so
-// frames it never receives it never re-emits — those SeqNums are absent from
+// frames it never receives it never re-emits, those SeqNums are absent from
 // the *entire* downstream domain (both the consumer and the downstream retry),
 // exactly the hole a downstream-only cache cannot fill. The upstream retry
 // received those frames directly from the proxy. The consumer NACKs the
@@ -67,7 +67,7 @@ func TestScenario74_NACKProxyCrossDomain(t *testing.T) {
 	})
 
 	// Bridge listener: ingress on the upstream domain, multicast egress into the
-	// downstream domain. No RETRY_ENDPOINTS — it never recovers its own ingress
+	// downstream domain. No RETRY_ENDPOINTS, it never recovers its own ingress
 	// gaps, so a dropped frame is absent downstream.
 	brEnv := listenerEnv()
 	brEnv["MC_EGRESS_ENABLED"] = "true"
@@ -118,7 +118,7 @@ func TestScenario74_NACKProxyCrossDomain(t *testing.T) {
 
 	// Domain-wide hole: drop frames on the bridge's ingress. Because the bridge
 	// never receives them and never recovers, they are absent from the whole
-	// downstream domain — only the upstream retry has them.
+	// downstream domain, only the upstream retry has them.
 	if err := env.ApplyNetemLoss(ctx, bridge, 5.0); err != nil {
 		t.Fatalf("netem loss on %s: %v", bridge, err)
 	}
@@ -180,7 +180,7 @@ func TestScenario74_NACKProxyCrossDomain(t *testing.T) {
 	// The consumer's gaps were ultimately recovered.
 	metrics.AssertGT(t, "consumer gaps suppressed (recovered)", gapsSuppressed)
 	// Served↔received correlation: every consumer gap recovery must trace to
-	// a repair actually served into the domain — a suppressed-without-served
+	// a repair actually served into the domain, a suppressed-without-served
 	// run fails here. bre_retransmits_total already counts both local cache
 	// hits and proxy recoveries (the proxy path re-emits via Retransmit), so
 	// adding proxyRecovered would double count.

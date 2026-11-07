@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 18 — Unrecoverable-loss (cache MISS) shortfall identity
+// Scenario 18: Unrecoverable-loss (cache MISS) shortfall identity
 //
 // Scenario 17's exact identity in the regime where repair genuinely CANNOT
 // happen: the retry endpoint's multicast ingress is blocked (scenario 11's
@@ -18,13 +18,13 @@ import (
 //
 //	gaps_unrecovered == sent − delivered
 //
-// must hold EXACTLY with unrecovered large — honest loss accounting when
+// must hold EXACTLY with unrecovered large, honest loss accounting when
 // nothing can be repaired. This is the harness analogue of the lab's
 // 32=32 / 21=21 / 13=13 / 9=9 runs.
 //
 // Deliberately NOT rate-limit starvation: "unrecovered" means the tracker gave
 // up, not that the frame never arrived. A rate-limiter only DELAYS service, so
-// an abandoned gap's frame can still land later via a range fill — delivered
+// an abandoned gap's frame can still land later via a range fill, delivered
 // but booked unrecovered, and the identity over-counts (verified: 1059 booked
 // vs 425 true shortfall at RL_GROUP_RATE=2). Rate-limit behaviour is covered
 // by scenarios 12/16; the exact identity needs loss to be PERMANENT, which an
@@ -43,7 +43,7 @@ func TestScenario18_UnrecoverableLossShortfallIdentity(t *testing.T) {
 	e.Sleep(4*time.Second, "MLD querier settle")
 
 	// Empty cache: the retry hears NACKs (unicast, port 9300) but never the
-	// data plane (multicast, port 9001) — every NACK is a MISS forever.
+	// data plane (multicast, port 9001), every NACK is a MISS forever.
 	if err := env.BlockUDPIngress(ctx, "s18-retry1", 9001); err != nil {
 		t.Fatalf("block retry ingress: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestScenario18_UnrecoverableLossShortfallIdentity(t *testing.T) {
 	// The trailer must be GENTLE here, unlike scenario 17's: a frame dropped
 	// during the trailer (e.g. a socket-level drop under burst) lands on a
 	// flow tail, its probe MISSes against the empty cache, and probe MISSes
-	// are deliberately never booked unrecovered — an invisible one-frame
+	// are deliberately never booked unrecovered, an invisible one-frame
 	// shortfall that breaks exactness. Scenario 17 is immune (its full cache
 	// recovers trailer losses); with nothing repairable, pace the trailer so
 	// nothing drops.

@@ -11,8 +11,8 @@ import (
 
 // TestScenario91_CoalesceLossRecovery proves BRC-142 bundle-unit NACK recovery
 // on real binaries: under multicast loss, the listener detects gaps in the
-// *bundle* SeqNum stream, NACKs the missing bundle, and the retry endpoint —
-// which cached the bundle opaquely by (HashKey, SeqNum) — retransmits it whole
+// *bundle* SeqNum stream, NACKs the missing bundle, and the retry endpoint,
+// which cached the bundle opaquely by (HashKey, SeqNum), retransmits it whole
 // (deriving the group from the bundle header). The recovered bundle is
 // re-decoalesced and the gap closes.
 //
@@ -34,7 +34,7 @@ func TestScenario91_CoalesceLossRecovery(t *testing.T) {
 	// only if the listener gap-tracks and NACKs that SAME flow identity. A
 	// ShardBits mismatch would send the listener through the re-bucketer, which
 	// re-splits each RECEIVED bundle and re-stamps children from a fresh LOCAL
-	// SeqNum counter — so an upstream-dropped bundle never increments it and the
+	// SeqNum counter, so an upstream-dropped bundle never increments it and the
 	// loss becomes invisible (contiguous local stream → zero gaps), and the
 	// re-stamped HashKey no longer matches the retry's cache. Match the proxy so
 	// this exercises the real bundle-unit recovery path, not re-bucketing.
@@ -98,7 +98,7 @@ func TestScenario91_CoalesceLossRecovery(t *testing.T) {
 	// The full bundle-unit recovery loop fired (these prove the BRC-142 path;
 	// the exact recovery *rate* is a tuning property of loss/TTL/pps, already
 	// characterised by the sims and the non-bundle NACK scenarios, so it is
-	// logged, not asserted — it varies with host load):
+	// logged, not asserted, it varies with host load):
 	//   listener gap-tracks the BUNDLE SeqNum stream and NACKs (P2),
 	//   retry caches the bundle opaquely and retransmits it whole (P3),
 	//   the re-decoalesced bundle closes the gap.

@@ -7,5 +7,5 @@ import "testing"
 // Tests nftables rules specific to LXD VM systemd services.
 // Not portable to Docker.
 func TestScenario00_Firewall(t *testing.T) {
-	t.Skip("Tests nftables rules specific to LXD VM systemd services — not portable to Docker")
+	t.Skip("Tests nftables rules specific to LXD VM systemd services, not portable to Docker")
 }

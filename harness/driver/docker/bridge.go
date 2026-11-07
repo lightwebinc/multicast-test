@@ -31,7 +31,7 @@ const (
 // A 3-second settle delay is imposed after bridge creation so the MLD querier
 // completes its first query cycle before containers start joining groups.
 func CreateMcastBridge(ctx context.Context) error {
-	// 1. Create the Docker network (idempotent — ignore "already exists").
+	// 1. Create the Docker network (idempotent, ignore "already exists").
 	out, err := run(ctx, "docker", "network", "create",
 		"--driver", "bridge",
 		"--ipv6",
@@ -69,13 +69,13 @@ func CreateMcastBridge(ctx context.Context) error {
 	// report races the veth/snooping attach and is missed, the bridge drops ALL
 	// multicast to that listener for the whole run (intermittent received=0),
 	// with no follow-up query to recover. Tighten the query cadence so the
-	// bridge continuously re-solicits membership reports — any listener joining
+	// bridge continuously re-solicits membership reports, any listener joining
 	// at any point in any scenario is refreshed within the settle window,
 	// making mdb population deterministic across the whole run.
 	//
 	// These knobs are not exposed via `ip link set type bridge`; write sysfs
 	// directly, falling back to sudo tee if the process lacks the privilege.
-	// (Note: there is no `mcast_querier6` sysfs file on modern kernels — the
+	// (Note: there is no `mcast_querier6` sysfs file on modern kernels, the
 	// single `multicast_querier` toggle set above covers both IGMP and MLD.)
 	// Values are in centiseconds.
 	sysfsSets := map[string]string{
@@ -91,7 +91,7 @@ func CreateMcastBridge(ctx context.Context) error {
 		}
 	}
 
-	// 4. Settle delay — only on first creation.
+	// 4. Settle delay, only on first creation.
 	if !already {
 		fmt.Fprintf(os.Stderr, "[bridge] created %s; waiting 3s for MLD querier...\n", NetworkName)
 		select {
@@ -105,7 +105,7 @@ func CreateMcastBridge(ctx context.Context) error {
 }
 
 // DestroyMcastBridge removes the mcast-fabric Docker network.
-// Idempotent — ignores "not found" errors.
+// Idempotent, ignores "not found" errors.
 func DestroyMcastBridge(ctx context.Context) error {
 	out, err := run(ctx, "docker", "network", "rm", NetworkName)
 	if err != nil && !strings.Contains(out, "not found") && !strings.Contains(out, "No such network") {

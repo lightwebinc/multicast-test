@@ -11,10 +11,10 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 19 — Listener retry-tee feeds a join-less cache (tee-only repair)
+// Scenario 19: Listener retry-tee feeds a join-less cache (tee-only repair)
 //
 // The retry-endpoint runs MC_JOIN_ENABLED=false: it never joins a multicast
-// group and never binds the shared wildcard data port — the collapsed-node
+// group and never binds the shared wildcard data port, the collapsed-node
 // co-bind end-state. Its ONLY frame feed is the co-resident listener's
 // -retry-tee, which mirrors every fabric-received data frame over loopback
 // ([::1]:9002) in a teewire envelope carrying the original datagram source.
@@ -28,13 +28,13 @@ import (
 // frames, every cross-node NACK would MISS silently (the "dedicated tee port
 // without a listener feed" trap). Asserted:
 //
-//   - bre_tee_datagrams_total{form="encap"} > 0 and form="raw" == 0 — the
+//   - bre_tee_datagrams_total{form="encap"} > 0 and form="raw" == 0, the
 //     cache was fed by the listener envelope path alone.
 //   - bre_cache_stored_total{source="<proxy fabric addr>"} > 0 and
-//     {source="::1"} == 0 — the envelope preserved per-source attribution
+//     {source="::1"} == 0, the envelope preserved per-source attribution
 //     (the RetryCacheSourceStarved alerting contract) instead of collapsing
 //     the tee feed onto the loopback label.
-//   - bre_unicast_retransmits_total > 0 — repairs actually SERVED from the
+//   - bre_unicast_retransmits_total > 0, repairs actually SERVED from the
 //     tee-fed cache (testing.md criterion #2).
 //   - The full criterion-#1 shortfall identity on every listener, and
 //     delivered == sent (clean regime: the 2% netem loss fully repaired).
@@ -82,7 +82,7 @@ func TestScenario19_ListenerTeeFedJoinlessRepair(t *testing.T) {
 	})
 
 	// listener1 = the co-resident tee feeder, sharing the retry's network
-	// namespace (one node, shared loopback — the collapsed-edge shape). No
+	// namespace (one node, shared loopback, the collapsed-edge shape). No
 	// filters: the cache must cover every group. Registered AFTER the retry
 	// so its namespace exists at start.
 	l1env := listenerEnv()
@@ -127,7 +127,7 @@ func TestScenario19_ListenerTeeFedJoinlessRepair(t *testing.T) {
 	beforeP := e.Snapshot(ctx, "s19-proxy")
 	beforeR := e.Snapshot(ctx, "s19-retry1")
 
-	// Loss on the two remote listeners only — never on the tee node, whose
+	// Loss on the two remote listeners only, never on the tee node, whose
 	// receive stream IS the cache feed.
 	for _, l := range []string{"s19-listener2", "s19-listener3"} {
 		if err := env.ApplyNetemLoss(ctx, l, 2.0); err != nil {
@@ -198,7 +198,7 @@ func TestScenario19_ListenerTeeFedJoinlessRepair(t *testing.T) {
 	metrics.AssertGT(t, "listener frames mirrored to tee", teeSent)
 	metrics.AssertZero(t, "tee mirror write errors", teeErrs)
 	metrics.AssertGT(t, "retry tee datagrams (encap)", teeEncap)
-	metrics.AssertZero(t, "retry tee datagrams (raw — nothing else feeds this cache)", teeRaw)
+	metrics.AssertZero(t, "retry tee datagrams (raw, nothing else feeds this cache)", teeRaw)
 
 	// Source preservation: tee-fed frames are attributed to the true fabric
 	// source, never to the loopback the mirror rode in on.

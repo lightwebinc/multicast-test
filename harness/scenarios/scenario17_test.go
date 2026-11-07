@@ -9,7 +9,7 @@ import (
 	"github.com/lightwebinc/multicast-test/harness/metrics"
 )
 
-// Scenario 17 — Recovery shortfall identity (criterion #1, clean regime)
+// Scenario 17: Recovery shortfall identity (criterion #1, clean regime)
 //
 // For every unfiltered listener, EXACTLY
 //
@@ -25,22 +25,22 @@ import (
 // This scenario originally caught a real tracker defect (2026-08-21): a
 // unicast repair filling a gap at a seqNum below the proxy-restart threshold
 // fell through to the restart heuristic, flushing every other pending gap to
-// unrecovered (phantoms) and re-baselining the flow — 7–56 phantom
+// unrecovered (phantoms) and re-baselining the flow, 7–56 phantom
 // unrecovered per listener while delivered == sent held exactly. Fixed in
 // shard-listener nack.Observe (repairs return after auto-fill; only live-
 // source frames can signal a restart; regression tests in nack_test.go), so
 // the FULL identity is asserted here: unrecovered == sent − delivered == 0.
 //
 // Four preconditions make the identity exact (each guards a real leak):
-//  1. Unicast-only repair — a multicast repair duplicates delivery on
+//  1. Unicast-only repair, a multicast repair duplicates delivery on
 //     listeners that never lost the frame (egress dedup defaults off) and a
 //     trusted bare ACK can cancel a gap whose repair was itself lost.
-//  2. No -seq-gap-* injection — injected seqnums are pre-stamped and PRESERVED
+//  2. No -seq-gap-* injection, injected seqnums are pre-stamped and PRESERVED
 //     by the proxy, never sent by anyone, so each becomes a phantom permanent
 //     gap with no sent−delivered counterpart.
-//  3. Lossless WARMUP before the measurement window — the tracker baselines a
+//  3. Lossless WARMUP before the measurement window, the tracker baselines a
 //     flow on its first observed frame, so a first-frame loss is invisible.
-//  4. Lossless TRAILER after loss removal — tail-loss detection needs 16
+//  4. Lossless TRAILER after loss removal, tail-loss detection needs 16
 //     contiguous frames for a probe; trailer frames extend every chain so tail
 //     losses become ordinary interior gaps.
 func TestScenario17_RecoveryShortfallIdentity(t *testing.T) {
@@ -51,7 +51,7 @@ func TestScenario17_RecoveryShortfallIdentity(t *testing.T) {
 		"BEACON_FLAGS_UNICAST":   "true",
 		// Rate limits out of the way: a silently rate-dropped NACK burns one
 		// of the listener's 5 retry rounds, and a gap that exhausts its rounds
-		// under contention gets abandoned — after which a later range-fill can
+		// under contention gets abandoned, after which a later range-fill can
 		// STILL deliver the frame (delivered but booked unrecovered, breaking
 		// the identity). The clean regime must actually be clean: every NACK
 		// answered within its round.
@@ -144,7 +144,7 @@ func TestScenario17_RecoveryShortfallIdentity(t *testing.T) {
 		// The full criterion-#1 identity: closure exact AND
 		// unrecovered == sent − delivered.
 		assertRecoveryIdentity(t, name, beforeL[i], afterL[i], sent)
-		// Clean regime on top: every stamped frame was delivered — netem loss
+		// Clean regime on top: every stamped frame was delivered, netem loss
 		// fully repaired, exactly, no tolerance (so unrecovered above is 0).
 		d := metrics.DeltaMap(beforeL[i], afterL[i])
 		delivered := d["bsl_frames_forwarded_total"] + d["bsl_egress_errors_total"]
