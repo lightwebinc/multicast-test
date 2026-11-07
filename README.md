@@ -11,15 +11,9 @@ End-to-end test suite for the Bitcoin multicast sharding pipeline. Validates
 and [`shard-manifest`](https://github.com/lightwebinc/shard-manifest)
 working together over an IPv6 multicast fabric.
 
-This repo is the **integration** test suite, the Go Docker harness:
-
-| Framework | Location | Runtime | Description |
-|-----------|----------|---------|-------------|
-| **Go Docker harness** | `harness/` | Docker containers on `fd10::/64` | Scenario tests driven by `go test`. |
-
-> Deployment / applied-infrastructure testing (the LXD VM lab, the privileged
-> netns mesh repros, and the real-host deployment tooling) is maintained
-> separately from this public integration suite.
+The suite is a Go Docker harness (`harness/`): scenario tests driven by
+`go test`, with the components in containers on `fd10::/64`. Host-level
+deployment testing is outside this suite.
 
 ```
  source ──► proxy (ingress) ──► multicast fabric ──► listener1 / listener2 / listener3
@@ -36,7 +30,7 @@ This repo is the **integration** test suite, the Go Docker harness:
 
 ### Prerequisites
 
-Docker, Go 1.26.2+ (the `go.mod` floor), and root (tests create network namespaces). The harness
+Docker, Go 1.26 or later, and root (tests create network namespaces). The harness
 compiles component binaries from **sibling checkouts**; clone the component
 repos side by side under one parent directory:
 
@@ -120,3 +114,7 @@ test names, make-target filters). Highlights:
 ## Releases
 
 Releases and release notes live on [GitHub Releases](https://github.com/lightwebinc/multicast-test/releases); there is no CHANGELOG.
+
+## License
+
+Apache 2.0; see [LICENSE](LICENSE).
