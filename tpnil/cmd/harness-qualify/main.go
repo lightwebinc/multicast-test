@@ -172,8 +172,21 @@ func run(root string, l lockFile, pattern, timeout string) int {
 	}
 	fmt.Printf("harness images removed before the run: %d\n", len(stale))
 
+	// The scenarios run tc, ip and ip6tables as root. A login PATH on Debian
+	// omits the sbin directories, so the root run appends them.
+	rootPath := os.Getenv("PATH") + ":/usr/local/sbin:/usr/sbin:/sbin"
+	for _, tool := range []string{"tc", "ip", "ip6tables"} {
+		if _, err := exec.LookPath(tool); err != nil {
+			if out, err := exec.Command("sudo", "-n", "env", "PATH="+rootPath, "sh", "-c", "command -v "+tool).Output(); err != nil || len(out) == 0 {
+				fail("host tool %s not found for the root run", tool)
+			}
+		}
+	}
+	fmt.Println("host tools tc, ip, ip6tables found")
+	fmt.Printf("docker server %s\n", strings.TrimSpace(mustOutput("", "sudo", "-n", "docker", "version", "--format", "{{.Server.Version}}")))
+
 	cmd := exec.Command("sudo", "-n", "env",
-		"PATH="+os.Getenv("PATH"), "GOTOOLCHAIN=local", "GOFLAGS=-mod=readonly",
+		"PATH="+rootPath, "GOTOOLCHAIN=local", "GOFLAGS=-mod=readonly",
 		"go", "test", "./harness/scenarios/...", "-v", "-count=1", "-timeout", timeout, "-run", pattern)
 	cmd.Dir = root
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
