@@ -1,0 +1,55 @@
+{
+  "schema": "lightweb-multicast-harness-components@1.0.0",
+  "toolchain": "go1.27.3",
+  "components": [
+    {
+      "name": "beef-generator",
+      "repository": "https://github.com/lightwebinc/beef-generator.git",
+      "tag": "v0.2.2",
+      "commit": "58dd133842bea745a515c5697860e047cdbf59e6"
+    },
+    {
+      "name": "retry-endpoint",
+      "repository": "https://github.com/lightwebinc/retry-endpoint.git",
+      "tag": "v1.16.1",
+      "commit": "fdb3ab9041a2f54d873acedf3b502b52a8c05512"
+    },
+    {
+      "name": "shard-common",
+      "repository": "https://github.com/lightwebinc/shard-common.git",
+      "tag": "v0.24.0",
+      "commit": "fec3fe226410686a7ab2854f62aee037ada906a0"
+    },
+    {
+      "name": "shard-listener",
+      "repository": "https://github.com/lightwebinc/shard-listener.git",
+      "tag": "v1.35.1",
+      "commit": "eec8bb2bcbed9e7762fd3fbc38263b191ade32f1"
+    },
+    {
+      "name": "shard-manifest",
+      "repository": "https://github.com/lightwebinc/shard-manifest.git",
+      "tag": "v0.4.4",
+      "commit": "77267d28d96909c8cd824db5b49d06677e69b030"
+    },
+    {
+      "name": "shard-proxy",
+      "repository": "https://github.com/lightwebinc/shard-proxy.git",
+      "tag": "v1.43.1",
+      "commit": "2ddd64e231b1e32496c1d2aacba4ff5ad785c7e1"
+    },
+    {
+      "name": "subtx-generator",
+      "repository": "https://github.com/lightwebinc/subtx-generator.git",
+      "tag": "v0.4.2",
+      "commit": "6af00840b3f155fbe2e50d8ad4ca4498cc2c2e9a"
+    }
+  ],
+  "images": [
+    {
+      "reference": "redis:7-alpine",
+      "repository": "docker.io/library/redis",
+      "digest": "sha256:c5d34a98396a4775e223c74e929162c35c5a2182901ba26b50ade939941ce14b"
+    }
+  ]
+}

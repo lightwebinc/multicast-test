@@ -1,0 +1,26 @@
+multicast-test
+Copyright 2026 Lightweb Inc. (https://lightweb.net)
+
+=========================================================================
+
+This software is the end-to-end test suite for the BSV Layered Multicast
+delivery fabric. It compiles the fabric's components from pinned source
+checkouts, runs them as containers on an IPv6 multicast bridge, and asserts
+the delivery, filtering, fragmentation, repair, coalescing, manifest and
+BEEF object plane contracts that the fabric's BRC specifications define.
+The tpnil directory runs selected scenarios under the component
+qualification protocol of the Transaction Processing Network
+Interoperability Laboratory.
+
+=========================================================================
+Third-Party Software
+
+This product includes third-party software, distributed under the terms
+of their respective licenses. Each dependency retains its own copyright;
+this notice does not modify those licenses.
+
+  github.com/lightwebinc/shard-common         Apache License 2.0
+  github.com/prometheus/client_model         Apache License 2.0
+  github.com/prometheus/common               Apache License 2.0
+
+=========================================================================
