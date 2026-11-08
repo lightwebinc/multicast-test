@@ -63,6 +63,11 @@ fi
 ./lib/env_writer.sh .env HOST_IP "$GW"
 ./lib/env_writer.sh .env asset_httpPublicAddress "http://$GW:8090/api/v1"
 ./lib/env_writer.sh .env p2p_advertise_addresses "/ip4/$GW/tcp/9905"
+# Every peer of this node (Merkle Service, Broadcaster's p2p client) is on a
+# private container network. Teranode's gater refuses private addresses in both
+# directions unless this is set; its documentation recommends true for isolated
+# regtest networks.
+./lib/env_writer.sh .env p2p_allow_private_ips true
 # shellcheck source=/dev/null
 source ./lib/config_perms.sh && fix_config_perms "$QS"
 
