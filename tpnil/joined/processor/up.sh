@@ -6,8 +6,10 @@
 #
 # The answers setup.sh would ask for are fixed here: regtest, full mode (so the
 # p2p service announces blocks and subtrees to a local Merkle Service), no
-# archival node, no monitoring stack. RPC credentials and the gRPC admin key
-# are generated into the quickstart's .env, which is never printed.
+# archival node, no monitoring stack. The RPC service is bound to loopback and
+# uses fixed regtest-only credentials (tpnil / tpnil-regtest-only), as TPNIL's
+# own Teranode regtest profile does, because qualification plans record them.
+# The gRPC admin key is generated into the quickstart's .env, never printed.
 #
 # The node publishes its asset API and p2p port on the Docker host gateway
 # (docker0), and advertises them there. The Broadcaster stack and the bridges
@@ -45,8 +47,6 @@ if [ ! -f .env ]; then
 	w SETTINGS_CONTEXT docker.m
 	w COMPOSE_PROFILES legacy,p2p
 	w listen_mode full
-	w rpc_user tpnil
-	w rpc_pass "$(openssl rand -hex 16)"
 	w clientName tpnil-regtest
 	w minminingtxfee 0
 	w blockmaxsize 4294967296
@@ -60,6 +60,8 @@ if [ ! -f .env ]; then
 	say "wrote $QS/.env (regtest, full mode, generated credentials)"
 fi
 ./lib/env_writer.sh .env TERANODE_VERSION "$TERANODE_VERSION"
+./lib/env_writer.sh .env rpc_user tpnil
+./lib/env_writer.sh .env rpc_pass tpnil-regtest-only
 ./lib/env_writer.sh .env HOST_IP "$GW"
 ./lib/env_writer.sh .env asset_httpPublicAddress "http://$GW:8090/api/v1"
 ./lib/env_writer.sh .env p2p_advertise_addresses "/ip4/$GW/tcp/9905"
