@@ -118,9 +118,9 @@ const maxSubmission = 64 << 20
 func routes(eng *engine.Engine, log *slog.Logger) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /submit", func(w http.ResponseWriter, r *http.Request) {
-		var topics []string
-		if err := json.Unmarshal([]byte(r.Header.Get("X-Topics")), &topics); err != nil || len(topics) == 0 {
-			http.Error(w, `X-Topics must be a JSON array of topic names, for example ["tm_example"]`, http.StatusBadRequest)
+		topics, err := parseTopics(r.Header.Values("X-Topics"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxSubmission))
@@ -173,6 +173,34 @@ func routes(eng *engine.Engine, log *slog.Logger) http.Handler {
 		_, _ = io.WriteString(w, "ok\n")
 	})
 	return mux
+}
+
+// parseTopics reads the X-Topics header in both forms clients send: the JSON
+// array of BRC-22's example (["tm_a","tm_b"]) and a comma list (tm_a,tm_b).
+// Names are trimmed, and a repeated or empty header is refused.
+func parseTopics(values []string) ([]string, error) {
+	if len(values) != 1 {
+		return nil, fmt.Errorf("send the X-Topics header exactly once (got %d)", len(values))
+	}
+	v := strings.TrimSpace(values[0])
+	var topics []string
+	if strings.HasPrefix(v, "[") {
+		if err := json.Unmarshal([]byte(v), &topics); err != nil {
+			return nil, fmt.Errorf("X-Topics is not a JSON array of names: %w", err)
+		}
+	} else {
+		topics = strings.Split(v, ",")
+	}
+	out := topics[:0]
+	for _, name := range topics {
+		if name = strings.TrimSpace(name); name != "" {
+			out = append(out, name)
+		}
+	}
+	if len(out) == 0 {
+		return nil, errors.New(`X-Topics names no topic; send ["tm_example"] or tm_example`)
+	}
+	return out, nil
 }
 
 // brc24Output is one output-list item as BRC-24 encodes it: the BEEF as an
