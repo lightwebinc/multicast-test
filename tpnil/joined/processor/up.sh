@@ -8,6 +8,11 @@
 # p2p service announces blocks and subtrees to a local Merkle Service), no
 # archival node, no monitoring stack. RPC credentials and the gRPC admin key
 # are generated into the quickstart's .env, which is never printed.
+#
+# The node publishes its asset API and p2p port on the Docker host gateway
+# (docker0), and advertises them there. The Broadcaster stack and the bridges
+# reach it at that address rather than by joining its compose network, whose
+# service names (postgres, aerospike) would collide with theirs.
 set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -29,17 +34,17 @@ git -C "$QS" -c advice.detachedHead=false checkout -q "$QS_COMMIT"
 [ -z "$(git -C "$QS" status --porcelain --untracked-files=no)" ] || die "tracked files in $QS differ from $QS_COMMIT"
 say "teranode-quickstart at $(git -C "$QS" rev-parse HEAD)"
 
+GW=$(ip -4 -o addr show docker0 | awk '{print $4}' | cut -d/ -f1)
+[ -n "$GW" ] || die "no docker0 address"
+
 cd "$QS"
 if [ ! -f .env ]; then
 	cp .env.example .env
 	w() { ./lib/env_writer.sh .env "$1" "$2"; }
 	w network regtest
 	w SETTINGS_CONTEXT docker.m
-	w HOST_IP 127.0.0.1
 	w COMPOSE_PROFILES legacy,p2p
 	w listen_mode full
-	w asset_httpPublicAddress http://asset:8090/api/v1
-	w p2p_advertise_addresses /dns4/peer/tcp/9905
 	w rpc_user tpnil
 	w rpc_pass "$(openssl rand -hex 16)"
 	w clientName tpnil-regtest
@@ -55,6 +60,9 @@ if [ ! -f .env ]; then
 	say "wrote $QS/.env (regtest, full mode, generated credentials)"
 fi
 ./lib/env_writer.sh .env TERANODE_VERSION "$TERANODE_VERSION"
+./lib/env_writer.sh .env HOST_IP "$GW"
+./lib/env_writer.sh .env asset_httpPublicAddress "http://$GW:8090/api/v1"
+./lib/env_writer.sh .env p2p_advertise_addresses "/ip4/$GW/tcp/9905"
 # shellcheck source=/dev/null
 source ./lib/config_perms.sh && fix_config_perms "$QS"
 
