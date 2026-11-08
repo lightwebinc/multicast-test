@@ -1,0 +1,121 @@
+# The open delivery fabric and the bridges of the ITCVE-2 joined configuration.
+#
+#   Broadcaster propagation -> arcade-bridge facade -> shard-proxy -> fabric
+#     -> shard-listener tx lane -> teranode-bridge -> Teranode propagation
+#   Teranode blockchain notifications -> teranode-bridge -> shard-proxy -> fabric
+#     -> shard-listener subtree and block lanes -> arcade-bridge -> Merkle Service
+#
+# The fabric segment is its own IPv6 multicast bridge (tpnil-fabric, created by
+# fabric/up.sh with MLD snooping and a querier). retry-endpoint joins the
+# groups itself, so it caches every frame upstream of the delivery edge; the
+# delivery edge's link to the segment is the declared impairment point (netem on
+# shard-listener's fabric0). Images are pinned by digest through the variables
+# fabric/up.sh sets.
+name: tpnil-fabric
+
+networks:
+  fabric:
+    external: true
+    name: tpnil-fabric
+  teranode:
+    external: true
+    name: teranode-quickstart-network
+  broadcaster:
+    external: true
+    name: broadcaster_bsv-broadcaster-net
+
+x-fabric-env: &fabric-env
+  SHARD_BITS: "2"
+  MC_SCOPE: site
+  MC_GROUP_ID: "0x000B"
+
+services:
+  shard-proxy:
+    image: ${SHARD_PROXY_IMAGE:?}
+    networks:
+      fabric: {interface_name: fabric0, ipv6_address: "fd10:2::a:2"}
+    environment:
+      <<: *fabric-env
+      MULTICAST_IF: fabric0
+      UDP_LISTEN_PORT: "8725"
+      TCP_LISTEN_PORT: "8725"
+      SUBTREE_LISTEN_PORT: "8726"
+      BLOCK_LISTEN_PORT: "8727"
+      BEEF_LISTEN_PORT: "8728"
+      EGRESS_PORT: "9001"
+      METRICS_ADDR: ":9100"
+    ports: ["127.0.0.1:9100:9100"]
+    restart: unless-stopped
+
+  retry-endpoint:
+    image: ${RETRY_ENDPOINT_IMAGE:?}
+    networks:
+      fabric: {interface_name: fabric0, ipv6_address: "fd10:2::a:3"}
+    environment:
+      <<: *fabric-env
+      MULTICAST_IF: fabric0
+      MC_IFACE: fabric0
+      EGRESS_IFACE: fabric0
+      MC_JOIN_ENABLED: "true"
+      BEEF_ENABLED: "true"
+      SUBTREE_DATA_ENABLED: "true"
+      LISTEN_PORT: "9001"
+      NACK_PORT: "9300"
+      EGRESS_PORT: "9001"
+      METRICS_ADDR: ":9400"
+    ports: ["127.0.0.1:9400:9400"]
+    restart: unless-stopped
+
+  shard-listener:
+    image: ${SHARD_LISTENER_IMAGE:?}
+    cap_add: [NET_ADMIN]
+    networks:
+      fabric: {interface_name: fabric0, ipv6_address: "fd10:2::a:11"}
+    environment:
+      <<: *fabric-env
+      MULTICAST_IF: fabric0
+      LISTEN_PORT: "9001"
+      NUM_WORKERS: "2"
+      METRICS_ADDR: ":9200"
+      BEEF_TOPICS: ${BEEF_TOPICS:-}
+      LANE_TX: teranode-bridge:8725
+      LANE_SUBTREE: arcade-bridge:9143
+      LANE_BLOCK: arcade-bridge:9144
+      LANE_HEADER: ${LANE_HEADER:-}
+      LANE_BEEF: ${LANE_BEEF:-}
+    ports: ["127.0.0.1:9200:9200"]
+    restart: unless-stopped
+
+  teranode-bridge:
+    image: ${TERANODE_BRIDGE_IMAGE:?}
+    networks:
+      fabric: {interface_name: fabric0}
+      teranode: {}
+    volumes:
+      - ${TERANODE_ADMIN_KEY_FILE:?}:/run/tpnil/teranode-admin-key:ro
+    command:
+      - -propagation=http://propagation:8833
+      - -kafka=kafka-shared:9092
+      - -advertise=http://teranode-bridge:9145
+      - -peer-id=12D3KooWGwhBci9d9CBK1SsUrFhgW3AEuxsmN7EMb29betZHgu7d
+      - -blockchain=blockchain:8087
+      - -blockchain-api-key-file=/run/tpnil/teranode-admin-key
+      - -local-asset=http://asset:8090/api/v1
+      - -edge-ingress=shard-proxy
+      - -stats-every=30s
+    ports: ["127.0.0.1:9146:9146"]
+    restart: unless-stopped
+
+  arcade-bridge:
+    image: ${ARCADE_BRIDGE_IMAGE:?}
+    networks:
+      fabric: {interface_name: fabric0}
+      broadcaster: {}
+    command:
+      - -advertise=http://arcade-bridge:9165
+      - -kafka=redpanda:9092
+      - -edge-ingress=shard-proxy
+      - -hydrate-asset=http://${PROCESSOR_GATEWAY:?}:8090/api/v1
+      - -stats-every=30s
+    ports: ["127.0.0.1:9167:9167"]
+    restart: unless-stopped

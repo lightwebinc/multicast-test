@@ -7,9 +7,10 @@
 #
 # standing:    p2p datahub discovery on; Merkle Service bootstraps from the
 #              regtest processor's libp2p peer (its own source).
-# fabric-only: discovery off, so the facade is Broadcaster's only datahub; Merkle
-#              Service's bootstrap peer refuses (loopback port 1), so it holds no
-#              peer and its announcements come from the proof bridge alone.
+# fabric-only: discovery off and the p2p client stopped, so the facade is
+#              Broadcaster's only datahub; Merkle Service's bootstrap peer refuses
+#              (loopback port 1), so it holds no peer and its announcements come
+#              from the proof bridge alone.
 # The processor (processor/up.sh) must be up first. Re-running with the other
 # mode recreates only the services whose configuration changed.
 set -euo pipefail
@@ -60,6 +61,11 @@ compose() {
 }
 compose pull -q
 compose up -d --remove-orphans
+if [ "$MODE" = fabric-only ]; then
+	compose stop p2p-client
+else
+	compose start p2p-client
+fi
 say "waiting for the API server"
 for _ in $(seq 1 60); do
 	if curl -sf -m5 -o /dev/null http://127.0.0.1:8080/health; then

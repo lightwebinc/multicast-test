@@ -32,7 +32,7 @@ services:
     ports: !reset []
   merkle-service:
     image: ghcr.io/bsv-blockchain/merkle-service:v0.6.3@sha256:a399bb859889a06073ec5db92d9f7cd9fc680a95310c9f6c6fa5e6c4a9f20905
-    ports: !override ["127.0.0.1:18080:8080"]
+    ports: !override ["127.0.0.1:18080:8080", "127.0.0.1:9187:9090"]
     mem_limit: 6g
     restart: unless-stopped
     volumes:
