@@ -33,6 +33,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/lightwebinc/multicast-test/harness/build"
 )
 
 const lockPath = "tpnil/components.lock.json"
@@ -42,6 +44,9 @@ type lockFile struct {
 	Toolchain  string      `json:"toolchain"`
 	Components []component `json:"components"`
 	Images     []image     `json:"images"`
+	// BaseImage pins the image every component is packaged on; the run builds
+	// FROM it by digest (HARNESS_BASE_IMAGE).
+	BaseImage *image `json:"baseImage"`
 }
 
 type component struct {
@@ -125,6 +130,11 @@ func prepare(root string, l lockFile) {
 		mustRun("", "sudo", "-n", "docker", "tag", pinned, im.Reference)
 		fmt.Printf("image %s pulled as %s\n", pinned, im.Reference)
 	}
+	if b := l.BaseImage; b != nil {
+		pinned := b.Repository + "@" + b.Digest
+		mustRun("", "sudo", "-n", "docker", "pull", "--quiet", pinned)
+		fmt.Printf("base image %s pulled\n", pinned)
+	}
 	fmt.Println("closure prepared")
 }
 
@@ -185,8 +195,27 @@ func run(root string, l lockFile, pattern, timeout string) int {
 	fmt.Println("host tools tc, ip, ip6tables found")
 	fmt.Printf("docker server %s\n", strings.TrimSpace(mustOutput("", "sudo", "-n", "docker", "version", "--format", "{{.Server.Version}}")))
 
+	// The base image is pinned by digest, so every image the run builds rests
+	// on the same bytes; a lock without one keeps the tag (older closures).
+	base := build.DefaultBaseImage
+	if b := l.BaseImage; b != nil {
+		base = b.Repository + "@" + b.Digest
+		if _, err := exec.Command("sudo", "-n", "docker", "image", "inspect", base).Output(); err != nil {
+			fail("base image %s is not present; run prepare", base)
+		}
+		fmt.Printf("base image %s verified\n", base)
+	}
+	// Build caches and temporary files stay on the workspace disk: on a
+	// laboratory host the root filesystem is a network mount, and root's
+	// default caches would land on it.
+	cache := filepath.Join(ws, ".qualify-cache")
+	mustRun("", "sudo", "-n", "mkdir", "-p", filepath.Join(cache, "go-build"), filepath.Join(cache, "gomod"), filepath.Join(cache, "tmp"))
+	fmt.Printf("build caches under %s\n", cache)
+
 	cmd := exec.Command("sudo", "-n", "env",
 		"PATH="+rootPath, "GOTOOLCHAIN=local", "GOFLAGS=-mod=readonly",
+		"HARNESS_BASE_IMAGE="+base,
+		"GOCACHE="+filepath.Join(cache, "go-build"), "GOMODCACHE="+filepath.Join(cache, "gomod"), "TMPDIR="+filepath.Join(cache, "tmp"),
 		"go", "test", "./harness/scenarios/...", "-v", "-count=1", "-timeout", timeout, "-run", pattern)
 	cmd.Dir = root
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr

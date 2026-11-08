@@ -51,5 +51,10 @@
       "repository": "docker.io/library/redis",
       "digest": "sha256:c5d34a98396a4775e223c74e929162c35c5a2182901ba26b50ade939941ce14b"
     }
-  ]
+  ],
+  "baseImage": {
+    "reference": "gcr.io/distroless/static:nonroot",
+    "repository": "gcr.io/distroless/static",
+    "digest": "sha256:25ac8f0c3b2334a9eb05452266bd4697864a8c8ef0ef71e5e6480d7f92868329"
+  }
 }
