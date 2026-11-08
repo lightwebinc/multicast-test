@@ -16,10 +16,12 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/bsv-blockchain/go-sdk/chainhash"
+	ec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 	"github.com/bsv-blockchain/go-sdk/script"
 	"github.com/bsv-blockchain/go-sdk/transaction"
 	"github.com/bsv-blockchain/go-sdk/transaction/template/p2pkh"
@@ -173,7 +175,8 @@ func ef(args []string, getenv func(string) string, stdout, stderr io.Writer) err
 	var node rpcFlags
 	node.register(fs)
 	assetURL := fs.String("asset", "", "node asset HTTP API URL, for example http://localhost:8090 (required); a URL without a path gets /api/v1")
-	out := fs.String("out", "", "fixture file to write (required)")
+	out := fs.String("out", "", "fixture file to write (required); with -count above 1, a directory that receives ef-0001.json, ef-0002.json and so on")
+	count := fs.Int("count", 1, "fixtures to write, each spending a different mature coinbase output")
 	fee := fs.Uint64("fee", 1000, "fee rate, in satoshis per kilobyte")
 	maturity := fs.Int("maturity", 100, "coinbase maturity of the chain, in blocks")
 	scan := fs.Int("scan", 1000, "most mature blocks to examine, newest first")
@@ -185,8 +188,11 @@ func ef(args []string, getenv func(string) string, stdout, stderr io.Writer) err
 	if err := required(fs, "key", *keyPath, "rpc", node.url, "asset", *assetURL, "out", *out); err != nil {
 		return err
 	}
-	if *maturity < 0 || *scan < 1 {
-		return usageError(fs, "-maturity must not be negative and -scan must be positive")
+	if *maturity < 0 || *scan < 1 || *count < 1 {
+		return usageError(fs, "-maturity must not be negative, and -scan and -count must be positive")
+	}
+	if *count > 1 && *broadcast {
+		return usageError(fs, "-broadcast takes a single fixture (-count 1)")
 	}
 	key, addr, err := loadKey(*keyPath)
 	if err != nil {
@@ -203,10 +209,14 @@ func ef(args []string, getenv func(string) string, stdout, stderr io.Writer) err
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
 
-	src, vout, height, err := findCoinbase(ctx, rpc, asset, addr, *maturity, *scan)
+	if *count > 1 {
+		return efMany(ctx, rpc, asset, key, addr, *maturity, *scan, *count, *fee, *out, stdout)
+	}
+	found, err := findCoinbases(ctx, rpc, asset, addr, *maturity, *scan, 1)
 	if err != nil {
 		return err
 	}
+	src, vout, height := found[0].tx, found[0].vout, found[0].height
 	tx, err := buildSpend(src, vout, key, addr, *fee)
 	if err != nil {
 		return err
@@ -233,31 +243,66 @@ func ef(args []string, getenv func(string) string, stdout, stderr io.Writer) err
 	return say(stdout, "broadcast: accepted\n")
 }
 
-// findCoinbase returns the newest unspent coinbase output that pays addr and
-// that a transaction in the next block may spend: one at a height h where
-// h + maturity is at most the tip height + 1, the rule Teranode validates.
-func findCoinbase(ctx context.Context, rpc *rpcClient, asset *assetClient, addr *script.Address, maturity, scan int) (*transaction.Transaction, uint32, uint32, error) {
+// coinbaseOutput is one spendable coinbase output that pays the key.
+type coinbaseOutput struct {
+	tx     *transaction.Transaction
+	vout   uint32
+	height uint32
+}
+
+// efMany writes count fixtures into the directory out, each spending a
+// different mature coinbase output, newest first.
+func efMany(ctx context.Context, rpc *rpcClient, asset *assetClient, key *ec.PrivateKey, addr *script.Address, maturity, scan, count int, fee uint64, out string, stdout io.Writer) error {
+	found, err := findCoinbases(ctx, rpc, asset, addr, maturity, scan, count)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(out, 0o755); err != nil {
+		return err
+	}
+	for i, c := range found {
+		tx, err := buildSpend(c.tx, c.vout, key, addr, fee)
+		if err != nil {
+			return err
+		}
+		fx, err := newEFFixture(tx)
+		if err != nil {
+			return err
+		}
+		if err := writeJSON(filepath.Join(out, fmt.Sprintf("ef-%04d.json", i+1)), fx); err != nil {
+			return err
+		}
+	}
+	return say(stdout, "fixtures: %d in %s\n", len(found), out)
+}
+
+// findCoinbases returns up to want unspent coinbase outputs that pay addr and
+// that a transaction in the next block may spend, newest first: each at a
+// height h where h + maturity is at most the tip height + 1, the rule Teranode
+// validates. It fails unless it finds want of them within scan blocks.
+func findCoinbases(ctx context.Context, rpc *rpcClient, asset *assetClient, addr *script.Address, maturity, scan, want int) ([]coinbaseOutput, error) {
 	lock, err := p2pkh.Lock(addr)
 	if err != nil {
-		return nil, 0, 0, err
+		return nil, err
 	}
 	tip, err := asset.bestHeader(ctx)
 	if err != nil {
-		return nil, 0, 0, err
+		return nil, err
 	}
 	newest := min(int64(tip.Height)+1-int64(maturity), int64(tip.Height))
 	if newest < 1 {
-		return nil, 0, 0, fmt.Errorf("no coinbase is mature at chain height %d with maturity %d", tip.Height, maturity)
+		return nil, fmt.Errorf("no coinbase is mature at chain height %d with maturity %d", tip.Height, maturity)
 	}
+	var found []coinbaseOutput
 	h := newest
-	for ; h >= 1 && newest-h < int64(scan); h-- {
+	for ; h >= 1 && newest-h < int64(scan) && len(found) < want; h-- {
 		hash, err := rpc.blockHash(ctx, uint32(h))
 		if err != nil {
-			return nil, 0, 0, err
+			return nil, err
 		}
 		cb, err := asset.coinbase(ctx, hash)
 		if err != nil {
-			return nil, 0, 0, err
+			return nil, err
 		}
 		vouts := pays(cb, lock)
 		if len(vouts) == 0 {
@@ -265,17 +310,23 @@ func findCoinbase(ctx context.Context, rpc *rpcClient, asset *assetClient, addr 
 		}
 		utxos, err := asset.utxos(ctx, cb.TxID().String())
 		if err != nil {
-			return nil, 0, 0, err
+			return nil, err
 		}
 		for _, v := range vouts {
 			for _, u := range utxos {
-				if u.Vout == v && u.Status == "OK" {
-					return cb, v, uint32(h), nil
+				if u.Vout == v && u.Status == "OK" && len(found) < want {
+					found = append(found, coinbaseOutput{tx: cb, vout: v, height: uint32(h)})
 				}
 			}
 		}
 	}
-	return nil, 0, 0, fmt.Errorf("no unspent coinbase output pays %s at heights %d to %d", addr.AddressString, h+1, newest)
+	if len(found) == 0 {
+		return nil, fmt.Errorf("no unspent coinbase output pays %s at heights %d to %d", addr.AddressString, h+1, newest)
+	}
+	if len(found) < want {
+		return nil, fmt.Errorf("found %d unspent coinbase outputs paying %s at heights %d to %d, want %d", len(found), addr.AddressString, h+1, newest, want)
+	}
+	return found, nil
 }
 
 func beef(args []string, _ func(string) string, stdout, stderr io.Writer) error {

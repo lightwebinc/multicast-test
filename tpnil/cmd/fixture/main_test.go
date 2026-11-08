@@ -625,3 +625,47 @@ func assertFourKeys(t *testing.T, path string) {
 		t.Fatalf("fixture keys %v, want efHex rawHex schema txid", keys)
 	}
 }
+
+// TestEFCount checks -count writes one fixture per distinct mature coinbase
+// output, newest first, and fails when the chain holds fewer than asked.
+func TestEFCount(t *testing.T) {
+	node := newFakeNode(t, "", "")
+	keyPath, addr := newKey(t)
+	lock := lockTo(t, addr)
+	dir := filepath.Join(t.TempDir(), "fixtures")
+
+	node.mu.Lock()
+	node.mine(99, lock) // heights 1..99 pay the key; maturity 50 leaves 1..50 mature
+	node.mu.Unlock()
+
+	code, stdout, stderr := fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", dir, "-maturity", "50", "-count", "5")
+	if code != 0 || !strings.Contains(stdout, "fixtures: 5 in "+dir) {
+		t.Fatalf("ef -count 5: exit %d, stdout %q, stderr %q", code, stdout, stderr)
+	}
+	sources := map[string]bool{}
+	for i := 1; i <= 5; i++ {
+		path := filepath.Join(dir, fmt.Sprintf("ef-%04d.json", i))
+		assertFourKeys(t, path)
+		fx := readFixture[efFixture](t, path)
+		decoded, err := transaction.NewTransactionFromHex(fx.EFHex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		src := decoded.Inputs[0].SourceTXID.String()
+		if sources[src] {
+			t.Fatalf("fixture %d spends %s again", i, src)
+		}
+		sources[src] = true
+		if want := node.blocks[51-i].txs[0].TxID().String(); src != want {
+			t.Fatalf("fixture %d spends %s, want the coinbase at height %d (%s)", i, src, 51-i, want)
+		}
+	}
+
+	code, _, stderr = fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", dir, "-maturity", "50", "-count", "60", "-scan", "100")
+	if code != 1 || !strings.Contains(stderr, "found 50 unspent coinbase outputs") {
+		t.Fatalf("ef -count 60 on 50 mature outputs: exit %d, stderr %q", code, stderr)
+	}
+	if code, _, stderr = fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", dir, "-count", "2", "-broadcast"); code != 2 {
+		t.Fatalf("ef -count 2 -broadcast: exit %d, stderr %q", code, stderr)
+	}
+}
