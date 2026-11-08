@@ -102,6 +102,10 @@ services:
       - -blockchain-api-key-file=/run/tpnil/teranode-admin-key
       - -local-asset=http://asset:8090/api/v1
       - -edge-ingress=shard-proxy
+      # The processor is the only publisher on this segment, and the reference
+      # lane delivers subtrees and blocks to the proof bridge, not back here,
+      # so the origin filter has no plane view to wait for.
+      - -submitter-when-blind=true
       - -stats-every=30s
     ports: ["127.0.0.1:19146:9146"]
     restart: unless-stopped
