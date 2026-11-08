@@ -57,6 +57,10 @@ services:
       MC_IFACE: fabric0
       EGRESS_IFACE: fabric0
       MC_JOIN_ENABLED: "true"
+      # Repair on the NACK return channel: the retransmit is unicast and the
+      # delivery edge closes a gap only when the frame itself arrives (an ACK
+      # alone only promises it). This is the deployed posture.
+      BEACON_FLAGS_UNICAST: "true"
       BEEF_ENABLED: "true"
       SUBTREE_DATA_ENABLED: "true"
       LISTEN_PORT: "9001"

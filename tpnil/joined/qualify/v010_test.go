@@ -121,14 +121,13 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	// Mine while the impairment holds, so the block's own objects cross the
 	// impaired link too, then let repair drain.
 	blocks := mine(t, ctx, e, 1)
-	proved := waitMined(t, ctx, e, fixtures, blocks[0])
 	drainGaps(t, ctx, e, before)
 	after := snapshot(t, ctx, e)
-	unimpair(ctx, veth)
-
 	d := after.minus(before)
-	t.Logf("V010 accounting: gaps detected %d, repaired %d, unrecovered %d (late-filled %d); NACKs %d; retransmissions %d",
-		d.detected, d.repaired, d.unrecovered, d.lateFilled, d.nacks, d.retransmits)
+	t.Logf("V010 accounting: gaps detected %d, repaired %d, unrecovered %d (late-filled %d); NACKs %d; retransmissions %d; tx lane %d objects, %d drops; processor bridge %d",
+		d.detected, d.repaired, d.unrecovered, d.lateFilled, d.nacks, d.retransmits, d.laneTx, d.laneTxDrops, d.bridgeTx)
+	proved := waitMined(t, ctx, e, fixtures, blocks[0])
+	unimpair(ctx, veth)
 	if d.detected == 0 {
 		t.Fatalf("no gap was detected under %.1f%% loss; the impairment did not reach the fabric segment", e.lossPct)
 	}
@@ -452,6 +451,14 @@ func waitMined(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixtur
 		}
 	}
 	if len(pending) > 0 {
+		for txid := range pending {
+			req, _ := http.NewRequestWithContext(ctx, http.MethodGet, e.arcade+"/tx/"+txid, nil)
+			if resp, err := http.DefaultClient.Do(req); err == nil {
+				b, _ := io.ReadAll(io.LimitReader(resp.Body, 600))
+				_ = resp.Body.Close()
+				t.Logf("not proved: %s: Broadcaster says %s", txid, b)
+			}
+		}
 		t.Fatalf("%d of %d transactions not reported MINED with a proof", len(pending), len(fixtures))
 	}
 	return len(fixtures)
