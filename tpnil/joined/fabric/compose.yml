@@ -44,7 +44,7 @@ services:
       BEEF_LISTEN_PORT: "8728"
       EGRESS_PORT: "9001"
       METRICS_ADDR: ":9100"
-    ports: ["127.0.0.1:9100:9100"]
+    ports: ["127.0.0.1:19100:9100"]
     restart: unless-stopped
 
   retry-endpoint:
@@ -63,7 +63,7 @@ services:
       NACK_PORT: "9300"
       EGRESS_PORT: "9001"
       METRICS_ADDR: ":9400"
-    ports: ["127.0.0.1:9400:9400"]
+    ports: ["127.0.0.1:19400:9400"]
     restart: unless-stopped
 
   shard-listener:
@@ -83,7 +83,7 @@ services:
       LANE_BLOCK: arcade-bridge:9144
       LANE_HEADER: ${LANE_HEADER:-}
       LANE_BEEF: ${LANE_BEEF:-}
-    ports: ["127.0.0.1:9200:9200"]
+    ports: ["127.0.0.1:19200:9200"]
     restart: unless-stopped
 
   teranode-bridge:
@@ -103,7 +103,7 @@ services:
       - -local-asset=http://asset:8090/api/v1
       - -edge-ingress=shard-proxy
       - -stats-every=30s
-    ports: ["127.0.0.1:9146:9146"]
+    ports: ["127.0.0.1:19146:9146"]
     restart: unless-stopped
 
   arcade-bridge:
@@ -117,5 +117,5 @@ services:
       - -edge-ingress=shard-proxy
       - -hydrate-asset=http://${PROCESSOR_GATEWAY:?}:8090/api/v1
       - -stats-every=30s
-    ports: ["127.0.0.1:9167:9167"]
+    ports: ["127.0.0.1:19167:9167"]
     restart: unless-stopped
