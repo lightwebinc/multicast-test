@@ -17,7 +17,7 @@ set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 MODE=${1:-standing}
-WORK=${2:-/scratch/tpnil-joined}
+WORK=${2:-$HOME/tpnil-joined}
 BR_REPO=https://github.com/bsv-blockchain/arcade.git
 BR_COMMIT=e8bc97a5e3c971213a0a0c2933c224816ea7329d   # v0.20.0
 BR=$WORK/broadcaster

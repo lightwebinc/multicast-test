@@ -11,10 +11,10 @@
 set -uo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-WORK=${1:-/scratch/tpnil-joined}
+WORK=${1:-$HOME/tpnil-joined}
 TPNIL_COMMIT=${TPNIL_COMMIT:-8d7e42953776bb27b732a460343f38bc07e6ab76}
 SOURCE_COMMIT=${SOURCE_COMMIT:-914ec72d990b87eaca9265f2685dd39d7ba891bd}   # arcade-bridge tpnil-joined
-RID=${RUNNER_ID:-"Lightweb Inc. laboratory, operator Jeff Harris"}
+RID=${RUNNER_ID:?set RUNNER_ID to the runner identity TPNIL records, for example "Example Laboratory, operator A. Operator"}
 RUN=$WORK/runs/run-$(date -u +%Y%m%dT%H%M%SZ)
 FIX=$WORK/bin/fixture
 export TPNIL_RPC_USER=tpnil TPNIL_RPC_PASSWORD=tpnil-regtest-only

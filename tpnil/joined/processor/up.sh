@@ -2,7 +2,7 @@
 # up.sh: bring up the ITCVE-2 joined processor, Teranode on an isolated regtest
 # chain, from teranode-quickstart at a pinned commit with every image by digest.
 #
-#   tpnil/joined/processor/up.sh [WORK]      (default WORK=/scratch/tpnil-joined)
+#   tpnil/joined/processor/up.sh [WORK]      (default WORK=$HOME/tpnil-joined)
 #
 # The answers setup.sh would ask for are fixed here: regtest, full mode (so the
 # p2p service announces blocks and subtrees to a local Merkle Service), no
@@ -18,7 +18,7 @@
 set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-WORK=${1:-/scratch/tpnil-joined}
+WORK=${1:-$HOME/tpnil-joined}
 QS_REPO=https://github.com/bsv-blockchain/teranode-quickstart.git
 QS_COMMIT=90ff6bf12010e7681dba6bbecb07c2eb96323e07
 TERANODE_VERSION=v0.16.0@sha256:8ff56f976ef406309c49ff7e6c41e193d9dca7537bfe93976ec07b52c6d3a220

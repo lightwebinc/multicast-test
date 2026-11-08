@@ -10,12 +10,12 @@
 set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-WORK=${1:-/scratch/tpnil-joined}
+WORK=${1:-$HOME/tpnil-joined}
 : "${SHARD_PROXY_IMAGE:=ghcr.io/lightwebinc/shard-proxy:1.43.1@sha256:aa8e0ea7500fa8959c2ee3ff9083b0b2d929f0f53116f04f5face6e74b78ddf0}"
 : "${RETRY_ENDPOINT_IMAGE:=ghcr.io/lightwebinc/retry-endpoint:1.16.1@sha256:b77cfabe14526c9b28b6f5afada87816073bd0b77a7961f563cd4a1b051b3a52}"
 : "${ARCADE_BRIDGE_IMAGE:=ghcr.io/lightwebinc/arcade-bridge:0.1.4@sha256:51196953fb43c613cecf9174b674e06b6d2b198ccf3d7b298421d2d447e80fa9}"
-: "${SHARD_LISTENER_IMAGE:?set SHARD_LISTENER_IMAGE (the reference lane is not released yet)}"
-: "${TERANODE_BRIDGE_IMAGE:?set TERANODE_BRIDGE_IMAGE (v0.13.0 image not published yet)}"
+: "${SHARD_LISTENER_IMAGE:=ghcr.io/lightwebinc/shard-listener:1.36.0@sha256:84c2681b16891b862357d796881635ee0e90276992717607e9490ea426086d81}"
+: "${TERANODE_BRIDGE_IMAGE:=ghcr.io/lightwebinc/teranode-bridge:0.13.0@sha256:e53eb55db7011dc60612513fe75e3ca6d2a4ab6488ba5dc07d3dcb5508598631}"
 export SHARD_PROXY_IMAGE RETRY_ENDPOINT_IMAGE ARCADE_BRIDGE_IMAGE SHARD_LISTENER_IMAGE TERANODE_BRIDGE_IMAGE
 
 say() { echo "== $(date -u +%H:%M:%S) $*"; }
