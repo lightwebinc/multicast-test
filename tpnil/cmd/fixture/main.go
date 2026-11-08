@@ -330,20 +330,24 @@ func findCoinbases(ctx context.Context, rpc *rpcClient, asset *assetClient, addr
 }
 
 func beef(args []string, _ func(string) string, stdout, stderr io.Writer) error {
-	fs := newFlagSet("beef", "-asset URL -txid TXID -out FILE [flags]",
+	fs := newFlagSet("beef", "-asset URL -txid TXID -topic TOPIC -out FILE [flags]",
 		"Fetches a mined transaction and its merkle proof (BUMP, BRC-74), checks that\n"+
 			"the proof computes the merkle root of the block header that holds the\n"+
 			"transaction, and writes the Atomic BEEF (BRC-95) that go-sdk builds and\n"+
 			"verifies against that header as a "+beefSchema+" fixture.", stderr)
 	assetURL := fs.String("asset", "", "node asset HTTP API URL, for example http://localhost:8090 (required); a URL without a path gets /api/v1")
 	txidHex := fs.String("txid", "", "txid of the mined transaction (required)")
+	topic := fs.String("topic", "", "overlay topic the fixture is submitted to, for example tm_example (required)")
 	out := fs.String("out", "", "fixture file to write (required)")
 	timeout := fs.Duration("timeout", 10*time.Minute, "time limit for the node requests")
 	if err := parse(fs, args); err != nil {
 		return err
 	}
-	if err := required(fs, "asset", *assetURL, "txid", *txidHex, "out", *out); err != nil {
+	if err := required(fs, "asset", *assetURL, "txid", *txidHex, "topic", *topic, "out", *out); err != nil {
 		return err
+	}
+	if !strings.HasPrefix(*topic, "tm_") {
+		return usageError(fs, "-topic must be a topic manager name, tm_ followed by the name")
 	}
 	txid := strings.ToLower(*txidHex)
 	if !isHash(txid) {
@@ -376,11 +380,11 @@ func beef(args []string, _ func(string) string, stdout, stderr io.Writer) error 
 	if err != nil {
 		return err
 	}
-	fx := beefFixture{BEEFHex: hex.EncodeToString(b), BlockHash: hdr.Hash, BlockHeight: hdr.Height, Schema: beefSchema, TxID: txid}
+	fx := beefFixture{BEEFHex: hex.EncodeToString(b), Encoding: "atomic", Schema: beefSchema, Topic: *topic, TxID: txid}
 	if err := writeJSON(*out, fx); err != nil {
 		return err
 	}
-	return say(stdout, "txid: %s\nblock: %s (height %d)\nmerkle root: %s\n", fx.TxID, fx.BlockHash, fx.BlockHeight, hdr.MerkleRoot)
+	return say(stdout, "txid: %s\nblock: %s (height %d)\nmerkle root: %s\n", fx.TxID, hdr.Hash, hdr.Height, hdr.MerkleRoot)
 }
 
 // provingHeader returns the header of the block that holds txid at height,

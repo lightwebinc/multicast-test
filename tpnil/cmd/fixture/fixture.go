@@ -51,13 +51,16 @@ type efFixture struct {
 	TxID              string `json:"txid"`
 }
 
-// beefFixture is the tpnil-beef-fixture@1.0.0 document, keys in order.
+// beefFixture is the tpnil-beef-fixture@1.0.0 document, keys in order: the
+// object an overlay qualification submits, the topic it is submitted to, and
+// how the object is encoded. Its readers decode it strictly, so nothing else
+// is written; the proving block is printed instead.
 type beefFixture struct {
-	BEEFHex     string `json:"beefHex"`
-	BlockHash   string `json:"blockHash"`
-	BlockHeight uint32 `json:"blockHeight"`
-	Schema      string `json:"schema"`
-	TxID        string `json:"txid"`
+	BEEFHex  string `json:"beefHex"`
+	Encoding string `json:"encoding"`
+	Schema   string `json:"schema"`
+	Topic    string `json:"topic"`
+	TxID     string `json:"txid"`
 }
 
 func newKeyFile() (keyFile, error) {

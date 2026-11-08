@@ -345,7 +345,8 @@ func TestUsage(t *testing.T) {
 		{[]string{"mint"}, 2, `unknown command "mint"`},
 		{[]string{"ef", "-h"}, 0, "-broadcast"},
 		{[]string{"fund", "-key"}, 2, "flag needs an argument"},
-		{[]string{"beef", "-asset", "http://localhost", "-out", "x.json", "-txid", "ABC"}, 2, "64 hex digits"},
+		{[]string{"beef", "-asset", "http://localhost", "-out", "x.json", "-txid", "ABC", "-topic", "tm_example"}, 2, "64 hex digits"},
+		{[]string{"beef", "-asset", "http://localhost", "-out", "x.json", "-txid", strings.Repeat("a", 64), "-topic", "example"}, 2, "topic manager name"},
 		{[]string{"fund", "-key", "k.json", "-rpc", "http://localhost", "extra"}, 2, `unexpected argument "extra"`},
 	}
 	for _, tc := range tests {
@@ -532,14 +533,15 @@ func TestSession(t *testing.T) {
 		t.Fatal("the fixture transaction was not mined in block 102")
 	}
 
-	code, stdout, stderr := fixture(nil, "beef", "-asset", node.asset.URL, "-txid", strings.ToUpper(efx.TxID), "-out", beefOut)
+	code, stdout, stderr := fixture(nil, "beef", "-asset", node.asset.URL, "-txid", strings.ToUpper(efx.TxID), "-topic", "tm_example", "-out", beefOut)
 	if code != 0 {
 		t.Fatalf("beef exit %d: %s", code, stderr)
 	}
 	bfx := readFixture[beefFixture](t, beefOut)
-	if bfx.Schema != beefSchema || bfx.TxID != efx.TxID || bfx.BlockHash != block.hash || bfx.BlockHeight != 102 {
-		t.Fatalf("beef fixture %+v, want %s in block %s at 102", bfx, efx.TxID, block.hash)
+	if bfx.Schema != beefSchema || bfx.TxID != efx.TxID || bfx.Topic != "tm_example" || bfx.Encoding != "atomic" {
+		t.Fatalf("beef fixture %+v, want %s for tm_example", bfx, efx.TxID)
 	}
+	assertKeys(t, beefOut, "beefHex,encoding,schema,topic,txid")
 	root := merkleRoot([]*chainhash.Hash{block.txs[0].TxID(), block.txs[1].TxID()}).String()
 	if want := fmt.Sprintf("txid: %s\nblock: %s (height 102)\nmerkle root: %s\n", efx.TxID, block.hash, root); stdout != want {
 		t.Fatalf("beef printed %q, want %q", stdout, want)
@@ -593,7 +595,7 @@ func TestBEEFErrors(t *testing.T) {
 			node.badRoot = tc.badRoot
 			node.mu.Unlock()
 			out := filepath.Join(dir, strings.ReplaceAll(tc.name, " ", "-")+".json")
-			code, stdout, stderr := fixture(nil, "beef", "-asset", node.asset.URL, "-txid", tc.txid, "-out", out)
+			code, stdout, stderr := fixture(nil, "beef", "-asset", node.asset.URL, "-txid", tc.txid, "-topic", "tm_example", "-out", out)
 			if code != 1 || stdout != "" || !strings.Contains(stderr, tc.want) {
 				t.Fatalf("beef: exit %d, stdout %q, stderr %q; want %q", code, stdout, stderr, tc.want)
 			}
@@ -608,6 +610,12 @@ func TestBEEFErrors(t *testing.T) {
 // consumers read; some of them decode it with unknown fields disallowed.
 func assertFourKeys(t *testing.T, path string) {
 	t.Helper()
+	assertKeys(t, path, "efHex,rawHex,schema,txid")
+}
+
+// assertKeys checks a fixture file carries exactly the comma-listed keys.
+func assertKeys(t *testing.T, path, want string) {
+	t.Helper()
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -621,8 +629,8 @@ func assertFourKeys(t *testing.T, path string) {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	if strings.Join(keys, ",") != "efHex,rawHex,schema,txid" {
-		t.Fatalf("fixture keys %v, want efHex rawHex schema txid", keys)
+	if got := strings.Join(keys, ","); got != want {
+		t.Fatalf("fixture keys %s, want %s", got, want)
 	}
 }
 

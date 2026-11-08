@@ -18,7 +18,7 @@ go run ./tpnil/cmd/fixture <command> [flags]   # from the root of this checkout
 | `keygen -out FILE` | Writes a new private key and its regtest address to a key file (JSON with `wif` and `address`, mode 0600, never overwritten) and prints the address. | none |
 | `fund -key FILE -rpc URL` | Mines `-blocks` blocks to the key's address, by default `-maturity` + 1 (maturity 100), which makes the first coinbase spendable. Prints the number of blocks and the first coinbase txid. | `generatetoaddress`, `getblock` |
 | `ef -key FILE -rpc URL -asset URL -out FILE` | Finds the newest mature, unspent coinbase output that pays the key, signs a transaction that spends it to the same address at `-fee` satoshis per kilobyte (default 1000), and writes the Extended Format fixture. `-broadcast` also submits the transaction. | `getblockhash`, `sendrawtransaction`; `/bestblockheader/json`, `/block/<hash>/json`, `/utxos/<txid>/json` |
-| `beef -asset URL -txid TXID -out FILE` | Fetches a mined transaction and its merkle proof (BUMP, BRC-74), checks that the proof computes the merkle root in the header of the block that holds the transaction, and writes the Atomic BEEF (BRC-95) that go-sdk builds and verifies against that header. | `/tx/<txid>`, `/merkle_proof/<txid>`, `/txmeta/<txid>/json`, `/header/<hash>/json` |
+| `beef -asset URL -txid TXID -topic TOPIC -out FILE` | Fetches a mined transaction and its merkle proof (BUMP, BRC-74), checks that the proof computes the merkle root in the header of the block that holds the transaction, and writes the Atomic BEEF (BRC-95) that go-sdk builds and verifies against that header. | `/tx/<txid>`, `/merkle_proof/<txid>`, `/txmeta/<txid>/json`, `/header/<hash>/json` |
 
 `-rpc-user` and `-rpc-password` default to `TPNIL_RPC_USER` and
 `TPNIL_RPC_PASSWORD`. `-asset` takes the asset API URL; one without a path
@@ -38,8 +38,9 @@ readers decode it strictly. The spent output and the fee are printed. Leave
 by `-out`, each spending a different mature coinbase output, for runs that
 submit many transactions.
 
-`beef` writes `tpnil-beef-fixture@1.0.0`: `txid`, `beefHex`, `blockHash` and
-`blockHeight`. It needs a transaction mined in a block with at least one
+`beef` writes `tpnil-beef-fixture@1.0.0`: `txid`, the `topic` named by
+`-topic`, `encoding` (`atomic`) and `beefHex`, and nothing else; the proving
+block is printed. It needs a transaction mined in a block with at least one
 other transaction; the asset API has no merkle proof for a coinbase alone in
 its block.
 
@@ -67,7 +68,7 @@ broadcast: accepted
 $ go run ./tpnil/cmd/fixture fund -key key.json -rpc $RPC -blocks 1
 blocks: 1
 first coinbase txid: <next-coinbase-txid>
-$ go run ./tpnil/cmd/fixture beef -asset $ASSET -txid <txid> -out beef.json
+$ go run ./tpnil/cmd/fixture beef -asset $ASSET -txid <txid> -topic tm_example -out beef.json
 txid: <txid>
 block: <block-hash> (height <block-height>)
 merkle root: <merkle-root>
