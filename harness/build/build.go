@@ -243,7 +243,21 @@ func modDropReplace(ctx context.Context, repoDir string) error {
 	return nil
 }
 
-var dockerfileTmpl = template.Must(template.New("df").Parse(`FROM gcr.io/distroless/static:nonroot
+// DefaultBaseImage is the image every component is packaged on. Its tag
+// resolves at build time; a qualification run pins it by digest through
+// HARNESS_BASE_IMAGE (tpnil/cmd/harness-qualify), so every image it builds
+// rests on the same bytes.
+const DefaultBaseImage = "gcr.io/distroless/static:nonroot"
+
+// BaseImage returns HARNESS_BASE_IMAGE when set, else DefaultBaseImage.
+func BaseImage() string {
+	if v := strings.TrimSpace(os.Getenv("HARNESS_BASE_IMAGE")); v != "" {
+		return v
+	}
+	return DefaultBaseImage
+}
+
+var dockerfileTmpl = template.Must(template.New("df").Parse(`FROM {{.Base}}
 COPY {{.Binary}} /{{.Binary}}
 ENTRYPOINT ["/{{.Binary}}"]
 `))
@@ -254,5 +268,5 @@ func writeDockerfile(path, binary string) error {
 		return err
 	}
 	defer f.Close()
-	return dockerfileTmpl.Execute(f, struct{ Binary string }{binary})
+	return dockerfileTmpl.Execute(f, struct{ Base, Binary string }{BaseImage(), binary})
 }

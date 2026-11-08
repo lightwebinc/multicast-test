@@ -14,7 +14,8 @@ content-addressed evidence that anyone can verify offline.
 The harness compiles every component from a sibling checkout, so a
 qualification pins each sibling. [`components.lock.json`](components.lock.json)
 lists the released component versions under test, by tag and commit, the Go
-toolchain, and each external container image by digest. The scenarios run
+toolchain, each external container image by digest, and the base image every
+component is packaged on (`baseImage`), also by digest. The scenarios run
 against exactly that closure or not at all.
 
 `harness-qualify` keeps preparation separate from the run:
@@ -25,8 +26,10 @@ against exactly that closure or not at all.
   workspace file, the toolchain and the image digests; removes previously
   built harness images so each image is compiled from the pinned sources; and
   runs the selected scenarios as root, because the harness creates network
-  namespaces. It prints one line per verified item, the image identifiers it
-  built, and its exit code.
+  namespaces. The images build `FROM` the pinned base digest
+  (`HARNESS_BASE_IMAGE`), and root's Go caches and temporary files stay under
+  `.qualify-cache/` in the workspace. It prints one line per verified item, the
+  image identifiers it built, and its exit code.
 
 ## Running a qualification
 
