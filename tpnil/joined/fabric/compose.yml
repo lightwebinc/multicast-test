@@ -75,7 +75,9 @@ services:
       <<: *fabric-env
       MULTICAST_IF: fabric0
       LISTEN_PORT: "9001"
-      NUM_WORKERS: "2"
+      # One worker: each worker joins every group, and block and subtree frames
+      # are not deduplicated across workers, so a second one delivers them twice.
+      NUM_WORKERS: "1"
       METRICS_ADDR: ":9200"
       BEEF_TOPICS: ${BEEF_TOPICS:-}
       LANE_TX: teranode-bridge:8725
