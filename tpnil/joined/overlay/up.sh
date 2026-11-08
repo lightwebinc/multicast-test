@@ -19,8 +19,7 @@ die() { echo "overlay/up.sh: $*" >&2; exit 1; }
 
 mkdir -p "$WORK"
 if [ ! -s "$WORK/overlay-topic" ]; then
-	suffix=$(LC_ALL=C tr -dc 'a-z' </dev/urandom | head -c 12)
-	echo "$suffix" > "$WORK/overlay-topic"
+	python3 -c 'import secrets, string; print("".join(secrets.choice(string.ascii_lowercase) for _ in range(12)))' > "$WORK/overlay-topic"
 fi
 suffix=$(cat "$WORK/overlay-topic")
 OVERLAY_TOPIC=tm_tpnil_$suffix
