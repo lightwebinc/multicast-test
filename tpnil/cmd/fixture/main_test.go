@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -434,14 +435,18 @@ func TestEF(t *testing.T) {
 		t.Fatalf("ef exit %d: %s", code, stderr)
 	}
 	fx := readFixture[efFixture](t, out)
-	if fx.Schema != efSchema || fx.SourceTxID != source.TxID().String() || fx.SourceOutputIndex != 0 || fx.FeeSatoshis != 96 {
-		t.Fatalf("fixture %+v does not spend %s:0 at 500 sat/kB", fx, source.TxID())
+	if fx.Schema != efSchema {
+		t.Fatalf("fixture schema %q", fx.Schema)
 	}
+	assertFourKeys(t, out)
 	decoded, err := transaction.NewTransactionFromHex(fx.EFHex)
 	if err != nil {
 		t.Fatal(err)
 	}
 	in := decoded.Inputs[0]
+	if in.SourceTXID.String() != source.TxID().String() || in.SourceTxOutIndex != 0 {
+		t.Fatalf("fixture spends %s:%d, want %s:0", in.SourceTXID, in.SourceTxOutIndex, source.TxID())
+	}
 	if *in.SourceTxSatoshis() != 50_0000_0000 || !bytes.Equal(*in.SourceTxScript(), *lock) {
 		t.Fatal("EF does not carry the coinbase output it spends")
 	}
@@ -462,7 +467,7 @@ func TestEF(t *testing.T) {
 	node.mu.Lock()
 	held := node.mempool[0].TxID().String()
 	node.mu.Unlock()
-	if fx2 := readFixture[efFixture](t, out); fx2.SourceTxID != source.TxID().String() || held != fx2.TxID {
+	if fx2 := readFixture[efFixture](t, out); held != fx2.TxID {
 		t.Fatal("broadcast fixture is not the transaction the node holds")
 	}
 	code, _, stderr = fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", out, "-maturity", "50", "-scan", "3")
@@ -596,5 +601,27 @@ func TestBEEFErrors(t *testing.T) {
 				t.Fatal("beef wrote a fixture after failing")
 			}
 		})
+	}
+}
+
+// assertFourKeys checks the EF fixture file carries exactly the four fields its
+// consumers read; some of them decode it with unknown fields disallowed.
+func assertFourKeys(t *testing.T, path string) {
+	t.Helper()
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatal(err)
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	if strings.Join(keys, ",") != "efHex,rawHex,schema,txid" {
+		t.Fatalf("fixture keys %v, want efHex rawHex schema txid", keys)
 	}
 }

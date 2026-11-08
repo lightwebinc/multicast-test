@@ -34,19 +34,20 @@ type keyFile struct {
 	WIF     string `json:"wif"`
 }
 
-// efFixture is the tpnil-arcade-teranode-fixture@1.0.0 document. The test
-// that consumes it reads schema, txid, efHex and rawHex; the other fields are
-// the ones TPNIL's own generator of this schema writes. Fields are declared in
-// key order, so the encoding has sorted keys like TPNIL's canonical JSON.
+// efFixture is the tpnil-arcade-teranode-fixture@1.0.0 document: schema,
+// txid, efHex and rawHex, the four fields its consumers read. Some decode it
+// strictly, so nothing else is written; the spend's source and fee are printed
+// instead. Fields are declared in key order, so the encoding has sorted keys
+// like TPNIL's canonical JSON.
 type efFixture struct {
 	EFHex             string `json:"efHex"`
-	EFSha256          string `json:"efSha256"`
-	FeeSatoshis       uint64 `json:"feeSatoshis"`
+	EFSha256          string `json:"-"`
+	FeeSatoshis       uint64 `json:"-"`
 	RawHex            string `json:"rawHex"`
-	RawSha256         string `json:"rawSha256"`
+	RawSha256         string `json:"-"`
 	Schema            string `json:"schema"`
-	SourceOutputIndex uint32 `json:"sourceOutputIndex"`
-	SourceTxID        string `json:"sourceTxid"`
+	SourceOutputIndex uint32 `json:"-"`
+	SourceTxID        string `json:"-"`
 	TxID              string `json:"txid"`
 }
 

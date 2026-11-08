@@ -30,9 +30,9 @@ standard error and exit non-zero. `fixture <command> -h` lists every flag.
 ## Fixtures
 
 `ef` writes `tpnil-arcade-teranode-fixture@1.0.0`, the schema of the fixture
-that TPNIL's Arcade and Teranode qualification reads: `txid`, `efHex`
-(Extended Format, BRC-30) and `rawHex`, with `sourceTxid`,
-`sourceOutputIndex`, `feeSatoshis`, `efSha256` and `rawSha256`. Leave
+that TPNIL's Arcade and Teranode qualification reads: `schema`, `txid`,
+`efHex` (Extended Format, BRC-30) and `rawHex`, and nothing else, since some
+readers decode it strictly. The spent output and the fee are printed. Leave
 `-broadcast` off when the qualification submits the transaction itself.
 
 `beef` writes `tpnil-beef-fixture@1.0.0`: `txid`, `beefHex`, `blockHash` and
