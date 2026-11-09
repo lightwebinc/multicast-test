@@ -77,6 +77,9 @@ clone https://github.com/lightwebinc/arcade-bridge.git "$SOURCE_COMMIT" "$SRC" t
 say "TPNIL $TPNIL_COMMIT, arcade-bridge $SOURCE_COMMIT, node $(node --version), $(go version | awk '{print $3}')"
 
 say "fixtures"
+# The fixture tool is built from this checkout, so it always matches it.
+mkdir -p "$WORK/bin" && (cd "$HERE/../.." && GOWORK=off go build -trimpath -buildvcs=false -o "$FIX" ./tpnil/cmd/fixture) ||
+	die "fixture tool not built"
 KEY=$WORK/fixtures/key.json
 [ -f "$KEY" ] || { mkdir -p "$WORK/fixtures" && "$FIX" keygen -out "$KEY"; }
 ADDR=$(python3 -c "import json;print(json.load(open('$KEY'))['address'])")

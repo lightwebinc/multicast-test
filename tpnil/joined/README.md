@@ -46,7 +46,8 @@ OVERLAY_BRIDGE_COMMIT=<overlay-bridge tpnil-overlay commit> \
   tpnil/joined/qualify.sh "$WORK"
 ```
 
-`WORK` defaults to `$HOME/tpnil-joined`. `qualify.sh` writes one fixture set,
+`WORK` defaults to `$HOME/tpnil-joined`. `qualify.sh` builds the fixture tool
+from this checkout, writes one fixture set,
 applies the fabric-only configuration and records it, and runs four plans,
 verifying every bundle offline:
 
