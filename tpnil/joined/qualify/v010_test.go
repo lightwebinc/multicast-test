@@ -117,7 +117,12 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	// link. Lane TCP takes an unimpaired band.
 	veth := hostVeth(t, ctx, e.listener)
 	impair(t, ctx, veth, e.lossPct)
-	t.Cleanup(func() { unimpair(context.Background(), veth) })
+	lifted := false
+	t.Cleanup(func() {
+		if !lifted {
+			_ = unimpair(context.Background(), veth)
+		}
+	})
 	t.Logf("V010 impairment: %.1f%% loss on IPv6 UDP into the delivery edge's fabric link (%s, host side); delivery lanes unimpaired", e.lossPct, veth)
 
 	before := snapshot(t, ctx, e)
@@ -129,7 +134,10 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	// impaired link too; then lift it and run the lossless trailer.
 	blocks := mine(t, ctx, e, 1)
 	time.Sleep(3 * time.Second)
-	unimpair(ctx, veth)
+	if err := unimpair(ctx, veth); err != nil {
+		t.Fatalf("lifting the impairment before the lossless trailer: %v", err)
+	}
+	lifted = true
 	submitAll(t, ctx, e, trailer)
 	waitLanes(t, ctx, e, before, len(fixtures)+len(trailer))
 	blocks = append(blocks, mine(t, ctx, e, 1)...)
@@ -251,7 +259,7 @@ func hostVeth(t *testing.T, ctx context.Context, name string) string {
 
 func impair(t *testing.T, ctx context.Context, veth string, loss float64) {
 	t.Helper()
-	unimpair(ctx, veth)
+	_ = unimpair(ctx, veth) // none may be installed yet
 	for _, args := range [][]string{
 		// Every packet goes to band 2 (1:2) unless the filter moves it.
 		{"qdisc", "add", "dev", veth, "root", "handle", "1:", "prio", "bands", "3", "priomap",
@@ -267,8 +275,11 @@ func impair(t *testing.T, ctx context.Context, veth string, loss float64) {
 	}
 }
 
-func unimpair(ctx context.Context, veth string) {
-	_, _ = run(ctx, "sudo", "-n", "tc", "qdisc", "del", "dev", veth, "root")
+func unimpair(ctx context.Context, veth string) error {
+	if out, err := run(ctx, "sudo", "-n", "tc", "qdisc", "del", "dev", veth, "root"); err != nil {
+		return fmt.Errorf("tc qdisc del dev %s root: %w: %s", veth, err, out)
+	}
+	return nil
 }
 
 type counts struct {
@@ -316,6 +327,9 @@ func scrape(t *testing.T, ctx context.Context, url string) []series {
 		t.Fatalf("scrape %s: %v", url, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("scrape %s: HTTP %d", url, resp.StatusCode)
+	}
 	var out []series
 	sc := bufio.NewScanner(resp.Body)
 	sc.Buffer(make([]byte, 1<<20), 1<<20)
@@ -337,6 +351,9 @@ func scrape(t *testing.T, ctx context.Context, url string) []series {
 			name, labels = name[:i], name[i:]
 		}
 		out = append(out, series{name, labels, v})
+	}
+	if err := sc.Err(); err != nil {
+		t.Fatalf("scrape %s: %v", url, err)
 	}
 	return out
 }
@@ -415,6 +432,7 @@ func waitLanes(t *testing.T, ctx context.Context, e v010Env, before counts, n in
 		}
 		time.Sleep(time.Second)
 	}
+	t.Fatalf("%d of %d transactions reached the processor bridge within 90 s", snapshot(t, ctx, e).minus(before).bridgeTx, n)
 }
 
 // drainGaps waits until every detected gap is repaired or reported, so the
@@ -464,7 +482,9 @@ func dumpMetrics(t *testing.T, ctx context.Context, e v010Env, label string) {
 		}
 		b, _ := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
-		_ = os.WriteFile(dir+"/"+label+"-"+name+".prom", b, 0o644)
+		if err := os.WriteFile(dir+"/"+label+"-"+name+".prom", b, 0o644); err != nil {
+			t.Errorf("metrics %s: %v", name, err)
+		}
 	}
 }
 

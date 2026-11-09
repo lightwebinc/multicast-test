@@ -28,13 +28,22 @@ RUN=$WORK/runs/run-$(date -u +%Y%m%dT%H%M%SZ)
 FIX=$WORK/bin/fixture
 RPC=http://127.0.0.1:9292
 export TPNIL_RPC_USER=tpnil TPNIL_RPC_PASSWORD=tpnil-regtest-only
-GW=$(ip -4 -o addr show docker0 | awk '{print $4}' | cut -d/ -f1)
+GW=$(ip -4 -o addr show docker0 2>/dev/null | awk '{print $4}' | cut -d/ -f1)
 ASSET=http://$GW:8090
 export PROCESSOR_GATEWAY=$GW
 
 say() { echo "== $(date -u +%H:%M:%S) $*"; }
 die() { echo "qualify.sh: $*" >&2; exit 1; }
 command -v node >/dev/null && command -v go >/dev/null || die "node and go must be on PATH"
+[ -n "$GW" ] || die "no docker0 IPv4 address; run processor/up.sh first"
+V010_COUNT=${V010_COUNT:-116}
+if [ -n "$MULTICAST_TEST_COMMIT" ]; then
+	# V010 needs 8 lossless fixtures before and after the impaired run, and 10 under it.
+	[[ $V010_COUNT =~ ^[0-9]{1,6}$ ]] && [ "$((10#$V010_COUNT))" -ge 26 ] ||
+		die "V010_COUNT must be a whole number from 26 to 999999, got '$V010_COUNT'"
+	V010_COUNT=$((10#$V010_COUNT))
+fi
+FAILED=0
 
 # clone REPO COMMIT DIR [BRANCH]: a checkout of exactly COMMIT.
 clone() {
@@ -46,11 +55,18 @@ clone() {
 qualify() {
 	local dir
 	dir=$(dirname "$2")
-	node "$WORK/tpnil/bin/tpnil.mjs" run-component-qualification "$2" "$3" "$dir/bundle" "$RID" > "$dir/run.json"
-	node "$WORK/tpnil/bin/tpnil.mjs" verify-component-qualification "$dir/bundle" > "$dir/verify.json"
+	node "$WORK/tpnil/bin/tpnil.mjs" run-component-qualification "$2" "$3" "$dir/bundle" "$RID" > "$dir/run.json" ||
+		echo "$1: the run exited non-zero" >&2
+	node "$WORK/tpnil/bin/tpnil.mjs" verify-component-qualification "$dir/bundle" > "$dir/verify.json" ||
+		echo "$1: the verification exited non-zero" >&2
+	# A plan counts only when its bundle verifies offline and passed.
 	python3 -c 'import json, sys
-v = json.load(open(sys.argv[2]))
-print(sys.argv[1] + ":", v.get("overall"), v.get("assertions"), "assertions, verified", v.get("verified"))' "$1" "$dir/verify.json"
+try:
+    v = json.load(open(sys.argv[2]))
+except (OSError, ValueError) as e:
+    sys.exit(sys.argv[1] + ": no verification result: " + str(e))
+print(sys.argv[1] + ":", v.get("overall"), v.get("assertions"), "assertions, verified", v.get("verified"))
+sys.exit(0 if v.get("overall") == "PASS" and v.get("verified") is True else 1)' "$1" "$dir/verify.json" || FAILED=1
 }
 
 mkdir -p "$RUN" || die "cannot create $RUN"
@@ -66,7 +82,7 @@ KEY=$WORK/fixtures/key.json
 ADDR=$(python3 -c "import json;print(json.load(open('$KEY'))['address'])")
 WANT_V011=0 WANT_V010=0 COUNT=1
 [ -n "$OVERLAY_BRIDGE_COMMIT" ] && WANT_V011=1 && COUNT=$((COUNT + 1))
-[ -n "$MULTICAST_TEST_COMMIT" ] && WANT_V010=1 && COUNT=$((COUNT + ${V010_COUNT:-116}))
+[ -n "$MULTICAST_TEST_COMMIT" ] && WANT_V010=1 && COUNT=$((COUNT + V010_COUNT))
 # Mine enough blocks to mature one coinbase per fixture, then write them as one
 # set so that no two inputs spend the same output.
 "$FIX" fund -key "$KEY" -rpc "$RPC" -blocks "$((COUNT + 101))" | tail -1
@@ -91,6 +107,8 @@ fi
 
 say "ready: fabric-only configuration"
 "$HERE/broadcaster/up.sh" fabric-only "$WORK" | grep -E "^== " | tail -1
+# From here an early exit must not leave Broadcaster in the fabric-only configuration.
+trap '"$HERE/broadcaster/up.sh" standing "$WORK" >/dev/null 2>&1 || echo "qualify.sh: restore the standing configuration with broadcaster/up.sh standing" >&2' EXIT
 sleep 20
 python3 "$HERE/record-profile.py" "$RUN/profile.json" "$WORK" >/dev/null || die "profile not recorded"
 export MULTICAST_TEST_COMMIT OVERLAY_BRIDGE_COMMIT
@@ -111,6 +129,8 @@ fi
 
 say "restore: standing configuration"
 "$HERE/broadcaster/up.sh" standing "$WORK" | grep -E "^== " | tail -1
+trap - EXIT
 sleep 30
 qualify restore "$RUN/restore/plan.json" "$SRC"
 say "bundles in $RUN"
+[ "$FAILED" = 0 ] || die "a plan failed or did not verify"

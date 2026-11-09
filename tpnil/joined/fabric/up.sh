@@ -21,7 +21,8 @@ export SHARD_PROXY_IMAGE RETRY_ENDPOINT_IMAGE ARCADE_BRIDGE_IMAGE SHARD_LISTENER
 say() { echo "== $(date -u +%H:%M:%S) $*"; }
 die() { echo "fabric/up.sh: $*" >&2; exit 1; }
 
-PROCESSOR_GATEWAY=$(ip -4 -o addr show docker0 | awk '{print $4}' | cut -d/ -f1)
+PROCESSOR_GATEWAY=$(ip -4 -o addr show docker0 2>/dev/null | awk '{print $4}' | cut -d/ -f1) || true
+[ -n "$PROCESSOR_GATEWAY" ] || die "no docker0 IPv4 address"
 export PROCESSOR_GATEWAY
 QS_ENV=$WORK/teranode-quickstart/.env
 [ -f "$QS_ENV" ] || die "no processor at $WORK; run processor/up.sh first"

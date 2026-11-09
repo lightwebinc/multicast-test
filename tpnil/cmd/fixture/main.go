@@ -292,6 +292,8 @@ func findCoinbases(ctx context.Context, rpc *rpcClient, asset *assetClient, addr
 		return nil, fmt.Errorf("no coinbase is mature at chain height %d with maturity %d", tip.Height, maturity)
 	}
 	var found []coinbaseOutput
+	var missing int    // coinbases whose output record the node does not hold
+	var lastMiss error // the last such answer, kept as the cause if none is found
 	h := newest
 	for ; h >= 1 && newest-h < int64(scan) && len(found) < want; h-- {
 		hash, err := rpc.blockHash(ctx, uint32(h))
@@ -308,6 +310,7 @@ func findCoinbases(ctx context.Context, rpc *rpcClient, asset *assetClient, addr
 		}
 		utxos, err := asset.utxos(ctx, cb.TxID().String())
 		if errors.Is(err, errNotFound) {
+			missing, lastMiss = missing+1, err
 			continue // the node keeps no record of this coinbase's outputs (spent and pruned)
 		}
 		if err != nil {
@@ -320,6 +323,9 @@ func findCoinbases(ctx context.Context, rpc *rpcClient, asset *assetClient, addr
 				}
 			}
 		}
+	}
+	if len(found) == 0 && missing > 0 {
+		return nil, fmt.Errorf("no unspent coinbase output pays %s at heights %d to %d; %d paying coinbases had no output record: %w", addr.AddressString, h+1, newest, missing, lastMiss)
 	}
 	if len(found) == 0 {
 		return nil, fmt.Errorf("no unspent coinbase output pays %s at heights %d to %d", addr.AddressString, h+1, newest)

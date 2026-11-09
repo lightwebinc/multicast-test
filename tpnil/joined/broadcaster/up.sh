@@ -35,9 +35,10 @@ git -C "$BR" -c advice.detachedHead=false checkout -q "$BR_COMMIT"
 [ -z "$(git -C "$BR" status --porcelain --untracked-files=no)" ] || die "tracked files in $BR differ from $BR_COMMIT"
 say "BSV Broadcaster at $(git -C "$BR" rev-parse HEAD)"
 
-GW=$(ip -4 -o addr show docker0 | awk '{print $4}' | cut -d/ -f1)
-PEER_ID=$(sudo -n docker logs peer 2>&1 | grep -oE 'P2P Client created\. ID: [0-9A-Za-z]+' | tail -1 | awk '{print $NF}')
-[ -n "$GW" ] && [ -n "$PEER_ID" ] || die "processor peer not found; run processor/up.sh first"
+GW=$(ip -4 -o addr show docker0 2>/dev/null | awk '{print $4}' | cut -d/ -f1) || true
+[ -n "$GW" ] || die "no docker0 IPv4 address"
+PEER_ID=$(sudo -n docker logs peer 2>&1 | grep -oE 'P2P Client created\. ID: [0-9A-Za-z]+' | tail -1 | awk '{print $NF}') || true
+[ -n "$PEER_ID" ] || die "processor peer not found; run processor/up.sh first"
 TERANODE_PEER=/ip4/$GW/tcp/9905/p2p/$PEER_ID
 
 mkdir -p "$CFG" && chmod 700 "$CFG"

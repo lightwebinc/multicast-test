@@ -36,8 +36,8 @@ git -C "$QS" -c advice.detachedHead=false checkout -q "$QS_COMMIT"
 [ -z "$(git -C "$QS" status --porcelain --untracked-files=no)" ] || die "tracked files in $QS differ from $QS_COMMIT"
 say "teranode-quickstart at $(git -C "$QS" rev-parse HEAD)"
 
-GW=$(ip -4 -o addr show docker0 | awk '{print $4}' | cut -d/ -f1)
-[ -n "$GW" ] || die "no docker0 address"
+GW=$(ip -4 -o addr show docker0 2>/dev/null | awk '{print $4}' | cut -d/ -f1) || true
+[ -n "$GW" ] || die "no docker0 IPv4 address"
 
 cd "$QS"
 if [ ! -f .env ]; then
