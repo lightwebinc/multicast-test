@@ -80,8 +80,14 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Minute)
 	defer cancel()
 
-	fixtures := readFixtures(t, e.fixtures)
-	t.Logf("fixtures: %d Extended Format transactions, each spending a different mature coinbase output", len(fixtures))
+	all := readFixtures(t, e.fixtures)
+	const edge = 8 // lossless transactions before and after the impaired run
+	if len(all) < 2*edge+10 {
+		t.Fatalf("%d fixtures; need at least %d", len(all), 2*edge+10)
+	}
+	warmup, fixtures, trailer := all[:edge], all[edge:len(all)-edge], all[len(all)-edge:]
+	t.Logf("fixtures: %d Extended Format transactions, each spending a different mature coinbase output: %d lossless before, %d under the impairment, %d lossless after",
+		len(all), len(warmup), len(fixtures), len(trailer))
 
 	// Precondition: the retransmission endpoint is fed upstream of the
 	// impairment. It joins the fabric groups itself; a tee from the delivery
@@ -96,6 +102,17 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	}
 	t.Logf("V010 precondition: the retransmission endpoint joins the fabric groups itself (MC_JOIN_ENABLED=true, no tee), upstream of the declared impairment; the delivery edge delivers on its tx, subtree and block lanes")
 
+	// Gap detection is inferential: a lost frame is known only when a later
+	// frame of its flow arrives. A lossless warmup (transactions and a block)
+	// gives every flow a baseline at the delivery edge before the impairment,
+	// and a lossless trailer extends every flow past its last loss, so each
+	// loss under the impairment has a successor that exposes it.
+	warmStart := snapshot(t, ctx, e)
+	submitAll(t, ctx, e, warmup)
+	waitLanes(t, ctx, e, warmStart, len(warmup))
+	mine(t, ctx, e, 1)
+	time.Sleep(5 * time.Second)
+
 	// Impairment: declared loss on IPv6 UDP into the delivery edge's fabric
 	// link. Lane TCP takes an unimpaired band.
 	veth := hostVeth(t, ctx, e.listener)
@@ -104,28 +121,25 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	t.Logf("V010 impairment: %.1f%% loss on IPv6 UDP into the delivery edge's fabric link (%s, host side); delivery lanes unimpaired", e.lossPct, veth)
 
 	before := snapshot(t, ctx, e)
-	for i, fx := range fixtures {
-		ef, err := hex.DecodeString(fx.EFHex)
-		if err != nil {
-			t.Fatalf("fixture %d: %v", i+1, err)
-		}
-		if code := post(t, ctx, e.arcade+"/tx", ef); code/100 != 2 {
-			t.Fatalf("fixture %d (%s): Broadcaster answered %d", i+1, fx.TxID, code)
-		}
-		time.Sleep(20 * time.Millisecond)
-	}
+	dumpMetrics(t, ctx, e, "before")
+	submitAll(t, ctx, e, fixtures)
 	waitLanes(t, ctx, e, before, len(fixtures))
 
 	// Mine while the impairment holds, so the block's own objects cross the
-	// impaired link too, then let repair drain.
+	// impaired link too; then lift it and run the lossless trailer.
 	blocks := mine(t, ctx, e, 1)
+	time.Sleep(3 * time.Second)
+	unimpair(ctx, veth)
+	submitAll(t, ctx, e, trailer)
+	waitLanes(t, ctx, e, before, len(fixtures)+len(trailer))
+	blocks = append(blocks, mine(t, ctx, e, 1)...)
 	drainGaps(t, ctx, e, before)
 	after := snapshot(t, ctx, e)
+	dumpMetrics(t, ctx, e, "after")
 	d := after.minus(before)
 	t.Logf("V010 accounting: gaps detected %d, repaired %d, unrecovered %d (late-filled %d); NACKs %d; retransmissions %d; tx lane %d objects, %d drops; processor bridge %d",
 		d.detected, d.repaired, d.unrecovered, d.lateFilled, d.nacks, d.retransmits, d.laneTx, d.laneTxDrops, d.bridgeTx)
-	proved := waitMined(t, ctx, e, fixtures, blocks[0])
-	unimpair(ctx, veth)
+	proved := waitMined(t, ctx, e, append(append([]efFixture{}, fixtures...), trailer...), blocks)
 	if d.detected == 0 {
 		t.Fatalf("no gap was detected under %.1f%% loss; the impairment did not reach the fabric segment", e.lossPct)
 	}
@@ -140,12 +154,12 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	}
 	t.Logf("V010 every gap on the fabric segment was detected and repaired: %d detected = %d repaired + 0 unrecovered", d.detected, d.repaired)
 
-	n := int64(len(fixtures))
+	n := int64(len(fixtures) + len(trailer))
 	if d.laneTx != n || d.bridgeTx != n || d.laneTxDrops != 0 {
 		t.Fatalf("tx lane carried %d objects and the processor bridge received %d for %d transactions (%d lane drops); sent must equal delivered", d.laneTx, d.bridgeTx, n, d.laneTxDrops)
 	}
 	t.Logf("V010 sent %d = delivered %d + unrecovered 0: each transaction crossed the tx lane once and reached the processor bridge once, so no transaction had a second financial effect", n, d.laneTx)
-	t.Logf("V010 V008 and V009 hold under the impairment: all %d transactions were mined in block %s and Broadcaster returned %d proofs", n, blocks[0], proved)
+	t.Logf("V010 V008 and V009 hold under the impairment: all %d transactions were mined (blocks %s, %s) and Broadcaster returned %d proofs", n, blocks[0], blocks[1], proved)
 }
 
 // readFixtures reads the tpnil-arcade-teranode-fixtures@1.0.0 document at
@@ -418,9 +432,45 @@ func drainGaps(t *testing.T, ctx context.Context, e v010Env, before counts) {
 	}
 }
 
-// waitMined waits for Broadcaster to report every fixture MINED in block with a
-// merkle path, and returns how many it proved.
-func waitMined(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixture, block string) int {
+// submitAll submits each fixture through Broadcaster.
+func submitAll(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixture) {
+	t.Helper()
+	for i, fx := range fixtures {
+		ef, err := hex.DecodeString(fx.EFHex)
+		if err != nil {
+			t.Fatalf("fixture %d: %v", i+1, err)
+		}
+		if code := post(t, ctx, e.arcade+"/tx", ef); code/100 != 2 {
+			t.Fatalf("fixture %d (%s): Broadcaster answered %d", i+1, fx.TxID, code)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+// dumpMetrics writes the delivery edge's and retransmission endpoint's metrics
+// to TPNIL_METRICS_DIR, when it is set, for reading the accounting by flow.
+func dumpMetrics(t *testing.T, ctx context.Context, e v010Env, label string) {
+	t.Helper()
+	dir := os.Getenv("TPNIL_METRICS_DIR")
+	if dir == "" {
+		return
+	}
+	for name, url := range map[string]string{"listener": e.listenerMetrics, "retry": e.retryMetrics, "teranode-bridge": e.bridgeMetrics} {
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Logf("metrics %s: %v", name, err)
+			continue
+		}
+		b, _ := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+		_ = os.WriteFile(dir+"/"+label+"-"+name+".prom", b, 0o644)
+	}
+}
+
+// waitMined waits for Broadcaster to report every fixture MINED in one of
+// blocks with a merkle path, and returns how many it proved.
+func waitMined(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixture, blocks []string) int {
 	t.Helper()
 	pending := map[string]bool{}
 	for _, fx := range fixtures {
@@ -442,8 +492,8 @@ func waitMined(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixtur
 			_ = json.NewDecoder(resp.Body).Decode(&st)
 			_ = resp.Body.Close()
 			if st.TxStatus == "MINED" && st.MerklePath != "" {
-				if st.BlockHash != "" && st.BlockHash != block {
-					t.Fatalf("%s mined in %s, want %s", txid, st.BlockHash, block)
+				if st.BlockHash != "" && !contains(blocks, st.BlockHash) {
+					t.Fatalf("%s mined in %s, want one of %v", txid, st.BlockHash, blocks)
 				}
 				delete(pending, txid)
 			}
@@ -464,4 +514,13 @@ func waitMined(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixtur
 		t.Fatalf("%d of %d transactions not reported MINED with a proof", len(pending), len(fixtures))
 	}
 	return len(fixtures)
+}
+
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }

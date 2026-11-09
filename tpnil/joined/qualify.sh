@@ -66,7 +66,7 @@ KEY=$WORK/fixtures/key.json
 ADDR=$(python3 -c "import json;print(json.load(open('$KEY'))['address'])")
 WANT_V011=0 WANT_V010=0 COUNT=1
 [ -n "$OVERLAY_BRIDGE_COMMIT" ] && WANT_V011=1 && COUNT=$((COUNT + 1))
-[ -n "$MULTICAST_TEST_COMMIT" ] && WANT_V010=1 && COUNT=$((COUNT + ${V010_COUNT:-100}))
+[ -n "$MULTICAST_TEST_COMMIT" ] && WANT_V010=1 && COUNT=$((COUNT + ${V010_COUNT:-116}))
 # Mine enough blocks to mature one coinbase per fixture, then write them as one
 # set so that no two inputs spend the same output.
 "$FIX" fund -key "$KEY" -rpc "$RPC" -blocks "$((COUNT + 101))" | tail -1
