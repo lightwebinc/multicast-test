@@ -422,8 +422,9 @@ func mine(t *testing.T, ctx context.Context, e v010Env, n int) []string {
 	return hashes
 }
 
-// waitLanes waits until the tx lane has carried one object per fixture (or
-// the deadline passes; the accounting then reports the shortfall).
+// waitLanes waits until the tx lane has carried one object per fixture. At the
+// deadline it fails the test when fatal is set, and otherwise logs and
+// returns, leaving the shortfall to the final accounting.
 func waitLanes(t *testing.T, ctx context.Context, e v010Env, before counts, n int, fatal bool) {
 	t.Helper()
 	deadline := time.Now().Add(90 * time.Second)
