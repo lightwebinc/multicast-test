@@ -17,10 +17,10 @@
 # PATH, and passwordless sudo (V010 applies its impairment with tc).
 set -uo pipefail
 
-HERE=$(cd "$(dirname "$0")" && pwd)
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 WORK=${1:-$HOME/tpnil-joined}
 # Absolute, so every path built from it holds wherever a command runs.
-WORK=$(mkdir -p "$WORK" && cd "$WORK" && pwd) || { echo "qualify.sh: cannot use ${1:-$HOME/tpnil-joined} as WORK" >&2; exit 1; }
+WORK=$(mkdir -p -- "$WORK" && CDPATH= cd -- "$WORK" && pwd) || { echo "qualify.sh: cannot use ${1:-$HOME/tpnil-joined} as WORK" >&2; exit 1; }
 TPNIL_COMMIT=${TPNIL_COMMIT:-8d7e42953776bb27b732a460343f38bc07e6ab76}
 SOURCE_COMMIT=${SOURCE_COMMIT:-914ec72d990b87eaca9265f2685dd39d7ba891bd}   # arcade-bridge tpnil-joined
 MULTICAST_TEST_COMMIT=${MULTICAST_TEST_COMMIT:-}   # multicast-test commit holding the V010 test
