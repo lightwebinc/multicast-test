@@ -64,6 +64,12 @@ write(os.path.join(run_dir, "plan.json"), {
         "TPNIL_TERANODE_ASSET_URL": f"http://{GATEWAY}:8090/api/v1",
         "TPNIL_ARCADE_BRIDGE_METRICS": "http://127.0.0.1:19167/metrics",
         "TPNIL_TERANODE_BRIDGE_METRICS": "http://127.0.0.1:19146/metrics",
+        # Lane byte identity: the transaction lane captured on the fabric
+        # network's host bridge, and the proof bridge's retrieval plane.
+        "TPNIL_TX_LANE_IFACE": "brtpnil0",
+        "TPNIL_TX_LANE_PORT": "8725",
+        "TPNIL_TX_LANE_CONTAINER": "tpnil-fabric-teranode-bridge-1",
+        "TPNIL_PROOF_BRIDGE_RETRIEVAL_URL": "http://127.0.0.1:19165/api/v1",
     }),
     "inputs": [
         {"environment": "TPNIL_FIXTURE", "sha256": sha256("fixture.json"),
@@ -78,10 +84,12 @@ write(os.path.join(run_dir, "plan.json"), {
         "fixture: EF bytes parse to txid",
         "MTS-01 fabric-only configuration: Broadcaster's sole datahub is the facade",
         "MTS-02 Broadcaster's propagation reached the facade",
+        "MTS-02 the transaction lane carried the fixture's Extended Format bytes exactly",
         "MTS-03 Teranode accepted transaction",
         "MTS-04 the mined transaction's raw bytes equal the fixture's raw bytes",
         "MTS-05 the reverse path published",
         "with 0 mismatches; Merkle Service received 0 libp2p announcements",
+        "MTS-05 the subtree and block lanes delivered the processor's bytes",
         "MTS-06 Broadcaster returned a mined proof whose computed root",
         "--- PASS: TestTPNIL_FabricJoinedPath",
     ],

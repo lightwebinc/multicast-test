@@ -22,7 +22,7 @@ WORK=${1:-$HOME/tpnil-joined}
 # Absolute, so every path built from it holds wherever a command runs.
 WORK=$(mkdir -p -- "$WORK" && CDPATH= cd -- "$WORK" && pwd) || { echo "qualify.sh: cannot use ${1:-$HOME/tpnil-joined} as WORK" >&2; exit 1; }
 TPNIL_COMMIT=${TPNIL_COMMIT:-8d7e42953776bb27b732a460343f38bc07e6ab76}
-SOURCE_COMMIT=${SOURCE_COMMIT:-914ec72d990b87eaca9265f2685dd39d7ba891bd}   # arcade-bridge tpnil-joined
+SOURCE_COMMIT=${SOURCE_COMMIT:-517e7f80d244edbff904c417b1a8d4bdeda3c08f}   # arcade-bridge: the joined test with lane byte identity
 MULTICAST_TEST_COMMIT=${MULTICAST_TEST_COMMIT:-}   # multicast-test commit holding the V010 test
 OVERLAY_BRIDGE_COMMIT=${OVERLAY_BRIDGE_COMMIT:-}   # overlay-bridge tpnil-overlay commit holding the V011 test
 RID=${RUNNER_ID:?set RUNNER_ID to the runner identity TPNIL records, for example "Example Laboratory, operator A. Operator"}
@@ -47,9 +47,10 @@ if [ -n "$MULTICAST_TEST_COMMIT" ]; then
 fi
 FAILED=0
 
-# clone REPO COMMIT DIR [BRANCH]: a checkout of exactly COMMIT.
+# clone REPO COMMIT DIR: a checkout of exactly COMMIT, fetched by its ID so it
+# need not be on the default branch.
 clone() {
-	git clone -q "$1" "$3" && { [ -z "${4:-}" ] || git -C "$3" fetch -q origin "$4"; } &&
+	git clone -q "$1" "$3" && git -C "$3" fetch -q origin "$2" &&
 		git -C "$3" -c advice.detachedHead=false checkout -q "$2"
 }
 # qualify NAME PLAN SOURCE-DIR: one TPNIL run beside its plan, then its offline
@@ -75,7 +76,7 @@ mkdir -p "$RUN" || die "cannot create $RUN"
 [ -d "$WORK/tpnil/.git" ] || git clone -q https://github.com/p2ppsr/interop.git "$WORK/tpnil"
 git -C "$WORK/tpnil" fetch -q origin && git -C "$WORK/tpnil" -c advice.detachedHead=false checkout -q "$TPNIL_COMMIT" || die "TPNIL checkout"
 SRC=$RUN/arcade-bridge
-clone https://github.com/lightwebinc/arcade-bridge.git "$SOURCE_COMMIT" "$SRC" tpnil-joined || die "arcade-bridge checkout"
+clone https://github.com/lightwebinc/arcade-bridge.git "$SOURCE_COMMIT" "$SRC" || die "arcade-bridge checkout"
 say "TPNIL $TPNIL_COMMIT, arcade-bridge $SOURCE_COMMIT, node $(node --version), $(go version | awk '{print $3}')"
 
 say "fixtures"
@@ -128,7 +129,7 @@ if [ -f "$RUN/v010/plan.json" ]; then
 fi
 if [ -f "$RUN/v011/plan.json" ]; then
 	say "qualification: V011"
-	clone https://github.com/lightwebinc/overlay-bridge.git "$OVERLAY_BRIDGE_COMMIT" "$RUN/v011/overlay-bridge" tpnil-overlay || die "overlay-bridge checkout"
+	clone https://github.com/lightwebinc/overlay-bridge.git "$OVERLAY_BRIDGE_COMMIT" "$RUN/v011/overlay-bridge" || die "overlay-bridge checkout"
 	qualify V011 "$RUN/v011/plan.json" "$RUN/v011/overlay-bridge"
 fi
 
