@@ -307,6 +307,9 @@ func findCoinbases(ctx context.Context, rpc *rpcClient, asset *assetClient, addr
 			continue
 		}
 		utxos, err := asset.utxos(ctx, cb.TxID().String())
+		if errors.Is(err, errNotFound) {
+			continue // the node keeps no record of this coinbase's outputs (spent and pruned)
+		}
 		if err != nil {
 			return nil, err
 		}

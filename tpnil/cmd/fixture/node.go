@@ -143,6 +143,9 @@ func newAssetClient(raw string, hc *http.Client) (*assetClient, error) {
 
 // get returns the body of a 200 response to GET path, waiting out the
 // Retry-After of a 429 a bounded number of times.
+// errNotFound marks an asset API answer of 404: the node holds no such record.
+var errNotFound = errors.New("not found")
+
 func (a *assetClient) get(ctx context.Context, path string) ([]byte, error) {
 	for attempt := 1; ; attempt++ {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, a.base+path, nil)
@@ -166,6 +169,8 @@ func (a *assetClient) get(ctx context.Context, path string) ([]byte, error) {
 				return nil, ctx.Err()
 			case <-time.After(retryAfter(resp.Header.Get("Retry-After"))):
 			}
+		case resp.StatusCode == http.StatusNotFound:
+			return nil, fmt.Errorf("asset GET %s: HTTP %d: %s: %w", path, resp.StatusCode, excerpt(data), errNotFound)
 		default:
 			return nil, fmt.Errorf("asset GET %s: HTTP %d: %s", path, resp.StatusCode, excerpt(data))
 		}
