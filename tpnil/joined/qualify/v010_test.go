@@ -148,7 +148,7 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	d := after.minus(before)
 	t.Logf("V010 accounting: gaps detected %d, repaired %d, unrecovered %d (late-filled %d); NACKs %d; retransmissions %d; tx lane %d objects, %d drops; processor bridge %d",
 		d.detected, d.repaired, d.unrecovered, d.lateFilled, d.nacks, d.retransmits, d.laneTx, d.laneTxDrops, d.bridgeTx)
-	proved := waitMined(t, ctx, e, append(append([]efFixture{}, fixtures...), trailer...), blocks)
+	proved, blocks := waitMined(t, ctx, e, append(append([]efFixture{}, fixtures...), trailer...), blocks)
 	if d.detected == 0 {
 		t.Fatalf("no gap was detected under %.1f%% loss; the impairment did not reach the fabric segment", e.lossPct)
 	}
@@ -168,7 +168,7 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 		t.Fatalf("tx lane carried %d objects and the processor bridge received %d for %d transactions (%d lane drops); sent must equal delivered", d.laneTx, d.bridgeTx, n, d.laneTxDrops)
 	}
 	t.Logf("V010 sent %d = delivered %d + unrecovered 0: each transaction crossed the tx lane once and reached the processor bridge once, so no transaction had a second financial effect", n, d.laneTx)
-	t.Logf("V010 V008 and V009 hold under the impairment: all %d transactions were mined (blocks %s, %s) and Broadcaster returned %d proofs", n, blocks[0], blocks[1], proved)
+	t.Logf("V010 V008 and V009 hold under the impairment: all %d transactions were mined (blocks %s) and Broadcaster returned %d proofs", n, strings.Join(blocks, ", "), proved)
 }
 
 // readFixtures reads the tpnil-arcade-teranode-fixtures@1.0.0 document at
@@ -495,15 +495,35 @@ func dumpMetrics(t *testing.T, ctx context.Context, e v010Env, label string) {
 }
 
 // waitMined waits for Broadcaster to report every fixture MINED in one of
-// blocks with a merkle path, and returns how many it proved.
-func waitMined(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixture, blocks []string) int {
+// blocks with a merkle path, and returns how many it proved and the blocks.
+// A transaction that reached the processor's mempool after a block template was
+// cut goes in a later block: while one is still unmined in the mempool, it mines
+// one more block, at most three.
+func waitMined(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixture, blocks []string) (int, []string) {
 	t.Helper()
 	pending := map[string]bool{}
 	for _, fx := range fixtures {
 		pending[fx.TxID] = true
 	}
 	deadline := time.Now().Add(5 * time.Minute)
+	extra, lastMine := 0, time.Now()
 	for len(pending) > 0 && time.Now().Before(deadline) {
+		if extra < 3 && time.Since(lastMine) > 20*time.Second {
+			var mempool []string
+			rpcCall(t, ctx, e, "getrawmempool", []any{}, &mempool)
+			late := 0
+			for _, id := range mempool {
+				if pending[id] {
+					late++
+				}
+			}
+			if late > 0 {
+				blocks = append(blocks, mine(t, ctx, e, 1)...)
+				extra++
+				t.Logf("V010 %d transactions reached the processor's mempool after the block template was cut; mined block %s", late, blocks[len(blocks)-1])
+			}
+			lastMine = time.Now()
+		}
 		for txid := range pending {
 			req, _ := http.NewRequestWithContext(ctx, http.MethodGet, e.arcade+"/tx/"+txid, nil)
 			resp, err := http.DefaultClient.Do(req)
@@ -539,7 +559,7 @@ func waitMined(t *testing.T, ctx context.Context, e v010Env, fixtures []efFixtur
 		}
 		t.Fatalf("%d of %d transactions not reported MINED with a proof", len(pending), len(fixtures))
 	}
-	return len(fixtures)
+	return len(fixtures), blocks
 }
 
 func contains(list []string, s string) bool {
