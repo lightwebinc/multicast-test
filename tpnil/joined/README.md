@@ -31,8 +31,8 @@ engine and MongoDB store unmodified. It serves BRC-22 `/submit` and BRC-24
 
 ## Running
 
-Requirements: Linux/amd64, Docker with Compose, about 12 GB of memory free,
-passwordless `sudo`, TPNIL's Node.js version and Go 1.27.3.
+Requirements: Linux/amd64, Docker with Compose, `tcpdump`, about 12 GB of
+memory free, passwordless `sudo`, TPNIL's Node.js version and Go 1.27.3.
 
 ```sh
 tpnil/joined/processor/up.sh "$WORK"
@@ -53,7 +53,7 @@ verifying every bundle offline:
 
 | Plan | ISI-5 | Source | What it requires |
 | --- | --- | --- | --- |
-| Joined path | V008, V009, ready condition | arcade-bridge | Broadcaster's only datahub is the facade; a transaction reaches Teranode through the fabric and is mined; the block's objects reach Merkle Service through the fabric only; Broadcaster's proof matches the block header |
+| Joined path | V008, V009, ready condition | arcade-bridge | Broadcaster's only datahub is the facade; a transaction reaches Teranode through the fabric and is mined; the transaction lane carries the fixture's exact bytes, and the subtree and block lanes the processor's; the block's objects reach Merkle Service through the fabric only; Broadcaster's proof matches the block header |
 | Repair under loss | V010 | this repository ([`qualify/`](qualify/)) | After a lossless warmup, with a declared loss on IPv6 UDP into the delivery edge and a lossless trailer, every gap is detected and repaired or reported, each transaction crosses its lane once, and the submission and proof paths still complete |
 | Overlay delivery | V011 | overlay-bridge | An object submitted to one host is delivered over the BEEF object plane and admitted by the other; both hosts answer the same lookup; a repeat creates no second admission |
 | Restore | Restore condition | arcade-bridge | Broadcaster's discovery and Merkle Service's own libp2p source return |

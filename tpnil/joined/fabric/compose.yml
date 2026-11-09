@@ -127,5 +127,7 @@ services:
       - -edge-ingress=shard-proxy
       - -hydrate-asset=http://${PROCESSOR_GATEWAY:?}:8090/api/v1
       - -stats-every=30s
-    ports: ["127.0.0.1:19167:9167"]
+    # 9165: the retrieval plane Merkle Service fetches from, read by the
+    # joined qualification to compare lane-delivered objects with the processor's.
+    ports: ["127.0.0.1:19167:9167", "127.0.0.1:19165:9165"]
     restart: unless-stopped
