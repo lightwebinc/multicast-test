@@ -4,11 +4,20 @@
     make-plans.py RUN-DIR SOURCE-COMMIT MINE-ADDRESS
 
 RUN-DIR holds fixture.json and profile.json, which the joined-path plan binds
-by digest. Two plans are written: RUN-DIR/plan.json (the joined path in the
-fabric-only configuration: ISI-5 V008 and V009 with the ready condition) and
-RUN-DIR/restore/plan.json (the restore condition). Every endpoint is on the
-qualification host: loopback ports, the processor's Docker gateway, and the
-facade by its compose name, which is how Broadcaster's configuration names it.
+by digest. Plans written:
+
+  RUN-DIR/plan.json          the joined path, fabric-only (ISI-5 V008, V009, ready)
+  RUN-DIR/restore/plan.json  the restore condition
+  RUN-DIR/v010/plan.json     ISI-5 V010, when RUN-DIR/v010/fixtures.json exists
+                             and MULTICAST_TEST_COMMIT names the test's commit
+  RUN-DIR/v011/plan.json     ISI-5 V011, when RUN-DIR/v011/beef.json and
+                             environment.json exist, OVERLAY_BRIDGE_COMMIT names
+                             the test's commit and OVERLAY_LOOKUP_SERVICE the
+                             hosts' lookup service
+
+Every endpoint is on the qualification host: loopback ports, the processor's
+Docker gateway, compose container names, and the facade by its compose name,
+which is how Broadcaster's configuration names it.
 """
 import hashlib
 import json
@@ -91,3 +100,85 @@ write(os.path.join(run_dir, "restore", "plan.json"), {
         "--- PASS: TestTPNIL_StandingRestored",
     ],
 })
+
+
+def sha(path):
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+v010 = os.path.join(run_dir, "v010")
+if os.path.exists(os.path.join(v010, "fixtures.json")) and os.environ.get("MULTICAST_TEST_COMMIT"):
+    write(os.path.join(v010, "plan.json"), {
+        "schemaVersion": "1.0.0",
+        "id": "ISI5-JOINED-PORTABLE-V010-REPAIR-UNDER-LOSS",
+        "claim": "INFRASTRUCTURE_QUALIFICATION_ONLY",
+        "source": {"repository": "https://github.com/lightwebinc/multicast-test.git",
+                   "commit": os.environ["MULTICAST_TEST_COMMIT"]},
+        "environment": dict(COMMON, **{
+            "TPNIL_FIXTURE_SET": "${PLAN_ROOT}/fixtures.json",
+            "TPNIL_LISTENER_CONTAINER": "tpnil-fabric-shard-listener-1",
+            "TPNIL_RETRY_CONTAINER": "tpnil-fabric-retry-endpoint-1",
+            "TPNIL_LISTENER_METRICS": "http://127.0.0.1:19200/metrics",
+            "TPNIL_RETRY_METRICS": "http://127.0.0.1:19400/metrics",
+            "TPNIL_TERANODE_BRIDGE_METRICS": "http://127.0.0.1:19146/metrics",
+            "TPNIL_DECLARED_LOSS_PCT": os.environ.get("DECLARED_LOSS_PCT", "5"),
+        }),
+        "inputs": [
+            {"environment": "TPNIL_FIXTURE_SET", "sha256": sha(os.path.join(v010, "fixtures.json")),
+             "purpose": "Signed Extended Format transactions, each spending a different mature coinbase output of the run's regtest fixture key."},
+        ],
+        "command": ["go", "test", "-tags", "tpnil", "-run", "^TestISI5_V010_RepairUnderLoss$",
+                    "-count=1", "-v", "-timeout", "15m", "./tpnil/joined/qualify"],
+        "timeoutSeconds": 1200,
+        "requiredOutput": [
+            "V010 precondition: the retransmission endpoint joins the fabric groups itself",
+            "V010 impairment:",
+            "V010 every gap on the fabric segment was detected and repaired",
+            "+ 0 unrecovered",
+            "no transaction had a second financial effect",
+            "V010 V008 and V009 hold under the impairment",
+            "--- PASS: TestISI5_V010_RepairUnderLoss",
+        ],
+    })
+
+v011 = os.path.join(run_dir, "v011")
+if (os.path.exists(os.path.join(v011, "beef.json")) and os.path.exists(os.path.join(v011, "environment.json"))
+        and os.environ.get("OVERLAY_BRIDGE_COMMIT") and os.environ.get("OVERLAY_LOOKUP_SERVICE")):
+    write(os.path.join(v011, "plan.json"), {
+        "schemaVersion": "1.0.0",
+        "id": "ISI5-JOINED-PORTABLE-V011-OVERLAY-DELIVERY",
+        "claim": "INFRASTRUCTURE_QUALIFICATION_ONLY",
+        "source": {"repository": "https://github.com/lightwebinc/overlay-bridge.git",
+                   "commit": os.environ["OVERLAY_BRIDGE_COMMIT"]},
+        "environment": {
+            "GOTOOLCHAIN": "local",
+            "GOFLAGS": "-mod=readonly",
+            "TPNIL_BEEF_FIXTURE": "${PLAN_ROOT}/beef.json",
+            "TPNIL_ENVIRONMENT": "${PLAN_ROOT}/environment.json",
+            "TPNIL_PUBLISHER_FACADE_URL": "http://127.0.0.1:19175",
+            "TPNIL_PUBLISHER_ENGINE_URL": "http://127.0.0.1:18281",
+            "TPNIL_PUBLISHER_BRIDGE_METRICS": "http://127.0.0.1:19179/metrics",
+            "TPNIL_RECEIVER_ENGINE_URL": "http://127.0.0.1:18282",
+            "TPNIL_RECEIVER_BRIDGE_METRICS": "http://127.0.0.1:19279/metrics",
+            "TPNIL_LOOKUP_SERVICE": os.environ["OVERLAY_LOOKUP_SERVICE"],
+        },
+        "inputs": [
+            {"environment": "TPNIL_BEEF_FIXTURE", "sha256": sha(os.path.join(v011, "beef.json")),
+             "purpose": "Atomic BEEF of a transaction mined on the run's regtest chain, for the run's overlay topic."},
+            {"environment": "TPNIL_ENVIRONMENT", "sha256": sha(os.path.join(v011, "environment.json")),
+             "purpose": "Overlay and fabric component images, recorded from the running containers."},
+        ],
+        "command": ["go", "test", "-tags", "tpnil", "-run", "^TestTPNIL_OverlayDeliveryContract$",
+                    "-count=1", "-v", "-timeout", "10m", "./tests/tpnil"],
+        "timeoutSeconds": 900,
+        "requiredOutput": [
+            "OVL-01 the receiving host's engine holds no output",
+            "OVL-02 the publishing host's BRC-22 boundary answered with the topic-keyed admittance of BRC-22",
+            "OVL-03 the publishing bridge sent the record",
+            "OVL-04 both hosts'",
+            "OVL-05 the repeated submission was answered with",
+            "so the repeat created no second admission",
+            "--- PASS: TestTPNIL_OverlayDeliveryContract",
+        ],
+    })

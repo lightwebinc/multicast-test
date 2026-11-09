@@ -640,21 +640,27 @@ func TestEFCount(t *testing.T) {
 	node := newFakeNode(t, "", "")
 	keyPath, addr := newKey(t)
 	lock := lockTo(t, addr)
-	dir := filepath.Join(t.TempDir(), "fixtures")
+	setPath := filepath.Join(t.TempDir(), "fixtures.json")
 
 	node.mu.Lock()
 	node.mine(99, lock) // heights 1..99 pay the key; maturity 50 leaves 1..50 mature
 	node.mu.Unlock()
 
-	code, stdout, stderr := fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", dir, "-maturity", "50", "-count", "5")
-	if code != 0 || !strings.Contains(stdout, "fixtures: 5 in "+dir) {
+	code, stdout, stderr := fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", setPath, "-maturity", "50", "-count", "5")
+	if code != 0 || !strings.Contains(stdout, "fixtures: 5 in "+setPath) {
 		t.Fatalf("ef -count 5: exit %d, stdout %q, stderr %q", code, stdout, stderr)
+	}
+	assertKeys(t, setPath, "fixtures,schema")
+	set := readFixture[efFixtureSet](t, setPath)
+	if set.Schema != efSetSchema || len(set.Fixtures) != 5 {
+		t.Fatalf("fixture set schema %q with %d fixtures", set.Schema, len(set.Fixtures))
 	}
 	sources := map[string]bool{}
 	for i := 1; i <= 5; i++ {
-		path := filepath.Join(dir, fmt.Sprintf("ef-%04d.json", i))
-		assertFourKeys(t, path)
-		fx := readFixture[efFixture](t, path)
+		fx := set.Fixtures[i-1]
+		if fx.Schema != efSchema {
+			t.Fatalf("fixture %d schema %q", i, fx.Schema)
+		}
 		decoded, err := transaction.NewTransactionFromHex(fx.EFHex)
 		if err != nil {
 			t.Fatal(err)
@@ -669,11 +675,11 @@ func TestEFCount(t *testing.T) {
 		}
 	}
 
-	code, _, stderr = fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", dir, "-maturity", "50", "-count", "60", "-scan", "100")
+	code, _, stderr = fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", setPath, "-maturity", "50", "-count", "60", "-scan", "100")
 	if code != 1 || !strings.Contains(stderr, "found 50 unspent coinbase outputs") {
 		t.Fatalf("ef -count 60 on 50 mature outputs: exit %d, stderr %q", code, stderr)
 	}
-	if code, _, stderr = fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", dir, "-count", "2", "-broadcast"); code != 2 {
+	if code, _, stderr = fixture(nil, "ef", "-key", keyPath, "-rpc", node.rpc.URL, "-asset", node.asset.URL, "-out", setPath, "-count", "2", "-broadcast"); code != 2 {
 		t.Fatalf("ef -count 2 -broadcast: exit %d, stderr %q", code, stderr)
 	}
 }

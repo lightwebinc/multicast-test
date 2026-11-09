@@ -16,7 +16,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -175,7 +174,7 @@ func ef(args []string, getenv func(string) string, stdout, stderr io.Writer) err
 	var node rpcFlags
 	node.register(fs)
 	assetURL := fs.String("asset", "", "node asset HTTP API URL, for example http://localhost:8090 (required); a URL without a path gets /api/v1")
-	out := fs.String("out", "", "fixture file to write (required); with -count above 1, a directory that receives ef-0001.json, ef-0002.json and so on")
+	out := fs.String("out", "", "fixture file to write (required); with -count above 1 it holds all the fixtures as one "+efSetSchema+" document")
 	count := fs.Int("count", 1, "fixtures to write, each spending a different mature coinbase output")
 	fee := fs.Uint64("fee", 1000, "fee rate, in satoshis per kilobyte")
 	maturity := fs.Int("maturity", 100, "coinbase maturity of the chain, in blocks")
@@ -250,17 +249,15 @@ type coinbaseOutput struct {
 	height uint32
 }
 
-// efMany writes count fixtures into the directory out, each spending a
-// different mature coinbase output, newest first.
+// efMany writes count fixtures, each spending a different mature coinbase
+// output, newest first, as one efSetSchema document at out.
 func efMany(ctx context.Context, rpc *rpcClient, asset *assetClient, key *ec.PrivateKey, addr *script.Address, maturity, scan, count int, fee uint64, out string, stdout io.Writer) error {
 	found, err := findCoinbases(ctx, rpc, asset, addr, maturity, scan, count)
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(out, 0o755); err != nil {
-		return err
-	}
-	for i, c := range found {
+	set := efFixtureSet{Schema: efSetSchema, Fixtures: make([]efFixture, 0, len(found))}
+	for _, c := range found {
 		tx, err := buildSpend(c.tx, c.vout, key, addr, fee)
 		if err != nil {
 			return err
@@ -269,9 +266,10 @@ func efMany(ctx context.Context, rpc *rpcClient, asset *assetClient, key *ec.Pri
 		if err != nil {
 			return err
 		}
-		if err := writeJSON(filepath.Join(out, fmt.Sprintf("ef-%04d.json", i+1)), fx); err != nil {
-			return err
-		}
+		set.Fixtures = append(set.Fixtures, fx)
+	}
+	if err := writeJSON(out, set); err != nil {
+		return err
 	}
 	return say(stdout, "fixtures: %d in %s\n", len(found), out)
 }

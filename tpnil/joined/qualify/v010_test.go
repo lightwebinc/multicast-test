@@ -24,8 +24,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -55,7 +53,7 @@ func loadV010Env(t *testing.T) v010Env {
 		t.Fatalf("TPNIL_DECLARED_LOSS_PCT %q: want a percentage in (0, 50)", os.Getenv("TPNIL_DECLARED_LOSS_PCT"))
 	}
 	return v010Env{
-		fixtures:        need(t, "TPNIL_FIXTURES"),
+		fixtures:        need(t, "TPNIL_FIXTURE_SET"),
 		arcade:          strings.TrimRight(need(t, "TPNIL_ARCADE_URL"), "/"),
 		rpc:             need(t, "TPNIL_TERANODE_RPC_URL"),
 		rpcUser:         need(t, "TPNIL_TERANODE_RPC_USER"),
@@ -150,31 +148,35 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	t.Logf("V010 V008 and V009 hold under the impairment: all %d transactions were mined in block %s and Broadcaster returned %d proofs", n, blocks[0], proved)
 }
 
-func readFixtures(t *testing.T, dir string) []efFixture {
+// readFixtures reads the tpnil-arcade-teranode-fixtures@1.0.0 document at
+// path, strictly: a set of Extended Format fixtures, each spending a different
+// output.
+func readFixtures(t *testing.T, path string) []efFixture {
 	t.Helper()
-	paths, err := filepath.Glob(filepath.Join(dir, "ef-*.json"))
-	if err != nil || len(paths) == 0 {
-		t.Fatalf("no ef-*.json fixtures in %s", dir)
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
 	}
-	sort.Strings(paths)
-	var out []efFixture
-	for _, p := range paths {
-		raw, err := os.ReadFile(p)
-		if err != nil {
-			t.Fatal(err)
-		}
-		dec := json.NewDecoder(bytes.NewReader(raw))
-		dec.DisallowUnknownFields()
-		var fx efFixture
-		if err := dec.Decode(&fx); err != nil {
-			t.Fatalf("%s: %v", p, err)
-		}
-		if fx.Schema != "tpnil-arcade-teranode-fixture@1.0.0" || len(fx.TxID) != 64 {
-			t.Fatalf("%s: schema %q txid %q", p, fx.Schema, fx.TxID)
-		}
-		out = append(out, fx)
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.DisallowUnknownFields()
+	var set struct {
+		Schema   string      `json:"schema"`
+		Fixtures []efFixture `json:"fixtures"`
 	}
-	return out
+	if err := dec.Decode(&set); err != nil {
+		t.Fatalf("%s: %v", path, err)
+	}
+	if set.Schema != "tpnil-arcade-teranode-fixtures@1.0.0" || len(set.Fixtures) == 0 {
+		t.Fatalf("%s: schema %q with %d fixtures", path, set.Schema, len(set.Fixtures))
+	}
+	seen := map[string]bool{}
+	for i, fx := range set.Fixtures {
+		if fx.Schema != "tpnil-arcade-teranode-fixture@1.0.0" || len(fx.TxID) != 64 || seen[fx.TxID] {
+			t.Fatalf("%s: fixture %d: schema %q txid %q (repeated: %v)", path, i+1, fx.Schema, fx.TxID, seen[fx.TxID])
+		}
+		seen[fx.TxID] = true
+	}
+	return set.Fixtures
 }
 
 func run(ctx context.Context, name string, args ...string) (string, error) {

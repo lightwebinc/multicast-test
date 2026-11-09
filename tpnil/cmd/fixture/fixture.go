@@ -25,6 +25,9 @@ const (
 	// qualification test reads (infra/adapters/arcade-real-teranode-merkle-test.patch).
 	efSchema   = "tpnil-arcade-teranode-fixture@1.0.0"
 	beefSchema = "tpnil-beef-fixture@1.0.0"
+	// efSetSchema is a set of EF fixtures in one document, for runs that
+	// submit many transactions and bind their inputs by one digest.
+	efSetSchema = "tpnil-arcade-teranode-fixtures@1.0.0"
 )
 
 // keyFile is a fixture key: a compressed WIF with the testnet prefix, which
@@ -49,6 +52,13 @@ type efFixture struct {
 	SourceOutputIndex uint32 `json:"-"`
 	SourceTxID        string `json:"-"`
 	TxID              string `json:"txid"`
+}
+
+// efFixtureSet is the efSetSchema document: fixtures in spending order, each
+// with exactly the four fields of efFixture.
+type efFixtureSet struct {
+	Fixtures []efFixture `json:"fixtures"`
+	Schema   string      `json:"schema"`
 }
 
 // beefFixture is the tpnil-beef-fixture@1.0.0 document, keys in order: the
