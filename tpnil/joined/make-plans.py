@@ -68,6 +68,7 @@ write(os.path.join(run_dir, "plan.json"), {
         # network's host bridge, and the proof bridge's retrieval plane.
         "TPNIL_TX_LANE_IFACE": "brtpnil0",
         "TPNIL_TX_LANE_PORT": "8725",
+        "TPNIL_TX_LANE_CONTAINER": "tpnil-fabric-teranode-bridge-1",
         "TPNIL_PROOF_BRIDGE_RETRIEVAL_URL": "http://127.0.0.1:19165/api/v1",
     }),
     "inputs": [
