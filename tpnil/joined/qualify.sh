@@ -22,7 +22,7 @@ WORK=${1:-$HOME/tpnil-joined}
 # Absolute, so every path built from it holds wherever a command runs.
 WORK=$(mkdir -p -- "$WORK" && CDPATH= cd -- "$WORK" && pwd) || { echo "qualify.sh: cannot use ${1:-$HOME/tpnil-joined} as WORK" >&2; exit 1; }
 TPNIL_COMMIT=${TPNIL_COMMIT:-8d7e42953776bb27b732a460343f38bc07e6ab76}
-SOURCE_COMMIT=${SOURCE_COMMIT:-517e7f80d244edbff904c417b1a8d4bdeda3c08f}   # arcade-bridge: the joined test with lane byte identity
+SOURCE_COMMIT=${SOURCE_COMMIT:-2b2e9a4520b06b68a0d4e6e89683485bacef822a}   # arcade-bridge main: the joined test with lane byte identity
 MULTICAST_TEST_COMMIT=${MULTICAST_TEST_COMMIT:-}   # multicast-test commit holding the V010 test
 OVERLAY_BRIDGE_COMMIT=${OVERLAY_BRIDGE_COMMIT:-}   # overlay-bridge tpnil-overlay commit holding the V011 test
 RID=${RUNNER_ID:?set RUNNER_ID to the runner identity TPNIL records, for example "Example Laboratory, operator A. Operator"}
