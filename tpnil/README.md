@@ -60,6 +60,13 @@ Its required output includes `components verified: 7 of 7`, the toolchain and
 image lines, one `--- PASS:` line per scenario, so that a skipped scenario
 fails the plan, and `harness qualification exit 0`.
 
+## Joined configuration
+
+[`joined/`](joined/) builds ITCVE-2's `joined` configuration on one host: the
+fabric between Teranode on regtest, BSV Broadcaster, Merkle Service and two
+overlay hosts, qualified by four plans with TPNIL's runner. Its
+[README](joined/README.md) covers the components and how to run it.
+
 ## What the scenarios establish
 
 | Scenario group | Standards | Contract exercised |
