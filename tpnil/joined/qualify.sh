@@ -64,26 +64,28 @@ say "fixtures"
 KEY=$WORK/fixtures/key.json
 [ -f "$KEY" ] || { mkdir -p "$WORK/fixtures" && "$FIX" keygen -out "$KEY"; }
 ADDR=$(python3 -c "import json;print(json.load(open('$KEY'))['address'])")
-"$FIX" fund -key "$KEY" -rpc "$RPC" -blocks 2 | tail -1
-"$FIX" ef -key "$KEY" -rpc "$RPC" -asset "$ASSET" -out "$RUN/fixture.json" | tail -1 || die "no fixture"
-if [ -n "$MULTICAST_TEST_COMMIT" ]; then
-	mkdir -p "$RUN/v010"
-	"$FIX" fund -key "$KEY" -rpc "$RPC" -blocks 101 | tail -1
-	"$FIX" ef -key "$KEY" -rpc "$RPC" -asset "$ASSET" -count "${V010_COUNT:-100}" -out "$RUN/v010/fixtures.json" | tail -1 ||
-		die "no V010 fixtures"
-fi
-if [ -n "$OVERLAY_BRIDGE_COMMIT" ]; then
+WANT_V011=0 WANT_V010=0 COUNT=1
+[ -n "$OVERLAY_BRIDGE_COMMIT" ] && WANT_V011=1 && COUNT=$((COUNT + 1))
+[ -n "$MULTICAST_TEST_COMMIT" ] && WANT_V010=1 && COUNT=$((COUNT + ${V010_COUNT:-100}))
+# Mine enough blocks to mature one coinbase per fixture, then write them as one
+# set so that no two inputs spend the same output.
+"$FIX" fund -key "$KEY" -rpc "$RPC" -blocks "$((COUNT + 101))" | tail -1
+"$FIX" ef -key "$KEY" -rpc "$RPC" -asset "$ASSET" -count "$COUNT" -out "$RUN/fixtures-all.json" | tail -1 || die "no fixtures"
+python3 "$HERE/split-fixtures.py" "$RUN/fixtures-all.json" "$RUN" "$WANT_V011" "$WANT_V010" || die "fixtures not split"
+if [ "$WANT_V011" = 1 ]; then
 	[ -s "$WORK/overlay-topic" ] || die "no overlay tier; run overlay/up.sh first"
-	mkdir -p "$RUN/v011"
 	OVERLAY_TOPIC=tm_tpnil_$(cat "$WORK/overlay-topic")
 	OVERLAY_LOOKUP_SERVICE=ls_tpnil_$(cat "$WORK/overlay-topic")
 	export OVERLAY_LOOKUP_SERVICE
-	"$FIX" ef -key "$KEY" -rpc "$RPC" -asset "$ASSET" -out "$RUN/v011/ef.json" -broadcast | tail -1 || die "no V011 transaction"
+	# V011's object is a proven transaction: broadcast it, mine it, prove it.
+	curl -sf -m30 --user "$TPNIL_RPC_USER:$TPNIL_RPC_PASSWORD" -H 'Content-Type: application/json' \
+		-d "{\"jsonrpc\":\"1.0\",\"id\":\"q\",\"method\":\"sendrawtransaction\",\"params\":[\"$(cat "$RUN/v011/raw.hex")\"]}" \
+		"$RPC/" >/dev/null || die "V011 transaction not accepted"
 	"$FIX" fund -key "$KEY" -rpc "$RPC" -blocks 1 | tail -1
 	sleep 5
-	TX=$(python3 -c "import json;print(json.load(open('$RUN/v011/ef.json'))['txid'])")
-	"$FIX" beef -asset "$ASSET" -txid "$TX" -topic "$OVERLAY_TOPIC" -out "$RUN/v011/beef.json" | head -1 || die "no V011 fixture"
-	rm -f "$RUN/v011/ef.json"
+	"$FIX" beef -asset "$ASSET" -txid "$(cat "$RUN/v011/txid")" -topic "$OVERLAY_TOPIC" -out "$RUN/v011/beef.json" | head -1 ||
+		die "no V011 fixture"
+	rm -f "$RUN/v011/raw.hex" "$RUN/v011/txid"
 	python3 "$HERE/record-environment.py" "$RUN/v011/environment.json" || die "environment not recorded"
 fi
 
