@@ -23,8 +23,8 @@
     {
       "name": "shard-listener",
       "repository": "https://github.com/lightwebinc/shard-listener.git",
-      "tag": "v1.35.1",
-      "commit": "eec8bb2bcbed9e7762fd3fbc38263b191ade32f1"
+      "tag": "v1.36.1",
+      "commit": "dc8a54d288d5726f7ab3092492ad076a47064096"
     },
     {
       "name": "shard-manifest",

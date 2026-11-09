@@ -43,6 +43,15 @@ import (
 //  4. Lossless TRAILER after loss removal, tail-loss detection needs 16
 //     contiguous frames for a probe; trailer frames extend every chain so tail
 //     losses become ordinary interior gaps.
+//
+// A second phase loses a contiguous burst behind a receive backlog, the shape a
+// NIC ring or socket overflow leaves. listener1 is frozen
+// (docker pause) so datagrams queue in its socket, a burst of 4,000 is dropped
+// in its network namespace while it is frozen, and more queue after it. Thawed,
+// it processes the frames either side of the burst back to back, which a
+// rate-based test once read as an emitter change (re-baselining every flow and
+// dropping its gaps with no NACK). The same identity must hold: every frame of
+// the burst NACKed, repaired and delivered, no flow re-baselined.
 func TestScenario17_RecoveryShortfallIdentity(t *testing.T) {
 	ctx := context.Background()
 	e := retryTopologyNACKEnv(t, "s17", nil)
@@ -149,5 +158,91 @@ func TestScenario17_RecoveryShortfallIdentity(t *testing.T) {
 		d := metrics.DeltaMap(beforeL[i], afterL[i])
 		delivered := d["bsl_frames_forwarded_total"] + d["bsl_egress_errors_total"]
 		metrics.AssertEq(t, name+" delivered == sent (loss fully repaired)", delivered, sent)
+	}
+
+	scenario17BackloggedBurst(t, e, ctx)
+}
+
+// scenario17BackloggedBurst is scenario 17's second phase: a contiguous burst
+// lost behind a receive backlog on listener1, under the same identity.
+func scenario17BackloggedBurst(t *testing.T, e *env.Env, ctx context.Context) {
+	const (
+		victim = "s17-listener1"
+		burst  = 4000 // 125 frames for each of the 32 flows (4 shards x 8 subtrees)
+	)
+	beforeL := snapshotListeners(t, e, ctx, "s17")
+	beforeP := e.Snapshot(ctx, "s17-proxy")
+	beforeR := e.Snapshot(ctx, "s17-retry1")
+
+	gen := subtxGenCmd("[fd10::2]:8725")
+	gen = append(gen, "-pps", "4000", "-duration", "8s")
+	startGenerator(t, ctx, "s17", gen)
+	e.Sleep(2*time.Second, "stream established")
+
+	if err := env.PauseContainer(ctx, victim); err != nil {
+		t.Fatalf("pause %s: %v", victim, err)
+	}
+	paused := true
+	t.Cleanup(func() {
+		if paused {
+			env.UnpauseContainer(context.Background(), victim) //nolint:errcheck
+		}
+	})
+	time.Sleep(300 * time.Millisecond) // frames queue behind the frozen receiver
+	if err := env.ApplyBurstDrop(ctx, victim, burst); err != nil {
+		t.Fatalf("burst rule %s: %v", victim, err)
+	}
+	t.Cleanup(func() { env.RemoveBurstDrop(context.Background(), victim) }) //nolint:errcheck
+	dropped := 0
+	for deadline := time.Now().Add(5 * time.Second); dropped < burst && time.Now().Before(deadline); {
+		time.Sleep(50 * time.Millisecond)
+		n, err := env.BurstDropped(ctx, victim)
+		if err != nil {
+			t.Fatalf("burst counter %s: %v", victim, err)
+		}
+		dropped = n[0]
+	}
+	if err := env.RemoveBurstDrop(ctx, victim); err != nil {
+		t.Fatalf("burst rule removal %s: %v", victim, err)
+	}
+	time.Sleep(300 * time.Millisecond) // and more queue after it
+	if err := env.UnpauseContainer(ctx, victim); err != nil {
+		t.Fatalf("unpause %s: %v", victim, err)
+	}
+	paused = false
+	waitGenerator(t, ctx, "s17")
+
+	trail := subtxGenCmd("[fd10::2]:8725")
+	trail = append(trail, "-pps", "500", "-duration", "3s")
+	startGenerator(t, ctx, "s17", trail)
+	waitGenerator(t, ctx, "s17")
+
+	afterL := settleRecovery(t, e, ctx, "s17", beforeL, 60*time.Second)
+	afterP := metrics.ScrapeOrFail(t, e.MetricsURL(ctx, "s17-proxy"))
+	afterR := metrics.ScrapeOrFail(t, e.MetricsURL(ctx, "s17-retry1"))
+
+	deltaP := metrics.DeltaMap(beforeP, afterP)
+	sent := deltaP["bsp_packets_forwarded_total"]
+	deltaR := metrics.DeltaMap(beforeR, afterR)
+	v := metrics.DeltaMap(beforeL[0], afterL[0])
+	t.Logf("burst: dropped=%d of %d at %s; proxy sent=%.0f", dropped, burst, victim, sent)
+	t.Logf("%s: recv=%.0f fwd=%.0f det=%.0f sup=%.0f unrec=%.0f rebaselines=%.0f nacks=%.0f",
+		victim, v["bsl_frames_received_total"], v["bsl_frames_forwarded_total"],
+		v["bsl_gaps_detected_total"], v["bsl_gaps_suppressed_total"],
+		v["bsl_gaps_unrecovered_total"], v["bsl_seq_rebaselines_total"], v["bsl_nacks_dispatched_total"])
+	t.Logf("retry: nacks_received=%.0f unicast_retransmits=%.0f cache_misses=%.0f rate_drops=%.0f",
+		deltaR["bre_nack_requests_total"], deltaR["bre_unicast_retransmits_total"],
+		deltaR["bre_cache_misses_total"], deltaR["bre_rate_limit_drops_total"])
+
+	metrics.AssertEq(t, "burst dropped in full", float64(dropped), burst)
+	metrics.AssertZero(t, victim+" re-baselines (one sender, no emitter change)", v["bsl_seq_rebaselines_total"])
+	metrics.AssertGTE(t, victim+" NACKs dispatched (every frame of the burst asked for)", v["bsl_nacks_dispatched_total"], burst)
+	metrics.AssertGTE(t, "unicast retransmits served", deltaR["bre_unicast_retransmits_total"], burst)
+	metrics.AssertZero(t, "proxy post-stamp drops", deltaP["bsp_packets_dropped_total"])
+	for i, name := range []string{"listener1", "listener2", "listener3"} {
+		assertRecoveryIdentity(t, name+" (burst phase)", beforeL[i], afterL[i], sent)
+		d := metrics.DeltaMap(beforeL[i], afterL[i])
+		delivered := d["bsl_frames_forwarded_total"] + d["bsl_egress_errors_total"]
+		metrics.AssertEq(t, name+" delivered == sent (burst fully repaired)", delivered, sent)
 	}
 }
