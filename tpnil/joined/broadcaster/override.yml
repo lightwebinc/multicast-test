@@ -1,0 +1,61 @@
+# Applied over BSV Broadcaster's own docker-compose.yaml at its pinned commit.
+# Configuration only: every image by digest, ports bound to loopback, the
+# regtest processor as the libp2p bootstrap peer, telemetry off, and the
+# configuration file selected by BROADCASTER_CONFIG (standing or fabric-only).
+x-broadcaster: &broadcaster
+  image: ghcr.io/bsv-blockchain/broadcaster:v0.20.0@sha256:f383f2cd7f1aa991defb639c41f8fbb6d74cb2607b427fdcc3df0698c22a98d6
+  volumes:
+    - ${BROADCASTER_CONFIG:?}:/etc/bsv-broadcaster/config.yaml:ro
+  ports: !reset []
+  environment:
+    BSV_BROADCASTER_TELEMETRY_ENABLED: "false"
+  restart: unless-stopped
+
+services:
+  redpanda:
+    image: docker.io/redpandadata/redpanda:v26.2.6@sha256:8b1076e0d61bfceb66594dc01536427ce0b529f8ead35fdab9763ab6085891ce
+    ports: !reset []
+  topic-init:
+    image: docker.io/redpandadata/redpanda:v26.2.6@sha256:8b1076e0d61bfceb66594dc01536427ce0b529f8ead35fdab9763ab6085891ce
+  postgres:
+    image: docker.io/library/postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
+    ports: !reset []
+  merkle-postgres:
+    image: docker.io/library/postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
+    ports: !reset []
+    environment:
+      # Postgres 18 refuses a data directory at the volume root; a subdirectory
+      # matches the main postgres service.
+      PGDATA: /var/lib/postgresql/data/pgdata
+  otel-collector:
+    profiles: ["telemetry"]
+    ports: !reset []
+  merkle-service:
+    image: ghcr.io/bsv-blockchain/merkle-service:v0.6.3@sha256:a399bb859889a06073ec5db92d9f7cd9fc680a95310c9f6c6fa5e6c4a9f20905
+    ports: !override ["127.0.0.1:18080:8080", "127.0.0.1:19187:9090"]
+    mem_limit: 6g
+    restart: unless-stopped
+    volumes:
+      - merkle-subtrees:/data/subtrees
+    environment:
+      BLOB_STORE_URL: file:///data/subtrees
+      P2P_NETWORK: regtest
+      P2P_BOOTSTRAP_PEERS: ${MERKLE_BOOTSTRAP_PEERS:?}
+      P2P_DHT_MODE: "off"
+      P2P_ENABLE_MDNS: "false"
+  api-server:
+    <<: *broadcaster
+    ports: !override ["127.0.0.1:8080:8080"]
+  propagation: *broadcaster
+  bump-builder: *broadcaster
+  sse: *broadcaster
+  chaintracks:
+    <<: *broadcaster
+    volumes:
+      - ${BROADCASTER_CONFIG:?}:/etc/bsv-broadcaster/config.yaml:ro
+      - chaintracks-data:/root/.bsv-broadcaster
+  watchdog: *broadcaster
+  p2p-client: *broadcaster
+
+volumes:
+  merkle-subtrees:

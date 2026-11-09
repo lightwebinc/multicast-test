@@ -1,0 +1,35 @@
+# BSV Broadcaster configuration for the ITCVE-2 joined configuration, written by
+# broadcaster/up.sh from this template. Two copies are written: the standing
+# configuration (discovery on) and the fabric-only one (discovery off, so the
+# facade is the only datahub). Nothing else differs between them.
+log_level: info
+network: regtest
+callback_token: @CALLBACK_TOKEN@
+callback_url: http://api-server:8080/api/v1/merkle-service/callback
+kafka:
+  brokers:
+    - redpanda:9092
+events:
+  subscriber_buffer: 16384
+bump_builder:
+  grace_window_ms: 15000
+store:
+  backend: postgres
+  postgres:
+    dsn: postgres://bsv_broadcaster:bsv_broadcaster@postgres:5432/bsv_broadcaster?sslmode=disable&pool_max_conn_idle_time=60s&pool_max_conn_lifetime=15m
+    max_conns: 25
+# The submission facade (arcade-bridge) is the configured datahub.
+datahub_urls:
+  - @FACADE_URL@
+p2p:
+  datahub_discovery: @DISCOVERY@
+  allow_private_urls: true
+  bootstrap_peers:
+    - @TERANODE_PEER@
+validator:
+  accept_zero_fee: true
+merkle_service:
+  url: http://merkle-service:8080
+chaintracks:
+  mode: remote
+  url: http://chaintracks:8083

@@ -1,0 +1,95 @@
+# The overlay tier of the ITCVE-2 joined configuration.
+#
+#   submission -> overlay-bridge-a facade (BRC-22) -> overlay-host-a
+#                                    \-> shard-proxy -> fabric -> shard-listener
+#   shard-listener beef lane (BRC-149) -> overlay-bridge-b -> overlay-host-b (BRC-22)
+#   shard-listener header lane (BRC-135) -> overlay-bridge-b header store
+#
+# Each overlay host is tpnil/cmd/overlay-host: go-overlay-services, unmodified,
+# with its MongoDB store (one database per host) and one admit-every-output
+# topic. Each bridge's header store is anchored at header-anchor, which reads
+# the processor's asset API; each host's chain tracker is its bridge's store.
+# overlay/up.sh sets the variables.
+name: tpnil-overlay
+
+networks:
+  overlay: {}
+  fabric:
+    external: true
+    name: tpnil-fabric
+
+volumes:
+  mongo-data: {}
+
+x-host-image: &host-image
+  image: tpnil-overlay-host:local
+  build:
+    context: ../../..
+    dockerfile: tpnil/joined/overlay/Dockerfile
+  restart: unless-stopped
+
+services:
+  mongo:
+    image: docker.io/library/mongo:8.0.17@sha256:9814652e33f0cf8b9fddea8b46dfc9d8e19b130dcfdd7b510ca58bb0d40c8b71
+    command: ["--replSet", "rs0", "--bind_ip_all", "--quiet"]
+    networks: [overlay]
+    volumes: ["mongo-data:/data/db"]
+    healthcheck:
+      # Initiates the one-member replica set on the first check; go-overlay-
+      # services' store needs a writable replica set.
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status().ok } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}).ok }"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
+
+  header-anchor:
+    <<: *host-image
+    entrypoint: ["/usr/local/bin/header-anchor"]
+    command: ["-listen", ":9188", "-asset", "http://${PROCESSOR_GATEWAY:?}:8090/api/v1"]
+    networks: [overlay]
+
+  overlay-host-a:
+    <<: *host-image
+    entrypoint: ["/usr/local/bin/overlay-host"]
+    command: ["-listen", ":8080", "-topic", "${OVERLAY_TOPIC:?}", "-lookup-service", "${OVERLAY_LOOKUP_SERVICE:?}",
+              "-mongo-uri", "mongodb://mongo:27017/?replicaSet=rs0", "-database", "host_a",
+              "-network", "regtest", "-genesis-hash", "${GENESIS_HASH:?}", "-node-id", "overlay-host-a",
+              "-headers", "http://overlay-bridge-a:9178"]
+    networks: [overlay]
+    ports: ["127.0.0.1:18281:8080"]
+    depends_on: {mongo: {condition: service_healthy}}
+
+  overlay-host-b:
+    <<: *host-image
+    entrypoint: ["/usr/local/bin/overlay-host"]
+    command: ["-listen", ":8080", "-topic", "${OVERLAY_TOPIC:?}", "-lookup-service", "${OVERLAY_LOOKUP_SERVICE:?}",
+              "-mongo-uri", "mongodb://mongo:27017/?replicaSet=rs0", "-database", "host_b",
+              "-network", "regtest", "-genesis-hash", "${GENESIS_HASH:?}", "-node-id", "overlay-host-b",
+              "-headers", "http://overlay-bridge-b:9178"]
+    networks: [overlay]
+    ports: ["127.0.0.1:18282:8080"]
+    depends_on: {mongo: {condition: service_healthy}}
+
+  overlay-bridge-a:
+    image: ${OVERLAY_BRIDGE_IMAGE:?}
+    command: ["-mode", "all", "-topics", "${OVERLAY_TOPIC:?}", "-engine", "http://overlay-host-a:8080",
+              "-facade-listen", "[::]:9175", "-edge-ingress", "shard-proxy",
+              "-header-anchor", "http://header-anchor:9188", "-headers-listen", "[::]:9178",
+              "-metrics-addr", "[::]:9179"]
+    networks: [overlay, fabric]
+    ports: ["127.0.0.1:19175:9175", "127.0.0.1:19179:9179"]
+    depends_on: [header-anchor]
+    restart: unless-stopped
+
+  overlay-bridge-b:
+    image: ${OVERLAY_BRIDGE_IMAGE:?}
+    command: ["-mode", "feed", "-topics", "${OVERLAY_TOPIC:?}", "-engine", "http://overlay-host-b:8080",
+              "-beef-lane", "[::]:9171", "-header-lane", "[::]:9172",
+              "-header-anchor", "http://header-anchor:9188", "-headers-listen", "[::]:9178",
+              "-metrics-addr", "[::]:9179"]
+    networks: [overlay, fabric]
+    ports: ["127.0.0.1:19178:9178", "127.0.0.1:19279:9179"]
+    depends_on: [header-anchor]
+    restart: unless-stopped

@@ -10,7 +10,8 @@ the delivery, filtering, fragmentation, repair, coalescing, manifest and
 BEEF object plane contracts that the fabric's BRC specifications define.
 The tpnil directory runs selected scenarios under the component
 qualification protocol of the Transaction Processing Network
-Interoperability Laboratory.
+Interoperability Laboratory, and builds the regtest transaction fixtures
+of its joined-configuration qualifications.
 
 =========================================================================
 Third-Party Software
@@ -19,8 +20,19 @@ This product includes third-party software, distributed under the terms
 of their respective licenses. Each dependency retains its own copyright;
 this notice does not modify those licenses.
 
+  github.com/bsv-blockchain/go-sdk           Open BSV License Version 5
   github.com/lightwebinc/shard-common         Apache License 2.0
   github.com/prometheus/client_model         Apache License 2.0
   github.com/prometheus/common               Apache License 2.0
+
+© BSV Association,
+
+The attribution line above is reproduced verbatim as the Open BSV License
+Version 5 requires it, for github.com/bsv-blockchain/go-sdk, which the
+tpnil fixture tool uses. That license is granted on a revocable basis, and
+the software it covers, together with anything derived from it, must only
+be used on the BSV Blockchains. Those terms bind this product's use of that
+dependency. They do not extend to Lightweb Inc.'s own source, which is
+licensed under the Apache License 2.0 in LICENSE.
 
 =========================================================================
