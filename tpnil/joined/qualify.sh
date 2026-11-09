@@ -28,7 +28,7 @@ RUN=$WORK/runs/run-$(date -u +%Y%m%dT%H%M%SZ)
 FIX=$WORK/bin/fixture
 RPC=http://127.0.0.1:9292
 export TPNIL_RPC_USER=tpnil TPNIL_RPC_PASSWORD=tpnil-regtest-only
-GW=$(ip -4 -o addr show docker0 2>/dev/null | awk '{print $4}' | cut -d/ -f1)
+GW=$(ip -4 -o addr show docker0 2>/dev/null | awk '{print $4}' | cut -d/ -f1) || true
 ASSET=http://$GW:8090
 export PROCESSOR_GATEWAY=$GW
 

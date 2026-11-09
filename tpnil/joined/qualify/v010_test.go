@@ -109,7 +109,7 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	// loss under the impairment has a successor that exposes it.
 	warmStart := snapshot(t, ctx, e)
 	submitAll(t, ctx, e, warmup)
-	waitLanes(t, ctx, e, warmStart, len(warmup))
+	waitLanes(t, ctx, e, warmStart, len(warmup), true)
 	mine(t, ctx, e, 1)
 	time.Sleep(5 * time.Second)
 
@@ -128,7 +128,8 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	before := snapshot(t, ctx, e)
 	dumpMetrics(t, ctx, e, "before")
 	submitAll(t, ctx, e, fixtures)
-	waitLanes(t, ctx, e, before, len(fixtures))
+	// Not fatal: a loss here may be exposed only by the trailer's frames.
+	waitLanes(t, ctx, e, before, len(fixtures), false)
 
 	// Mine while the impairment holds, so the block's own objects cross the
 	// impaired link too; then lift it and run the lossless trailer.
@@ -139,7 +140,7 @@ func TestISI5_V010_RepairUnderLoss(t *testing.T) {
 	}
 	lifted = true
 	submitAll(t, ctx, e, trailer)
-	waitLanes(t, ctx, e, before, len(fixtures)+len(trailer))
+	waitLanes(t, ctx, e, before, len(fixtures)+len(trailer), true)
 	blocks = append(blocks, mine(t, ctx, e, 1)...)
 	drainGaps(t, ctx, e, before)
 	after := snapshot(t, ctx, e)
@@ -423,7 +424,7 @@ func mine(t *testing.T, ctx context.Context, e v010Env, n int) []string {
 
 // waitLanes waits until the tx lane has carried one object per fixture (or
 // the deadline passes; the accounting then reports the shortfall).
-func waitLanes(t *testing.T, ctx context.Context, e v010Env, before counts, n int) {
+func waitLanes(t *testing.T, ctx context.Context, e v010Env, before counts, n int, fatal bool) {
 	t.Helper()
 	deadline := time.Now().Add(90 * time.Second)
 	for time.Now().Before(deadline) {
@@ -432,7 +433,11 @@ func waitLanes(t *testing.T, ctx context.Context, e v010Env, before counts, n in
 		}
 		time.Sleep(time.Second)
 	}
-	t.Fatalf("%d of %d transactions reached the processor bridge within 90 s", snapshot(t, ctx, e).minus(before).bridgeTx, n)
+	got := snapshot(t, ctx, e).minus(before).bridgeTx
+	if fatal {
+		t.Fatalf("%d of %d transactions reached the processor bridge within 90 s", got, n)
+	}
+	t.Logf("%d of %d transactions reached the processor bridge within 90 s; continuing", got, n)
 }
 
 // drainGaps waits until every detected gap is repaired or reported, so the
