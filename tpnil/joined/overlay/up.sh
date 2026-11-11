@@ -12,7 +12,7 @@ set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 WORK=${1:-$HOME/tpnil-joined}
-: "${OVERLAY_BRIDGE_IMAGE:=ghcr.io/lightwebinc/overlay-bridge:0.14.1@sha256:909bade3a95a583b2eb8e3c7e3ce036ad9d8cfd262916d587c26a728b4067494}"
+: "${OVERLAY_BRIDGE_IMAGE:=ghcr.io/lightwebinc/overlay-bridge:0.14.2@sha256:67cce9812c45005fd512cfa20b02805db857ff68ca419aaf93b9a9aaf510e79e}"
 
 say() { echo "== $(date -u +%H:%M:%S) $*"; }
 die() { echo "overlay/up.sh: $*" >&2; exit 1; }

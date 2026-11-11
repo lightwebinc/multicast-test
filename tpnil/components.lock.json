@@ -1,48 +1,48 @@
 {
   "schema": "lightweb-multicast-harness-components@1.0.0",
-  "toolchain": "go1.27.3",
+  "toolchain": "go1.27.4",
   "components": [
     {
       "name": "beef-generator",
       "repository": "https://github.com/lightwebinc/beef-generator.git",
-      "tag": "v0.2.2",
-      "commit": "58dd133842bea745a515c5697860e047cdbf59e6"
+      "tag": "v0.2.3",
+      "commit": "b81d86a4d0260e9c2a28b055413970a69b554bb6"
     },
     {
       "name": "retry-endpoint",
       "repository": "https://github.com/lightwebinc/retry-endpoint.git",
-      "tag": "v1.16.1",
-      "commit": "fdb3ab9041a2f54d873acedf3b502b52a8c05512"
+      "tag": "v1.17.0",
+      "commit": "546c323a32717e1a7054de58bb84acc0900a734e"
     },
     {
       "name": "shard-common",
       "repository": "https://github.com/lightwebinc/shard-common.git",
-      "tag": "v0.24.0",
-      "commit": "fec3fe226410686a7ab2854f62aee037ada906a0"
+      "tag": "v0.25.0",
+      "commit": "f627b23f34cf57899015fd34dd23debc14b6f073"
     },
     {
       "name": "shard-listener",
       "repository": "https://github.com/lightwebinc/shard-listener.git",
-      "tag": "v1.36.1",
-      "commit": "dc8a54d288d5726f7ab3092492ad076a47064096"
+      "tag": "v1.36.2",
+      "commit": "2032256e820b0b5fe6a5869b6f93611f4d7c1ddb"
     },
     {
       "name": "shard-manifest",
       "repository": "https://github.com/lightwebinc/shard-manifest.git",
-      "tag": "v0.4.4",
-      "commit": "77267d28d96909c8cd824db5b49d06677e69b030"
+      "tag": "v0.4.5",
+      "commit": "af45a2bd39caa5c867030645b69430621a78b8f1"
     },
     {
       "name": "shard-proxy",
       "repository": "https://github.com/lightwebinc/shard-proxy.git",
-      "tag": "v1.43.1",
-      "commit": "2ddd64e231b1e32496c1d2aacba4ff5ad785c7e1"
+      "tag": "v1.44.0",
+      "commit": "788bacf0c81114d2c70dad15a22d244dc0b34e1f"
     },
     {
       "name": "subtx-generator",
       "repository": "https://github.com/lightwebinc/subtx-generator.git",
-      "tag": "v0.4.2",
-      "commit": "6af00840b3f155fbe2e50d8ad4ca4498cc2c2e9a"
+      "tag": "v0.4.3",
+      "commit": "f0feb97b106c02deac7e092eac7074861ba27744"
     }
   ],
   "images": [
