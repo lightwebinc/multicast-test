@@ -32,7 +32,7 @@ engine and MongoDB store unmodified. It serves BRC-22 `/submit` and BRC-24
 ## Running
 
 Requirements: Linux/amd64, Docker with Compose, `tcpdump`, about 12 GB of
-memory free, passwordless `sudo`, TPNIL's Node.js version and Go 1.27.3.
+memory free, passwordless `sudo`, TPNIL's Node.js version and Go 1.27.4.
 
 ```sh
 tpnil/joined/processor/up.sh "$WORK"

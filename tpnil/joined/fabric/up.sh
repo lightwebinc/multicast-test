@@ -11,11 +11,11 @@ set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 WORK=${1:-$HOME/tpnil-joined}
-: "${SHARD_PROXY_IMAGE:=ghcr.io/lightwebinc/shard-proxy:1.43.1@sha256:aa8e0ea7500fa8959c2ee3ff9083b0b2d929f0f53116f04f5face6e74b78ddf0}"
-: "${RETRY_ENDPOINT_IMAGE:=ghcr.io/lightwebinc/retry-endpoint:1.16.1@sha256:b77cfabe14526c9b28b6f5afada87816073bd0b77a7961f563cd4a1b051b3a52}"
-: "${ARCADE_BRIDGE_IMAGE:=ghcr.io/lightwebinc/arcade-bridge:0.1.4@sha256:51196953fb43c613cecf9174b674e06b6d2b198ccf3d7b298421d2d447e80fa9}"
-: "${SHARD_LISTENER_IMAGE:=ghcr.io/lightwebinc/shard-listener:1.36.1@sha256:632fca40b9a1b3f0fe2bf05d871a1a29eed830a59ea2bf2f557f87b2cd37a8b2}"
-: "${TERANODE_BRIDGE_IMAGE:=ghcr.io/lightwebinc/teranode-bridge:0.13.0@sha256:e53eb55db7011dc60612513fe75e3ca6d2a4ab6488ba5dc07d3dcb5508598631}"
+: "${SHARD_PROXY_IMAGE:=ghcr.io/lightwebinc/shard-proxy:1.44.0@sha256:5c74b2a949f9997a4db7b65daa740b35c08d15ccbde5feaf7d04769af82b52fa}"
+: "${RETRY_ENDPOINT_IMAGE:=ghcr.io/lightwebinc/retry-endpoint:1.17.0@sha256:d558e06874eb61ac2fb17e21937a627af48706daeaa45acb3c09c27f496b0fe7}"
+: "${ARCADE_BRIDGE_IMAGE:=ghcr.io/lightwebinc/arcade-bridge:0.1.5@sha256:8f1228ee0e5e74cd2387ff2cd3160b470e1f29311496b5d15eb66e5da791aaff}"
+: "${SHARD_LISTENER_IMAGE:=ghcr.io/lightwebinc/shard-listener:1.36.2@sha256:bd306333f8a17c3df2d28ebad7f88830ad0a7b27c3972bf1c7e8cb345b79cdc2}"
+: "${TERANODE_BRIDGE_IMAGE:=ghcr.io/lightwebinc/teranode-bridge:0.13.1@sha256:60b9135bfb741a36cd99770cf4e29a803db715dc97bed0bb063685db1c27223c}"
 export SHARD_PROXY_IMAGE RETRY_ENDPOINT_IMAGE ARCADE_BRIDGE_IMAGE SHARD_LISTENER_IMAGE TERANODE_BRIDGE_IMAGE
 
 say() { echo "== $(date -u +%H:%M:%S) $*"; }
