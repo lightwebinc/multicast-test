@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	github.com/bsv-blockchain/go-overlay-services v1.3.8
 	github.com/bsv-blockchain/go-sdk v1.7.4
-	github.com/lightwebinc/shard-common v0.24.0
+	github.com/lightwebinc/shard-common v0.27.2
 	github.com/prometheus/client_model v0.6.3
 	github.com/prometheus/common v0.73.1
 )

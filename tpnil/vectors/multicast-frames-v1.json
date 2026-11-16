@@ -71,7 +71,7 @@
   "license": "Apache-2.0",
   "name": "Multicast delivery fabric frames: transaction, fragment, header-lane and BEEF object frames, records and group addressing",
   "note": "Expected bytes come from the reference encoders; every field they encode is recorded as an input or an expected value so that an implementation of the BRC text can rebuild it. Header bytes printed in a BRC example are asserted byte for byte.",
-  "reference_impl": "github.com/lightwebinc/shard-common@v0.24.0",
+  "reference_impl": "github.com/lightwebinc/shard-common@v0.27.2",
   "standardSource": {
     "commit": "99ee33ea5980313a5c2b01a02a1e42569d981fd6",
     "repository": "https://github.com/bsv-blockchain/BRCs"
