@@ -28,7 +28,7 @@ import (
 const (
 	out        = "tpnil/vectors/multicast-frames-v1.json"
 	brcCommit  = "99ee33ea5980313a5c2b01a02a1e42569d981fd6"
-	referenced = "github.com/lightwebinc/shard-common@v0.24.0"
+	referenced = "github.com/lightwebinc/shard-common@v0.27.2"
 )
 
 type vector struct {
