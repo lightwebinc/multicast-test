@@ -20,19 +20,47 @@ This product includes third-party software, distributed under the terms
 of their respective licenses. Each dependency retains its own copyright;
 this notice does not modify those licenses.
 
-  github.com/bsv-blockchain/go-sdk           Open BSV License Version 5
-  github.com/lightwebinc/shard-common         Apache License 2.0
-  github.com/prometheus/client_model         Apache License 2.0
-  github.com/prometheus/common               Apache License 2.0
+  github.com/bsv-blockchain/go-overlay-services  Apache License 2.0
+  github.com/bsv-blockchain/go-sdk               Apache License 2.0
+  github.com/lightwebinc/shard-common            Apache License 2.0
+  github.com/prometheus/client_model             Apache License 2.0
+  github.com/prometheus/common                   Apache License 2.0
 
-© BSV Association,
+go-sdk, which the tpnil fixture tool uses, is under the Apache License
+2.0 from v1.7.5, and go-overlay-services, which the tpnil overlay host
+uses, from v1.3.9; those are the versions this suite builds on. Earlier
+versions of both were under the Open BSV License Version 5, whose grant
+was revocable and limited to the BSV Blockchains; those terms do not
+apply to these versions.
 
-The attribution line above is reproduced verbatim as the Open BSV License
-Version 5 requires it, for github.com/bsv-blockchain/go-sdk, which the
-tpnil fixture tool uses. That license is granted on a revocable basis, and
-the software it covers, together with anything derived from it, must only
-be used on the BSV Blockchains. Those terms bind this product's use of that
-dependency. They do not extend to Lightweb Inc.'s own source, which is
-licensed under the Apache License 2.0 in LICENSE.
+Section 4(d) of the Apache License asks that a module's NOTICE travel
+with it. Both ship one, and their attribution notices are these:
+
+  github.com/bsv-blockchain/go-overlay-services
+    go-overlay-services
+    Copyright 2025-2026 BSV Association
+
+  github.com/bsv-blockchain/go-sdk
+    go-sdk
+    Copyright 2023-2026 BSV Association
+
+    This product includes software from these projects, under their own
+    licenses:
+    - btcd (chainhash, compat, script/interpreter): Copyright (c)
+      2013-2017 The btcsuite developers (ISC)
+    - btcec (primitives/ec): Copyright 2010 The Go Authors, Copyright
+      2011 ThePiachu, Copyright 2013-2014 The btcsuite developers (ISC)
+    - dcrd (chainhash, script/interpreter): Copyright (c) 2015-2018 The
+      Decred developers (ISC)
+    - Bitcoin Core script test data (script/interpreter/data): Copyright
+      (c) 2012-2014 The Bitcoin Core developers (MIT)
+
+Both also ship a PATENTS file, in which BSV Association states that it
+holds no patent rights and undertakes not to assert any against a user
+of the software. It travels with each module's source.
+
+This repository publishes no binary or image: its tools are compiled
+from source where the suite runs. Whoever distributes a binary built
+from it must carry the license text of every module that binary links.
 
 =========================================================================
