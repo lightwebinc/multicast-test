@@ -7,7 +7,7 @@ require (
 	github.com/bsv-blockchain/go-sdk v1.7.5
 	github.com/lightwebinc/shard-common v0.27.2
 	github.com/prometheus/client_model v0.6.3
-	github.com/prometheus/common v0.73.1
+	github.com/prometheus/common v0.74.0
 )
 
 require (
@@ -16,7 +16,7 @@ require (
 	github.com/klauspost/compress v1.20.4 // indirect
 	github.com/mrz1836/go-whatsonchain v1.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/pandatix/go-abnf v0.5.3 // indirect
+	github.com/pandatix/go-abnf v0.5.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.12.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
