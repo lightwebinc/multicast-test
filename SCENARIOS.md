@@ -99,8 +99,8 @@ tests.
 `make test-dedup`
 
 The listeners' egress TxID dedup points `EGRESS_DEDUP_REDIS_ADDR` at a Redis
-container on `fd10::30`; listeners sharing a `DEPLOYMENT_ID` are HA siblings
-that forward each TxID once between them. The listener dials one Redis
+container on the test fabric; listeners sharing a `DEPLOYMENT_ID` are HA
+siblings that forward each TxID once between them. The listener dials one Redis
 address and has no Sentinel client.
 
 | #   | Title                                                      | Test                                   | Files                                                                                                    |
