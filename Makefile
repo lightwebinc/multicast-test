@@ -51,7 +51,7 @@ test-beef: ## Run BRC-148 BEEF object plane scenarios
 test-misc: ## Run baseline scenarios not in a themed group (firewall, dashboard, egress bridge, payload verify)
 	$(GOTEST) -timeout 10m -run 'Scenario0[0459]'
 
-test-one: ## Run a single scenario test by name: make test-one T=Scenario36
+test-one: ## Run a single scenario test by its full name: make test-one T=TestScenario36_AnchorDelivery
 	@if [ -z "$(T)" ]; then echo "usage: make test-one T=<TestName>"; exit 2; fi
 	$(GOTEST) -timeout 15m -run '^$(T)$$'
 
