@@ -16,7 +16,7 @@ import (
 //
 // Builds and runs the real shard-manifest binary with LOG_FORMAT=json and
 // asserts that the structured logs it emits at startup satisfy the unified
-// logging contract from bsv-multicast/docs/UnifiedLogging:
+// logging contract (shard-common docs/logging.md):
 //
 //   - output is one JSON object per line on stdout;
 //   - every line carries the identity triple (service.name,

@@ -8,7 +8,6 @@ import (
 )
 
 // AssertNear fails t if |got-expected|/max(expected,1) > tol.
-// Mirrors the bash assert_near helper in scenarios/lib/common.sh.
 func AssertNear(t *testing.T, label string, got, expected, tol float64) {
 	t.Helper()
 	if expected <= 0 {

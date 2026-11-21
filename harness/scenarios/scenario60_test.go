@@ -21,7 +21,8 @@ import (
 // Posture C end-to-end across containers requires PIM-SSM in the
 // inter-container fabric, which Docker's default bridge does not
 // provide; that is validated on real fabric hosts (not in this
-// harness). See bsv-multicast SSM Support Plan for the design.
+// harness). See the Source-Specific Multicast section of bsv-multicast
+// DESIGN.md for the design.
 func TestScenario60_SSMLoopback(t *testing.T) {
 	if runtime.GOOS != "linux" {
 		t.Skip("SSM loopback test requires Linux")

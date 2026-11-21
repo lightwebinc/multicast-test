@@ -78,8 +78,8 @@ func subtxGenCmd(proxyAddr string) []string {
 //	listener3 (fd10::13), and returns the env.Env ready for StartAll.
 //
 // The prefix is used for container names (e.g. "s02" → "s02-proxy").
-// Listeners are configured with the standard shard/subtree filters from the
-// lab's listener-hosts.yml unless overrides are applied after calling this.
+// Listeners are configured with the standard shard/subtree filters of
+// scenario 01 unless overrides are applied after calling this.
 func basicTopology(t *testing.T, prefix string) (*env.Env, map[string]string, map[string]string, map[string]string) {
 	t.Helper()
 	e := env.New(t, dockerdriver.New())
@@ -476,7 +476,7 @@ func scrapeOrFail(t *testing.T, url string) map[string]float64 {
 // settleRecovery polls the listeners until the gap tracker has fully resolved
 // (no pending gaps: Δdetected == Δsuppressed + Δunrecovered on every listener)
 // AND delivery + unrecovered stopped moving between two consecutive polls.
-// This is testing.md's settle-until-stable rule: the shortfall identity is an
+// This is the settle-until-stable rule: the shortfall identity is an
 // accounting statement about a CLOSED window, so scraping while a gap is still
 // pending or a repair is in flight reads as a violation that is really just an
 // open window. Worst-case honest resolution is ~15s (5 failed NACK rounds with
@@ -519,8 +519,8 @@ func settleRecovery(t *testing.T, e *env.Env, ctx context.Context, prefix string
 	}
 }
 
-// assertRecoveryIdentity asserts the criterion-#1 shortfall identity from
-// testing.md on ONE unfiltered listener: every frame the proxy put on the
+// assertRecoveryIdentity asserts the criterion-#1 shortfall identity on ONE
+// unfiltered listener: every frame the proxy put on the
 // fabric was either delivered onward (forwarded, or attempted; the harness
 // egress target is a blackhole, so alternating refused writes land in
 // bsl_egress_errors_total and count as delivery attempts, the same accounting
