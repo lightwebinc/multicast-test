@@ -43,7 +43,7 @@ func TestScenario50_TxIDDedupBasic(t *testing.T) {
 	redisAddr := "[fd10::30]:6379"
 	for i, suffix := range []string{"1", "2", "3"} {
 		lenv := listenerEnv()
-		lenv["TXID_DEDUP_ADDR"] = redisAddr
+		lenv["EGRESS_DEDUP_REDIS_ADDR"] = redisAddr
 		// Share DeploymentID across listeners so they race against the same
 		// Redis prefix; the default (hostname) would give each listener its
 		// own namespace and dedup would never fire.

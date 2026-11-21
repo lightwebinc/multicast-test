@@ -15,19 +15,16 @@ import (
 //
 // Ported from the retired bash scenario 51.
 //
-// Single listener with dedup enabled. Since only one listener is writing,
-// tx_deduped should be 0 (no collisions from other listeners).
+// One listener claims every TxID through the Redis backend. The generator's
+// TxIDs are unique, so no claim may lose: nothing is suppressed and every
+// received frame goes to egress. The claim keys in Redis prove the backend was
+// on the path of every forwarded frame; a listener deduplicating on its local
+// set alone passes the forwarding checks too.
 func TestScenario51_TxIDDedupCollision(t *testing.T) {
 	ctx := context.Background()
 	e := env.New(t, dockerdriver.New())
 
-	// Redis container.
-	e.AddNode(driver.NodeConfig{
-		Name:  "s51-redis",
-		Image: "redis:7-alpine",
-		IPv6:  "fd10::30",
-		Role:  driver.RoleAux,
-	})
+	e.AddNode(dedupRedisNode("s51-redis"))
 
 	e.AddNode(driver.NodeConfig{
 		Name:        "s51-proxy",
@@ -38,14 +35,11 @@ func TestScenario51_TxIDDedupCollision(t *testing.T) {
 		Role:        driver.RoleProxy,
 	})
 
-	l1env := listenerEnv()
-	l1env["TXID_DEDUP_ENABLED"] = "true"
-	l1env["TXID_DEDUP_REDIS_ADDR"] = "fd10::30:6379"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s51-listener1",
 		Image:       "shard-listener:harness",
 		IPv6:        "fd10::11",
-		Env:         l1env,
+		Env:         dedupListenerEnv(""),
 		MetricsPort: 9200,
 		Role:        driver.RoleListener,
 	})
@@ -53,6 +47,7 @@ func TestScenario51_TxIDDedupCollision(t *testing.T) {
 	e.StartAll(ctx)
 	e.Sleep(4*time.Second, "MLD querier + Redis settle")
 
+	keysBefore := redisClaimKeys(t, ctx, e, "s51-redis")
 	beforeL1 := e.Snapshot(ctx, "s51-listener1")
 
 	genCmd := subtxGenCmd("[fd10::2]:8725")
@@ -61,15 +56,25 @@ func TestScenario51_TxIDDedupCollision(t *testing.T) {
 
 	e.Sleep(2*time.Second, "egress pipeline drain")
 
-	urlL1 := e.MetricsURL(ctx, "s51-listener1")
-	afterL1 := metrics.ScrapeOrFail(t, urlL1)
+	afterL1 := settleDedupListeners(t, ctx, e, []string{"s51-listener1"}, 30*time.Second)[0]
+	keys := redisClaimKeys(t, ctx, e, "s51-redis") - keysBefore
 
 	deltaL1 := metrics.DeltaMap(beforeL1, afterL1)
+	recv := deltaL1["bsl_frames_received_total"]
 	fwd := deltaL1["bsl_frames_forwarded_total"]
+	egrErr := deltaL1["bsl_egress_errors_total"]
 	dedup := deltaL1["bsl_frames_tx_deduped_total"]
+	claimErr := deltaL1["bsl_txid_dedup_errors_total"]
+	// The egress target is a blackhole: refused writes count as egress
+	// errors, and a forward attempt either way.
+	delivered := fwd + egrErr
 
-	t.Logf("listener1: forwarded=%.0f tx_deduped=%.0f", fwd, dedup)
+	t.Logf("listener1: received=%.0f forwarded=%.0f egress_errors=%.0f tx_deduped=%.0f claim_errors=%.0f redis_claim_keys=%.0f",
+		recv, fwd, egrErr, dedup, claimErr, keys)
 
 	metrics.AssertGT(t, "forwarded > 0", fwd)
-	metrics.AssertZero(t, "tx_deduped == 0 (single listener)", dedup)
+	metrics.AssertZero(t, "tx_deduped == 0 (single listener, unique TxIDs)", dedup)
+	metrics.AssertZero(t, "Redis claim errors == 0", claimErr)
+	metrics.AssertEq(t, "Redis claim keys == forwarded + egress errors", keys, delivered)
+	metrics.AssertNear(t, "forwarded + egress errors ≈ received", delivered, recv, 0.05)
 }
