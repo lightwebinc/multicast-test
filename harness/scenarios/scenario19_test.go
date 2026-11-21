@@ -35,7 +35,7 @@ import (
 //     (the RetryCacheSourceStarved alerting contract) instead of collapsing
 //     the tee feed onto the loopback label.
 //   - bre_unicast_retransmits_total > 0, repairs actually SERVED from the
-//     tee-fed cache (testing.md criterion #2).
+//     tee-fed cache (criterion #2).
 //   - The full criterion-#1 shortfall identity on every listener, and
 //     delivered == sent (clean regime: the 2% netem loss fully repaired).
 //

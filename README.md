@@ -30,9 +30,12 @@ deployment testing is outside this suite.
 
 ### Prerequisites
 
-Docker, Go 1.26 or later, and root (tests create network namespaces). The harness
-compiles component binaries from **sibling checkouts**; clone the component
-repos side by side under one parent directory:
+Docker, Go 1.26.2 or later, the host tools `ip`, `tc`, `nsenter`, `ip6tables`
+and `nft`, and root (the harness sets the bridge's multicast options and
+applies loss and firewall rules to the containers' interfaces and network
+namespaces). The harness compiles component binaries from **sibling
+checkouts**; clone the component repos side by side under one parent
+directory:
 
 ```
 <parent>/
@@ -45,6 +48,11 @@ repos side by side under one parent directory:
 ├── beef-generator      (BEEF scenarios 92–98, 100)
 └── shard-manifest      (scenario 73)
 ```
+
+Every run builds the `shard-proxy`, `shard-listener`, `retry-endpoint`,
+`subtx-generator` and `beef-generator` images before the first scenario (an
+existing image is reused), so those checkouts are needed whichever scenarios
+run; `shard-manifest` is built by scenario 73 alone.
 
 If the parent directory has a `go.work` listing the repos, the builder uses
 it; otherwise it injects a temporary `replace` directive pointing at the
@@ -66,7 +74,7 @@ make test-manifest # BRC-139 manifest / auto-shard-config scenarios
 make test-coalesce # BRC-142 coalescing / bundle-frame scenarios
 make test-beef     # BRC-148 BEEF object plane scenarios
 make test-misc     # baseline scenarios outside a themed group
-make test-one T=Scenario36  # a single scenario test by name
+make test-one T=TestScenario36_AnchorDelivery  # a single test, by its full function name
 make help          # show all targets
 ```
 
@@ -88,9 +96,9 @@ test names, make-target filters). Highlights:
   `make test-manifest` (filter `Scenario7[0-5]`) runs 70–72 (wire pipeline,
   live-reshard signal, adoption safety gates), 73 (the `shard-manifest`
   [unified logging](https://github.com/lightwebinc/shard-common/blob/main/docs/logging.md)
-  emit contract; needs only `go` + loopback), and 74–75 (cross-domain NACK
-  proxying, inter-fabric RTT repair); any one runs alone via
-  `make test-one T=Scenario73`.
+  emit contract; the scenario itself uses no containers), and 74–75
+  (cross-domain NACK proxying, inter-fabric RTT repair); any one runs alone
+  via `make test-one T=TestScenario73_UnifiedLoggingContract`.
 - **92–98, 100: BRC-148 BEEF object plane** (`make test-beef`): submission-record
   ingress (open port + dedicated lane), topic/version filtered delivery,
   fragmentation, NACK recovery, per-domain manifest coordination,
@@ -108,9 +116,9 @@ test names, make-target filters). Highlights:
 | `harness/scenarios/` | Go test files, one per scenario |
 | `harness/build/` | Docker image builder (compiles binaries, creates minimal images) |
 | `harness/driver/` | Docker driver (container lifecycle, network) |
-| `harness/env/` | Network emulation (`tc netem`) and firewall (`ip6tables`) helpers |
+| `harness/env/` | Scenario environment (node start, readiness) and the network emulation (`tc netem`), burst loss (`nft`) and firewall (`ip6tables`) helpers |
 | `harness/metrics/` | Prometheus scraper and assertion helpers |
-| `tpnil/` | [TPNIL](https://github.com/p2ppsr/interop) component qualification: the pinned component closure and the command a qualification plan runs |
+| `tpnil/` | [TPNIL](https://github.com/p2ppsr/interop) component qualification: the pinned component closure and the command a qualification plan runs, the joined configuration (`joined/`) and the frame conformance vectors (`vectors/`) |
 
 ## Releases
 

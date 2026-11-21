@@ -7,8 +7,8 @@ Run a single scenario:
 
 ```bash
 sudo go test ./harness/scenarios/... -v -run TestScenarioNN
-# or
-make test-one T=ScenarioNN
+# or, by the full test function name (the target anchors it)
+make test-one T=TestScenario36_AnchorDelivery
 ```
 
 ## 00: Environment
@@ -136,7 +136,8 @@ asserts the [unified logging](https://github.com/lightwebinc/shard-common/blob/m
 emit contract: one JSON object per line, the `service.{name,instance.id,version}`
 identity triple on every line, and a single `host.inventory` event nesting
 os/cpu/mem/net/build groups with both IPv4 and IPv6 address keys per interface.
-Needs only `go` + loopback (no Docker fabric).
+The scenario itself needs only `go` + loopback (no containers); the package's
+`TestMain` still builds the harness images and the bridge before any test.
 
 ## 74–75: Cross-domain NACK proxying
 
@@ -240,4 +241,4 @@ per-domain quorum/hysteresis/divergence with BRC-139-only back-compat.
 | `make test-coalesce`         | `Scenario(89\|9[01])`           | BRC-142 coalescing / bundle    |
 | `make test-beef`             | `Scenario(9[2-8]\|100)`         | BRC-148 BEEF object plane      |
 | `make test-misc`             | `Scenario0[0459]`               | baseline (firewall, dashboard, egress bridge, payload verify) |
-| `make test-one T=ScenarioNN` | single                          | run one scenario               |
+| `make test-one T=<TestName>` | `^<TestName>$`                  | one test, by its full function name (for example `TestScenario36_AnchorDelivery`) |
