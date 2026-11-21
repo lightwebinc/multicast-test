@@ -1,3 +1,4 @@
 # Runtime artifacts from scenario runs: metrics snapshots and firewall reports.
 **/*.tsv
 **/report.txt
+__pycache__/
