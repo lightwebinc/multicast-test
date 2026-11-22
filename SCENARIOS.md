@@ -96,12 +96,19 @@ tests.
 
 ## 50–53: TxID dedup
 
+`make test-dedup`
+
+The listeners' egress TxID dedup points `EGRESS_DEDUP_REDIS_ADDR` at a Redis
+container on the test fabric; listeners sharing a `DEPLOYMENT_ID` are HA
+siblings that forward each TxID once between them. The listener dials one Redis
+address and has no Sentinel client.
+
 | #   | Title                                                      | Test                                   | Files                                                                                                    |
 | --- | ---------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | 50  | TxID dedup basic: cross-listener deduplication             | `TestScenario50_TxIDDedupBasic`        | [harness](harness/scenarios/scenario50_test.go)         |
-| 51  | TxID dedup: collision (single listener, no dedup expected) | `TestScenario51_TxIDDedupCollision`    | [harness](harness/scenarios/scenario51_test.go)     |
-| 52  | TxID dedup: Redis failure (fail-open)                      | `TestScenario52_TxIDDedupRedisFailure` | [harness](harness/scenarios/scenario52_test.go) |
-| 53  | TxID dedup: sentinel failover                              | `TestScenario53_TxIDDedupFailover`     | [harness](harness/scenarios/scenario53_test.go)      |
+| 51  | TxID dedup: collision (single listener, no dedup expected) | `TestScenario51_TxIDDedupCollision`    | [harness](harness/scenarios/scenario51_test.go) · one listener on the Redis backend: one claim key in Redis per forwarded frame, nothing suppressed, no backend errors |
+| 52  | TxID dedup: Redis failure (fail-open)                      | `TestScenario52_TxIDDedupRedisFailure` | [harness](harness/scenarios/scenario52_test.go) · three HA siblings dedup through Redis; with Redis stopped every claim fails and each frame is forwarded anyway, nothing suppressed |
+| 53  | TxID dedup: HA sibling failover                            | `TestScenario53_TxIDDedupFailover`     | [harness](harness/scenarios/scenario53_test.go) · listener2 stops between two traffic phases; listener1 and listener3 still deliver each TxID once and keep deduplicating |
 
 ## 60–69: Source-Specific Multicast (RFC 4607)
 
