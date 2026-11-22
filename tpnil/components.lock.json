@@ -5,44 +5,44 @@
     {
       "name": "beef-generator",
       "repository": "https://github.com/lightwebinc/beef-generator.git",
-      "tag": "v0.2.3",
-      "commit": "b81d86a4d0260e9c2a28b055413970a69b554bb6"
+      "tag": "v0.2.6",
+      "commit": "db32af0dfd47fa4a7d4591a54e02802e284fa188"
     },
     {
       "name": "retry-endpoint",
       "repository": "https://github.com/lightwebinc/retry-endpoint.git",
-      "tag": "v1.17.0",
-      "commit": "546c323a32717e1a7054de58bb84acc0900a734e"
+      "tag": "v1.21.0",
+      "commit": "b2bf171b070dade7f1230110eaebcffb9c8025ab"
     },
     {
       "name": "shard-common",
       "repository": "https://github.com/lightwebinc/shard-common.git",
-      "tag": "v0.25.0",
-      "commit": "f627b23f34cf57899015fd34dd23debc14b6f073"
+      "tag": "v0.27.3",
+      "commit": "da39b4d51b9a4859b04be4731e5da88dd645e34a"
     },
     {
       "name": "shard-listener",
       "repository": "https://github.com/lightwebinc/shard-listener.git",
-      "tag": "v1.36.2",
-      "commit": "2032256e820b0b5fe6a5869b6f93611f4d7c1ddb"
+      "tag": "v1.37.3",
+      "commit": "9bbafba5958009f488f4f87822cc5301c1ec27c4"
     },
     {
       "name": "shard-manifest",
       "repository": "https://github.com/lightwebinc/shard-manifest.git",
-      "tag": "v0.4.5",
-      "commit": "af45a2bd39caa5c867030645b69430621a78b8f1"
+      "tag": "v0.4.8",
+      "commit": "f20c11845ee44a033157e96c98b7a7007e218860"
     },
     {
       "name": "shard-proxy",
       "repository": "https://github.com/lightwebinc/shard-proxy.git",
-      "tag": "v1.44.0",
-      "commit": "788bacf0c81114d2c70dad15a22d244dc0b34e1f"
+      "tag": "v1.44.3",
+      "commit": "5397a7fd73000492d77472927fac473153453564"
     },
     {
       "name": "subtx-generator",
       "repository": "https://github.com/lightwebinc/subtx-generator.git",
-      "tag": "v0.4.3",
-      "commit": "f0feb97b106c02deac7e092eac7074861ba27744"
+      "tag": "v0.4.6",
+      "commit": "9b075e713495c44cf77c1b0a551ed8f253da1de3"
     }
   ],
   "images": [
