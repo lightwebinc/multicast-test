@@ -37,7 +37,7 @@ test-dedup: ## Run dedup scenarios (TxID, egress, retransmit)
 	$(GOTEST) -timeout 15m -run 'Scenario5[0-5]'
 
 test-ssm: ## Run SSM scenarios (RFC 4607)
-	$(GOTEST) -timeout 5m -run 'Scenario6[0-2]'
+	$(GOTEST) -timeout 10m -run 'Scenario6[0-5]'
 
 test-manifest: ## Run BRC-139 manifest / auto-shard-config scenarios
 	$(GOTEST) -timeout 15m -run 'Scenario7[0-5]'

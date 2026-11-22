@@ -121,7 +121,7 @@ retransmit claim in Redis (`REDIS_ADDR`).
 Validates the [Source-Specific Multicast design](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm)
 implementation. On the harness's one bridge no PIM is needed: the bridge
 forwards each group to its members and each receiver's kernel applies the
-source filter of its `(S,G)` join, which scenario 62 relies on. SSM routed
+source filter of its `(S,G)` join, which scenarios 62 and 65 rely on. SSM routed
 across hosts needs PIM-SSM in the fabric and is validated on real fabric
 hosts.
 
@@ -130,6 +130,9 @@ hosts.
 | 60  | SSM loopback Join/Leave (kernel sanity check) | `TestScenario60_SSMLoopback`      | [harness](harness/scenarios/scenario60_test.go) |
 | 61  | SSM ASM-fallback startup (scaffolding no-op)  | `TestScenario61_SSMASMFallback`   | [harness](harness/scenarios/scenario61_test.go) |
 | 62  | SSM block broadcast follows the publisher roster | `TestScenario62_SSMBlockBroadcastPublishers` | [harness](harness/scenarios/scenario62_test.go) · a decoy at another source, the only manifest announcer, also emits on 0xFFFE; the listener delivers and the retry endpoint caches the publisher's block frames only |
+| 63  | SSM manifest consumer at the stock ports | `TestScenario63_SSMManifestConsumerStockPorts` | [harness](harness/scenarios/scenario63_test.go) · the consumer's socket shares UDP 9001 with four workers: all of them bind (`/readyz`), and unicast to the data port from eight sockets all reaches the workers |
+| 64  | SSM auto-join follows the BRC-139 pilots | `TestScenario64_SSMAutoJoinPilots` | [harness](harness/scenarios/scenario64_test.go) · two `shard-manifest` pilot announcers claim shard 1 for a `SHARD_INCLUDE=0` listener: it delivers shard 1 (as a reference listener on shards 0 and 1 does), drops none as `shard_filter`, and after the pilots expire delivers shard 0 alone |
+| 65  | SSM subtree data from the publishers | `TestScenario65_SSMSubtreeDataPublishers` | [harness](harness/scenarios/scenario65_test.go) · only `SSM_PUBLISHERS_STATIC` set; a decoy proxy also emits BRC-132 subtree data; the listener takes exactly the publisher's frames |
 
 ## 70–79: BRC-139 manifest / auto-shard-config
 
@@ -138,6 +141,7 @@ hosts.
 | 70 | BRC-139 wire-level manifest pipeline        | `TestScenario70_BRC139WirePipeline`        | [harness](harness/scenarios/scenario70_test.go) |
 | 71 | BRC-139 Successor block live-reshard signal | `TestScenario71_BRC139SuccessorSignal`     | [harness](harness/scenarios/scenario70_test.go) |
 | 72 | BRC-139 adoption safety gates               | `TestScenario72_BRC139AdoptionSafetyGates` | [harness](harness/scenarios/scenario72_test.go) |
+| 72b | The manifest consumer against its running config | `TestScenario72b_ManifestRunningBaseline` | [harness](harness/scenarios/scenario72b_test.go) · two authoritative `shard-manifest` announcers: agreeing with `SHARD_BITS`, no adoption series and no warning; at another ShardBits, one divergence warning and `multicast_manifest_divergence_total` rising; agreeing again, one "manifest divergence cleared"; the listener stays up |
 
 ## 73: Unified logging
 
@@ -251,7 +255,7 @@ per-domain quorum/hysteresis/divergence with BRC-139-only back-compat.
 | `make test-block`            | `Scenario3[0-7]`                | BRC-131/132/134/135 lanes      |
 | `make test-bgp`              | `Scenario4[0-2]`                | BGP (all skip)                 |
 | `make test-dedup`            | `Scenario5[0-5]`                | dedup (TxID, egress, retransmit) |
-| `make test-ssm`              | `Scenario6[0-2]`                | SSM (RFC 4607)                 |
+| `make test-ssm`              | `Scenario6[0-5]`                | SSM (RFC 4607)                 |
 | `make test-manifest`         | `Scenario7[0-5]`                | BRC-139 / auto-shard-config    |
 | `make test-coalesce`         | `Scenario(89\|9[01])`           | BRC-142 coalescing / bundle    |
 | `make test-beef`             | `Scenario(9[2-8]\|100)`         | BRC-148 BEEF object plane      |
