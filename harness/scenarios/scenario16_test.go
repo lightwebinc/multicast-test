@@ -78,7 +78,8 @@ func TestScenario16_GroupRatelimit(t *testing.T) {
 
 	deltaR := metrics.DeltaMap(beforeR, afterR)
 	groupDrops := deltaR["bre_rate_limit_drops_total"]
-	retransmits := deltaR["bre_retransmits_total"]
+	// An ACK goes with a multicast or a unicast retransmit, so both bound it.
+	retransmits := deltaR["bre_retransmits_total"] + deltaR["bre_unicast_retransmits_total"]
 	nacksReceived := deltaR["bre_nack_requests_total"]
 
 	t.Logf("retry1: nacks=%.0f retransmits=%.0f acks=%.0f group_drops=%.0f",
