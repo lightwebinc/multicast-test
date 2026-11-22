@@ -16,12 +16,14 @@ import (
 //
 // retry1 claims each multicast retransmit in a shared Redis (SET NX), the
 // cross-instance dedup that keeps sibling endpoints from repairing one gap
-// twice. Redis is stopped mid-run. A claim the backend cannot answer must not
-// stop the repair: retry1 retransmits anyway and counts the claim in
-// bre_dedup_errors_total{claim="retransmit"}. Nor may it slow the repair: once
-// a claim fails, the claim breaker skips claims (bre_dedup_skipped_total) and
-// lets one probe through per window. Every gap the netem loss opened,
-// before and after the stop, is repaired.
+// twice. While Redis is up, a listener that missed the one copy and asks again
+// gets another: its repeat NACK goes out past the claim
+// (bre_retransmit_repeats_total). Redis is stopped mid-run. A claim the
+// backend cannot answer must not stop the repair: retry1 retransmits anyway
+// and counts the claim in bre_dedup_errors_total{claim="retransmit"}. Nor may
+// it slow the repair: once a claim fails, the claim breaker skips claims
+// (bre_dedup_skipped_total) and lets one probe through per window. Every gap
+// the netem loss opened, before and after the stop, is repaired.
 func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 	ctx := context.Background()
 	e := env.New(t, dockerdriver.New())
@@ -53,12 +55,6 @@ func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 	}
 	renv := retryEnv()
 	renv["REDIS_ADDR"] = "[fd10::30]:6379" // memory frame cache, Redis for the dedup claims
-	// A claimed retransmit is not sent again for DEDUP_WINDOW (default 60s),
-	// longer than a listener's NACK rounds last, so a listener that lost the
-	// one multicast copy gets no other while Redis is up and gives the gap up.
-	// That loss has nothing to do with Redis failing; a 2s window keeps it out
-	// of this scenario.
-	renv["DEDUP_WINDOW"] = "2s"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s55-retry1",
 		Image:       "retry-endpoint:harness",
@@ -72,7 +68,9 @@ func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 	e.Sleep(4*time.Second, "MLD querier settle")
 
 	for _, l := range listeners {
-		if err := env.ApplyNetemLoss(ctx, l, 1.0); err != nil {
+		// 2% loss on every listener: enough copies go missing while Redis
+		// is up that repeat NACKs always occur.
+		if err := env.ApplyNetemLoss(ctx, l, 2.0); err != nil {
 			t.Fatalf("netem loss %s: %v", l, err)
 		}
 		t.Cleanup(func() { env.RemoveNetemLoss(ctx, l) }) //nolint:errcheck
@@ -96,7 +94,7 @@ func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 	if err := e.Driver.Stop(ctx, "s55-redis"); err != nil {
 		t.Fatalf("stop redis: %v", err)
 	}
-	t.Logf("redis stopped with %.0f retransmit claims in it", claims)
+	t.Logf("redis stopped with %.0f retransmit claims and requester marks in it", claims)
 	// The first claim to fail opens the breaker, and the claims already in
 	// flight fail within the claim timeout. From then on only probes reach
 	// the dead backend.
@@ -113,10 +111,10 @@ func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 
 	up := metrics.DeltaMap(beforeR, midR)
 	down := metrics.DeltaMap(midR, afterR)
-	t.Logf("retry1 with Redis up: retransmits=%.0f claims=%.0f dedup_errors=%.0f dedup_skipped=%.0f retransmit_dedup=%.0f cache_misses=%.0f",
-		up["bre_retransmits_total"], claims, errsUp, skippedUp, up["bre_retransmit_dedup_total"], up["bre_cache_misses_total"])
-	t.Logf("retry1 with Redis down: retransmits=%.0f dedup_errors{claim=retransmit}=%.0f (%.0f in the first second, %.0f in the %s after) dedup_skipped{claim=retransmit}=%.0f",
-		down["bre_retransmits_total"], errsDown, errsAtStop, errsDown-errsAtStop, probedFor, skippedDown)
+	t.Logf("retry1 with Redis up: retransmits=%.0f claim_and_mark_keys=%.0f dedup_errors=%.0f dedup_skipped=%.0f retransmit_dedup=%.0f retransmit_repeats=%.0f cache_misses=%.0f",
+		up["bre_retransmits_total"], claims, errsUp, skippedUp, up["bre_retransmit_dedup_total"], up["bre_retransmit_repeats_total"], up["bre_cache_misses_total"])
+	t.Logf("retry1 with Redis down: retransmits=%.0f retransmit_dedup=%.0f retransmit_repeats=%.0f dedup_errors{claim=retransmit}=%.0f (%.0f in the first second, %.0f in the %s after) dedup_skipped{claim=retransmit}=%.0f",
+		down["bre_retransmits_total"], down["bre_retransmit_dedup_total"], down["bre_retransmit_repeats_total"], errsDown, errsAtStop, errsDown-errsAtStop, probedFor, skippedDown)
 
 	var detected, suppressed, unrecovered, lateFilled float64
 	for i, l := range listeners {
@@ -132,7 +130,10 @@ func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 		lateFilled += d["bsl_gaps_late_filled_total"]
 	}
 
-	metrics.AssertGT(t, "retransmit claims written while Redis was up", claims)
+	metrics.AssertGT(t, "retransmit claims and marks written while Redis was up", claims)
+	// A requester that asks again inside the dedup window did not get the
+	// copy; its repeat is sent past the claim, or the gap would be given up.
+	metrics.AssertGT(t, "bre_retransmit_repeats_total with Redis up", up["bre_retransmit_repeats_total"])
 	metrics.AssertGT(t, "retransmits with Redis up", up["bre_retransmits_total"])
 	metrics.AssertGT(t, "retransmits with Redis down (fail-open)", down["bre_retransmits_total"])
 	metrics.AssertGT(t, "bre_dedup_errors_total{claim=retransmit} in the first second Redis was down", errsAtStop)

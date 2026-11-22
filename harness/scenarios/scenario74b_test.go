@@ -81,13 +81,13 @@ func TestScenario74b_NACKProxyRedisFailure(t *testing.T) {
 	up := metrics.DeltaMap(beforeDS, midDS)
 	down := metrics.DeltaMap(midDS, afterDS)
 	c := metrics.DeltaMap(beforeC, afterC)
-	t.Logf("ds-retry with Redis up: proxy_requests=%.0f proxy_recovered=%.0f proxy_failed=%.0f proxy_inflight_dedup=%.0f retransmits=%.0f retransmit_dedup=%.0f dedup_errors proxy=%.0f retransmit=%.0f, dedup_skipped proxy=%.0f retransmit=%.0f",
+	t.Logf("ds-retry with Redis up: proxy_requests=%.0f proxy_recovered=%.0f proxy_failed=%.0f proxy_inflight_dedup=%.0f retransmits=%.0f retransmit_dedup=%.0f retransmit_repeats=%.0f dedup_errors proxy=%.0f retransmit=%.0f, dedup_skipped proxy=%.0f retransmit=%.0f",
 		up["bre_proxy_requests_total"], up["bre_proxy_recovered_total"], up["bre_proxy_failed_total"], up["bre_proxy_inflight_dedup_total"],
-		up["bre_retransmits_total"], up["bre_retransmit_dedup_total"],
+		up["bre_retransmits_total"], up["bre_retransmit_dedup_total"], up["bre_retransmit_repeats_total"],
 		proxyErrsUp, retransmitErrsUp, proxySkippedUp, retransmitSkippedUp)
-	t.Logf("ds-retry with Redis down: proxy_requests=%.0f proxy_recovered=%.0f proxy_failed=%.0f proxy_inflight_dedup=%.0f retransmits=%.0f retransmit_dedup=%.0f dedup_errors proxy=%.0f retransmit=%.0f (%.0f in the first second, %.0f in the %s after), dedup_skipped proxy=%.0f retransmit=%.0f",
+	t.Logf("ds-retry with Redis down: proxy_requests=%.0f proxy_recovered=%.0f proxy_failed=%.0f proxy_inflight_dedup=%.0f retransmits=%.0f retransmit_dedup=%.0f retransmit_repeats=%.0f dedup_errors proxy=%.0f retransmit=%.0f (%.0f in the first second, %.0f in the %s after), dedup_skipped proxy=%.0f retransmit=%.0f",
 		down["bre_proxy_requests_total"], down["bre_proxy_recovered_total"], down["bre_proxy_failed_total"], down["bre_proxy_inflight_dedup_total"],
-		down["bre_retransmits_total"], down["bre_retransmit_dedup_total"],
+		down["bre_retransmits_total"], down["bre_retransmit_dedup_total"], down["bre_retransmit_repeats_total"],
 		proxyErrs, retransmitErrs, errsAtStop, proxyErrs+retransmitErrs-errsAtStop, probedFor, proxySkipped, retransmitSkipped)
 	cURL := e.MetricsURL(ctx, consumer)
 	t.Logf("consumer: detected=%.0f suppressed=%.0f unrecovered=%.0f late_filled=%.0f (given up: retries=%.0f ttl=%.0f restart=%.0f)",
