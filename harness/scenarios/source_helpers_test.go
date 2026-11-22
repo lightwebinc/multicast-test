@@ -107,3 +107,25 @@ func dedupErrors(t *testing.T, ctx context.Context, e *env.Env, name, claim stri
 	t.Helper()
 	return metrics.LabelledValue(t, e.MetricsURL(ctx, name), "bre_dedup_errors_total", "claim", claim)
 }
+
+// dedupSkipped returns retry-endpoint's bre_dedup_skipped_total for one claim:
+// claims not sent to the shared backend because a recent one failed and the
+// claim breaker is open. Each one fails open at once.
+func dedupSkipped(t *testing.T, ctx context.Context, e *env.Env, name, claim string) float64 {
+	t.Helper()
+	return metrics.LabelledValue(t, e.MetricsURL(ctx, name), "bre_dedup_skipped_total", "claim", claim)
+}
+
+// breakerWindow is retry-endpoint's -dedup-breaker-window default: once a
+// claim fails, the endpoint skips claims for this long, then lets one probe
+// through.
+const breakerWindow = 5 * time.Second
+
+// breakerProbeLimit is the exclusive upper bound on the claim errors an
+// endpoint behind the claim breaker books in d, counted from once the breaker
+// is open and the claims in flight when it opened have failed (how many those
+// are depends on the endpoint's workers): one probe per window, and one more
+// for the edges of d.
+func breakerProbeLimit(d time.Duration) float64 {
+	return float64(d/breakerWindow) + 2
+}

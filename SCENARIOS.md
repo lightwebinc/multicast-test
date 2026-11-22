@@ -112,7 +112,7 @@ retransmit claim in Redis (`REDIS_ADDR`).
 | 52  | TxID dedup: Redis failure (fail-open)                      | `TestScenario52_TxIDDedupRedisFailure` | [harness](harness/scenarios/scenario52_test.go) · three HA siblings dedup through Redis; with Redis stopped every claim fails and each frame is forwarded anyway, nothing suppressed |
 | 53  | TxID dedup: HA sibling failover                            | `TestScenario53_TxIDDedupFailover`     | [harness](harness/scenarios/scenario53_test.go) · listener2 stops between two traffic phases; listener1 and listener3 still deliver each TxID once and keep deduplicating |
 | 54  | Egress dedup: two senders sharing (group, subtree, SeqNum) | `TestScenario54_EgressDedupTwoSenders` | [harness](harness/scenarios/scenario54_test.go) · two proxies' frames differ only in HashKey; with `EGRESS_DEDUP_CAP` on, every frame of both is delivered and none deduplicated |
-| 55  | Retransmit dedup: Redis failure (fail-open)                | `TestScenario55_RetransmitDedupRedisFailure` | [harness](harness/scenarios/scenario55_test.go) · retry1 claims retransmits in Redis; with Redis stopped mid-run it retransmits anyway, counts `bre_dedup_errors_total{claim="retransmit"}`, and every gap is repaired |
+| 55  | Retransmit dedup: Redis failure (fail-open)                | `TestScenario55_RetransmitDedupRedisFailure` | [harness](harness/scenarios/scenario55_test.go) · retry1 claims retransmits in Redis (`DEDUP_WINDOW=2s`); with Redis stopped mid-run it retransmits anyway, skips claims behind the claim breaker (`bre_dedup_skipped_total{claim="retransmit"}`) with one failed probe per window after the first second (`bre_dedup_errors_total`), and every gap is repaired |
 
 ## 60–69: Source-Specific Multicast (RFC 4607)
 
@@ -158,7 +158,7 @@ The scenario itself needs only `go` + loopback (no containers); the package's
 | #  | Title                          | Test                                  | Files                                                          |
 | -- | ------------------------------ | ------------------------------------- | -------------------------------------------------------------- |
 | 74 | Cross-domain NACK proxying     | `TestScenario74_NACKProxyCrossDomain` | [harness](harness/scenarios/scenario74_test.go) |
-| 74b | Same, with the downstream retry's Redis stopped mid-run | `TestScenario74b_NACKProxyRedisFailure` | [harness](harness/scenarios/scenario74b_test.go) · its proxy and retransmit claims fail open: recovery goes on and `bre_dedup_errors_total{claim="proxy"}` and `{claim="retransmit"}` count them |
+| 74b | Same, with the downstream retry's Redis stopped mid-run | `TestScenario74b_NACKProxyRedisFailure` | [harness](harness/scenarios/scenario74b_test.go) · its proxy and retransmit claims fail open, skipped behind the claim breaker (`bre_dedup_skipped_total`) with one failed probe per window after the first second (`bre_dedup_errors_total`), and the consumer recovers every gap |
 | 75 | NACK repair at inter-fabric RTT | `TestScenario75_NACKRepairInterFabric` | [harness](harness/scenarios/scenario75_test.go) · requires sudo (netem) |
 
 Two domains on one fabric (isolated by mc-group-id): a proxy + upstream

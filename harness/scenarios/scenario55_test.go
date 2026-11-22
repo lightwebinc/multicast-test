@@ -18,7 +18,9 @@ import (
 // cross-instance dedup that keeps sibling endpoints from repairing one gap
 // twice. Redis is stopped mid-run. A claim the backend cannot answer must not
 // stop the repair: retry1 retransmits anyway and counts the claim in
-// bre_dedup_errors_total{claim="retransmit"}. Every gap the netem loss opened,
+// bre_dedup_errors_total{claim="retransmit"}. Nor may it slow the repair: once
+// a claim fails, the claim breaker skips claims (bre_dedup_skipped_total) and
+// lets one probe through per window. Every gap the netem loss opened,
 // before and after the stop, is repaired.
 func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 	ctx := context.Background()
@@ -51,6 +53,12 @@ func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 	}
 	renv := retryEnv()
 	renv["REDIS_ADDR"] = "[fd10::30]:6379" // memory frame cache, Redis for the dedup claims
+	// A claimed retransmit is not sent again for DEDUP_WINDOW (default 60s),
+	// longer than a listener's NACK rounds last, so a listener that lost the
+	// one multicast copy gets no other while Redis is up and gives the gap up.
+	// That loss has nothing to do with Redis failing; a 2s window keeps it out
+	// of this scenario.
+	renv["DEDUP_WINDOW"] = "2s"
 	e.AddNode(driver.NodeConfig{
 		Name:        "s55-retry1",
 		Image:       "retry-endpoint:harness",
@@ -84,20 +92,31 @@ func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 	claims := redisKeys(t, ctx, e, "s55-redis", "bre:dedup:*")
 	midR := metrics.ScrapeOrFail(t, e.MetricsURL(ctx, "s55-retry1"))
 	errsUp := dedupErrors(t, ctx, e, "s55-retry1", "retransmit")
+	skippedUp := dedupSkipped(t, ctx, e, "s55-retry1", "retransmit")
 	if err := e.Driver.Stop(ctx, "s55-redis"); err != nil {
 		t.Fatalf("stop redis: %v", err)
 	}
 	t.Logf("redis stopped with %.0f retransmit claims in it", claims)
+	// The first claim to fail opens the breaker, and the claims already in
+	// flight fail within the claim timeout. From then on only probes reach
+	// the dead backend.
+	e.Sleep(time.Second, "claims in flight at the stop fail")
+	errsAtStop := dedupErrors(t, ctx, e, "s55-retry1", "retransmit") - errsUp
+	opened := time.Now()
 
 	waitGenerator(t, ctx, "s55")
 	afterL := settleRecovery(t, e, ctx, "s55", beforeL, 60*time.Second)
 	afterR := metrics.ScrapeOrFail(t, e.MetricsURL(ctx, "s55-retry1"))
 	errsDown := dedupErrors(t, ctx, e, "s55-retry1", "retransmit") - errsUp
+	skippedDown := dedupSkipped(t, ctx, e, "s55-retry1", "retransmit") - skippedUp
+	probedFor := time.Since(opened).Round(time.Second)
 
 	up := metrics.DeltaMap(beforeR, midR)
 	down := metrics.DeltaMap(midR, afterR)
-	t.Logf("retry1 with Redis up: retransmits=%.0f claims=%.0f dedup_errors=%.0f", up["bre_retransmits_total"], claims, errsUp)
-	t.Logf("retry1 with Redis down: retransmits=%.0f dedup_errors{claim=retransmit}=%.0f", down["bre_retransmits_total"], errsDown)
+	t.Logf("retry1 with Redis up: retransmits=%.0f claims=%.0f dedup_errors=%.0f dedup_skipped=%.0f retransmit_dedup=%.0f cache_misses=%.0f",
+		up["bre_retransmits_total"], claims, errsUp, skippedUp, up["bre_retransmit_dedup_total"], up["bre_cache_misses_total"])
+	t.Logf("retry1 with Redis down: retransmits=%.0f dedup_errors{claim=retransmit}=%.0f (%.0f in the first second, %.0f in the %s after) dedup_skipped{claim=retransmit}=%.0f",
+		down["bre_retransmits_total"], errsDown, errsAtStop, errsDown-errsAtStop, probedFor, skippedDown)
 
 	var detected, suppressed, unrecovered, lateFilled float64
 	for i, l := range listeners {
@@ -116,7 +135,13 @@ func TestScenario55_RetransmitDedupRedisFailure(t *testing.T) {
 	metrics.AssertGT(t, "retransmit claims written while Redis was up", claims)
 	metrics.AssertGT(t, "retransmits with Redis up", up["bre_retransmits_total"])
 	metrics.AssertGT(t, "retransmits with Redis down (fail-open)", down["bre_retransmits_total"])
-	metrics.AssertGT(t, "bre_dedup_errors_total{claim=retransmit} with Redis down", errsDown)
+	metrics.AssertGT(t, "bre_dedup_errors_total{claim=retransmit} in the first second Redis was down", errsAtStop)
+	// The claim breaker: after a failed claim the endpoint stops asking the
+	// dead backend and fails the rest open at once, so it waits on one probe
+	// claim per window instead of on every repair.
+	metrics.AssertGT(t, "bre_dedup_skipped_total{claim=retransmit} with Redis down", skippedDown)
+	metrics.AssertLT(t, fmt.Sprintf("claim errors in the %s after (one probe per breaker window)", probedFor),
+		errsDown-errsAtStop, breakerProbeLimit(probedFor))
 	metrics.AssertGT(t, "gaps detected", detected)
 	metrics.AssertGT(t, "gaps repaired", suppressed)
 	// A gap given up on whose frame then arrived is booked late-filled, so

@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -15,10 +16,11 @@ import (
 // Scenario 74's topology, with the downstream retry claiming its work in a
 // shared Redis: the NACK proxy's in-flight claim (one upstream fetch per gap
 // across sibling endpoints) and the multicast retransmit claim. Redis is
-// stopped mid-run. Neither claim may stop recovery: the endpoint proxies and
-// retransmits anyway and counts each unanswered claim in
-// bre_dedup_errors_total{claim="proxy"} and {claim="retransmit"}, and the
-// consumer keeps recovering the frames the bridge never re-emitted.
+// stopped mid-run. Neither claim may stop or slow recovery: the endpoint
+// proxies and retransmits anyway, books the claims that failed in
+// bre_dedup_errors_total and, once the shared claim breaker is open, the ones
+// it skipped in bre_dedup_skipped_total, and the consumer still recovers every
+// frame the bridge never re-emitted.
 func TestScenario74b_NACKProxyRedisFailure(t *testing.T) {
 	const (
 		bridge   = "s74b-bridge"
@@ -54,36 +56,61 @@ func TestScenario74b_NACKProxyRedisFailure(t *testing.T) {
 	midDS := metrics.ScrapeOrFail(t, e.MetricsURL(ctx, dsRetry))
 	proxyErrsUp := dedupErrors(t, ctx, e, dsRetry, "proxy")
 	retransmitErrsUp := dedupErrors(t, ctx, e, dsRetry, "retransmit")
+	proxySkippedUp := dedupSkipped(t, ctx, e, dsRetry, "proxy")
+	retransmitSkippedUp := dedupSkipped(t, ctx, e, dsRetry, "retransmit")
 	if err := e.Driver.Stop(ctx, redis); err != nil {
 		t.Fatalf("stop redis: %v", err)
 	}
 	t.Logf("redis stopped with %.0f proxy claims and %.0f retransmit claims in it", proxyClaims, retransmitClaims)
+	// As in scenario 55: once the claims in flight at the stop have failed,
+	// only probes reach the dead backend.
+	e.Sleep(time.Second, "claims in flight at the stop fail")
+	errsAtStop := dedupErrors(t, ctx, e, dsRetry, "proxy") - proxyErrsUp +
+		dedupErrors(t, ctx, e, dsRetry, "retransmit") - retransmitErrsUp
+	opened := time.Now()
 
 	waitGenerator(t, ctx, "s74b")
 	afterC := settleNode(t, e, ctx, consumer, beforeC, 60*time.Second)
 	afterDS := metrics.ScrapeOrFail(t, e.MetricsURL(ctx, dsRetry))
 	proxyErrs := dedupErrors(t, ctx, e, dsRetry, "proxy") - proxyErrsUp
 	retransmitErrs := dedupErrors(t, ctx, e, dsRetry, "retransmit") - retransmitErrsUp
+	proxySkipped := dedupSkipped(t, ctx, e, dsRetry, "proxy") - proxySkippedUp
+	retransmitSkipped := dedupSkipped(t, ctx, e, dsRetry, "retransmit") - retransmitSkippedUp
+	probedFor := time.Since(opened).Round(time.Second)
 
 	up := metrics.DeltaMap(beforeDS, midDS)
 	down := metrics.DeltaMap(midDS, afterDS)
 	c := metrics.DeltaMap(beforeC, afterC)
-	t.Logf("ds-retry with Redis up: proxy_requests=%.0f proxy_recovered=%.0f retransmits=%.0f",
-		up["bre_proxy_requests_total"], up["bre_proxy_recovered_total"], up["bre_retransmits_total"])
-	t.Logf("ds-retry with Redis down: proxy_requests=%.0f proxy_recovered=%.0f retransmits=%.0f dedup_errors proxy=%.0f retransmit=%.0f",
-		down["bre_proxy_requests_total"], down["bre_proxy_recovered_total"], down["bre_retransmits_total"], proxyErrs, retransmitErrs)
-	t.Logf("consumer: detected=%.0f suppressed=%.0f unrecovered=%.0f late_filled=%.0f",
-		c["bsl_gaps_detected_total"], c["bsl_gaps_suppressed_total"], c["bsl_gaps_unrecovered_total"], c["bsl_gaps_late_filled_total"])
+	t.Logf("ds-retry with Redis up: proxy_requests=%.0f proxy_recovered=%.0f proxy_failed=%.0f proxy_inflight_dedup=%.0f retransmits=%.0f retransmit_dedup=%.0f dedup_errors proxy=%.0f retransmit=%.0f, dedup_skipped proxy=%.0f retransmit=%.0f",
+		up["bre_proxy_requests_total"], up["bre_proxy_recovered_total"], up["bre_proxy_failed_total"], up["bre_proxy_inflight_dedup_total"],
+		up["bre_retransmits_total"], up["bre_retransmit_dedup_total"],
+		proxyErrsUp, retransmitErrsUp, proxySkippedUp, retransmitSkippedUp)
+	t.Logf("ds-retry with Redis down: proxy_requests=%.0f proxy_recovered=%.0f proxy_failed=%.0f proxy_inflight_dedup=%.0f retransmits=%.0f retransmit_dedup=%.0f dedup_errors proxy=%.0f retransmit=%.0f (%.0f in the first second, %.0f in the %s after), dedup_skipped proxy=%.0f retransmit=%.0f",
+		down["bre_proxy_requests_total"], down["bre_proxy_recovered_total"], down["bre_proxy_failed_total"], down["bre_proxy_inflight_dedup_total"],
+		down["bre_retransmits_total"], down["bre_retransmit_dedup_total"],
+		proxyErrs, retransmitErrs, errsAtStop, proxyErrs+retransmitErrs-errsAtStop, probedFor, proxySkipped, retransmitSkipped)
+	cURL := e.MetricsURL(ctx, consumer)
+	t.Logf("consumer: detected=%.0f suppressed=%.0f unrecovered=%.0f late_filled=%.0f (given up: retries=%.0f ttl=%.0f restart=%.0f)",
+		c["bsl_gaps_detected_total"], c["bsl_gaps_suppressed_total"], c["bsl_gaps_unrecovered_total"], c["bsl_gaps_late_filled_total"],
+		metrics.LabelledValue(t, cURL, "bsl_gaps_abandoned_total", "reason", "retries"),
+		metrics.LabelledValue(t, cURL, "bsl_gaps_abandoned_total", "reason", "ttl"),
+		metrics.LabelledValue(t, cURL, "bsl_gaps_abandoned_total", "reason", "restart"))
 
 	metrics.AssertGT(t, "proxy claims written while Redis was up", proxyClaims)
 	metrics.AssertGT(t, "proxied recoveries with Redis up", up["bre_proxy_recovered_total"])
-	metrics.AssertGT(t, "bre_dedup_errors_total{claim=proxy} with Redis down", proxyErrs)
-	metrics.AssertGT(t, "bre_dedup_errors_total{claim=retransmit} with Redis down", retransmitErrs)
+	// Both claims share one breaker, so after the first failure either may
+	// only be skipped: each one fails open, by an error or a skip.
+	metrics.AssertGT(t, "proxy claims failed open with Redis down (errors + skipped)", proxyErrs+proxySkipped)
+	metrics.AssertGT(t, "retransmit claims failed open with Redis down (errors + skipped)", retransmitErrs+retransmitSkipped)
+	metrics.AssertGT(t, "bre_dedup_errors_total in the first second Redis was down", errsAtStop)
+	metrics.AssertGT(t, "bre_dedup_skipped_total with Redis down", proxySkipped+retransmitSkipped)
+	metrics.AssertLT(t, fmt.Sprintf("claim errors in the %s after (one probe per breaker window)", probedFor),
+		proxyErrs+retransmitErrs-errsAtStop, breakerProbeLimit(probedFor))
 	metrics.AssertGT(t, "proxied recoveries with Redis down (fail-open)", down["bre_proxy_recovered_total"])
 	metrics.AssertGT(t, "retransmits into the domain with Redis down (fail-open)", down["bre_retransmits_total"])
 	metrics.AssertGT(t, "consumer gaps detected", c["bsl_gaps_detected_total"])
 	metrics.AssertGT(t, "consumer gaps recovered", c["bsl_gaps_suppressed_total"])
-	t.Logf("consumer gaps lost (unrecovered minus late-filled): %.0f",
+	metrics.AssertZero(t, "consumer gaps lost (unrecovered minus late-filled)",
 		c["bsl_gaps_unrecovered_total"]-c["bsl_gaps_late_filled_total"])
 }
 
