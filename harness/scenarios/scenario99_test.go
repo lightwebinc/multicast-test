@@ -77,5 +77,6 @@ func TestScenario99_NACKRetransmit(t *testing.T) {
 	metrics.AssertGT(t, "retransmits served", g.retransmits)
 	metrics.AssertGT(t, "late gap fills sent", late)
 	g.assertNothingLost(t)
+	assertNoRestartFlush(t, e, ctx, "s99")
 	g.assertAccounted(t, 0.10)
 }

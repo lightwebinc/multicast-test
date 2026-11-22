@@ -229,7 +229,7 @@ per-domain quorum/hysteresis/divergence with BRC-139-only back-compat.
 
 | #   | Title                      | Test                            | Files                                                                                           |
 | --- | -------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------- |
-| 99  | NACK retransmit end-to-end | `TestScenario99_NACKRetransmit` | [harness](harness/scenarios/scenario99_test.go) · 1% loss repaired by retransmits, `-seq-gap-delay` gaps closed by their late fills (the generator's `late=`); after the gaps settle, none is lost (unrecovered minus late-filled is 0) and no more close than retransmits plus late fills at the listeners tracking them account for |
+| 99  | NACK retransmit end-to-end | `TestScenario99_NACKRetransmit` | [harness](harness/scenarios/scenario99_test.go) · 1% loss repaired by retransmits, `-seq-gap-delay` gaps closed by their late fills (the generator's `late=`); after the gaps settle, none is lost (unrecovered minus late-filled is 0) no more close than retransmits plus late fills at the listeners tracking them account for, and no gap is given up as a proxy restart (`bsl_gaps_abandoned_total{reason="restart"}` is 0) |
 
 ## Make targets
 

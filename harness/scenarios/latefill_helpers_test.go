@@ -133,3 +133,17 @@ func logGapOutcomes(t *testing.T, e *env.Env, ctx context.Context, prefix string
 	}
 	t.Logf("retry1 rate-limit drops by level:%s", line)
 }
+
+// assertNoRestartFlush checks that no listener gave a gap up as a proxy
+// restart. No proxy restarts in these scenarios, so such a gap would be a
+// misread: a retransmitter's early SeqNum taken for the emitter starting over,
+// flushing the flow's pending gaps. The containers are fresh per scenario, so
+// the totals are this run's.
+func assertNoRestartFlush(t *testing.T, e *env.Env, ctx context.Context, prefix string) {
+	t.Helper()
+	for _, n := range []string{"1", "2", "3"} {
+		url := e.MetricsURL(ctx, prefix+"-listener"+n)
+		metrics.AssertZero(t, "listener"+n+` gaps given up as a proxy restart (reason="restart")`,
+			metrics.LabelledValue(t, url, "bsl_gaps_abandoned_total", "reason", "restart"))
+	}
+}

@@ -76,5 +76,6 @@ func TestScenario12_BurstGapRatelimit(t *testing.T) {
 	metrics.AssertGT(t, "retransmits served", g.retransmits)
 	metrics.AssertGT(t, "late gap fills sent", late)
 	g.assertNothingLost(t)
+	assertNoRestartFlush(t, e, ctx, "s12")
 	g.assertAccounted(t, 0.10)
 }

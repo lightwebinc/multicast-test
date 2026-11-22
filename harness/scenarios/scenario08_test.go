@@ -67,5 +67,6 @@ func TestScenario08_NackRetransmitBRC128(t *testing.T) {
 	metrics.AssertGT(t, "retransmits served", g.retransmits)
 	metrics.AssertGT(t, "late gap fills sent", late)
 	g.assertNothingLost(t)
+	assertNoRestartFlush(t, e, ctx, "s08")
 	g.assertAccounted(t, 0.10)
 }
