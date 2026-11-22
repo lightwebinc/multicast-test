@@ -33,14 +33,14 @@ test-block: ## Run BRC-131/132/134/135 block / subtree / anchor / header scenari
 test-bgp: ## Run BGP scenarios
 	$(GOTEST) -timeout 10m -run 'Scenario4[0-2]'
 
-test-dedup: ## Run TxID dedup scenarios
-	$(GOTEST) -timeout 10m -run 'Scenario5[0-3]'
+test-dedup: ## Run dedup scenarios (TxID, egress, retransmit)
+	$(GOTEST) -timeout 15m -run 'Scenario5[0-5]'
 
 test-ssm: ## Run SSM scenarios (RFC 4607)
-	$(GOTEST) -timeout 5m -run 'Scenario6[01]'
+	$(GOTEST) -timeout 5m -run 'Scenario6[0-2]'
 
 test-manifest: ## Run BRC-139 manifest / auto-shard-config scenarios
-	$(GOTEST) -timeout 10m -run 'Scenario7[0-5]'
+	$(GOTEST) -timeout 15m -run 'Scenario7[0-5]'
 
 test-coalesce: ## Run BRC-142 coalescing / bundle scenarios
 	$(GOTEST) -timeout 12m -run 'Scenario(89|9[01])'

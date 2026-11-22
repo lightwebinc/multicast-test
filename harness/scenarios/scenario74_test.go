@@ -34,84 +34,14 @@ import (
 // retransmits it into the downstream domain → the consumer's gap auto-fills.
 func TestScenario74_NACKProxyCrossDomain(t *testing.T) {
 	const (
-		upstreamGID   = "0x000B"
-		downstreamGID = "0x00CC"
-		bridge        = "s74-bridge"
-		consumer      = "s74-consumer"
-		dsRetry       = "s74-ds-retry"
-		usRetry       = "s74-us-retry"
+		bridge   = "s74-bridge"
+		consumer = "s74-consumer"
+		dsRetry  = "s74-ds-retry"
+		usRetry  = "s74-us-retry"
 	)
 	ctx := context.Background()
 	e := env.New(t, dockerdriver.New())
-
-	// Upstream proxy (gid 0x000B).
-	e.AddNode(driver.NodeConfig{
-		Name:        "s74-proxy",
-		Image:       "shard-proxy:harness",
-		IPv6:        "fd10::2",
-		Env:         proxyEnv(),
-		MetricsPort: 9100,
-		Role:        driver.RoleProxy,
-	})
-
-	// Upstream retry: caches everything from the proxy; the recovery source.
-	usEnv := retryEnv()
-	usEnv["NACK_ADDR"] = "fd10::20"
-	e.AddNode(driver.NodeConfig{
-		Name:        usRetry,
-		Image:       "retry-endpoint:harness",
-		IPv6:        "fd10::20",
-		Env:         usEnv,
-		MetricsPort: 9400,
-		Role:        driver.RoleRetry,
-	})
-
-	// Bridge listener: ingress on the upstream domain, multicast egress into the
-	// downstream domain. No RETRY_ENDPOINTS, it never recovers its own ingress
-	// gaps, so a dropped frame is absent downstream.
-	brEnv := listenerEnv()
-	brEnv["MC_EGRESS_ENABLED"] = "true"
-	brEnv["MC_EGRESS_GROUP_ID"] = downstreamGID
-	brEnv["MC_EGRESS_PORT"] = "9001"
-	brEnv["MC_EGRESS_SCOPE"] = "site"
-	brEnv["MC_EGRESS_IFACE"] = "eth0"
-	delete(brEnv, "RETRY_ENDPOINTS")
-	e.AddNode(driver.NodeConfig{
-		Name:        bridge,
-		Image:       "shard-listener:harness",
-		IPv6:        "fd10::30",
-		Env:         brEnv,
-		MetricsPort: 9200,
-		Role:        driver.RoleListener,
-	})
-
-	// Downstream consumer: joins the downstream domain, NACKs the downstream retry.
-	coEnv := listenerEnv()
-	coEnv["MC_GROUP_ID"] = downstreamGID
-	coEnv["RETRY_ENDPOINTS"] = "[fd10::40]:9300"
-	e.AddNode(driver.NodeConfig{
-		Name:        consumer,
-		Image:       "shard-listener:harness",
-		IPv6:        "fd10::31",
-		Env:         coEnv,
-		MetricsPort: 9200,
-		Role:        driver.RoleListener,
-	})
-
-	// Downstream retry: serves the downstream domain; proxies misses upstream.
-	dsEnv := retryEnv()
-	dsEnv["MC_GROUP_ID"] = downstreamGID
-	dsEnv["NACK_ADDR"] = "fd10::40"
-	dsEnv["PROXY_ENABLED"] = "true"
-	dsEnv["UPSTREAM_RETRY_ENDPOINTS"] = "[fd10::20]:9300"
-	e.AddNode(driver.NodeConfig{
-		Name:        dsRetry,
-		Image:       "retry-endpoint:harness",
-		IPv6:        "fd10::40",
-		Env:         dsEnv,
-		MetricsPort: 9400,
-		Role:        driver.RoleRetry,
-	})
+	crossDomainNodes(e, "s74", nil)
 
 	e.StartAll(ctx)
 	e.Sleep(4*time.Second, "MLD querier settle + multicast group joins")
@@ -186,4 +116,95 @@ func TestScenario74_NACKProxyCrossDomain(t *testing.T) {
 	// adding proxyRecovered would double count.
 	metrics.AssertNear(t, "consumer suppressed ≈ repairs served into domain",
 		gapsSuppressed, dsRetransmits, 0.30)
+}
+
+// crossDomainNodes adds scenario 74's two-domain topology to e: the proxy and
+// upstream retry on the upstream domain, the bridge listener re-emitting into
+// the downstream domain, and the downstream consumer and retry (proxy-enabled
+// toward the upstream retry). dsExtra is merged into the downstream retry's
+// environment. Node names are prefix + "-proxy", "-us-retry", "-bridge",
+// "-consumer" and "-ds-retry".
+func crossDomainNodes(e *env.Env, prefix string, dsExtra map[string]string) {
+	const (
+		upstreamGID   = "0x000B"
+		downstreamGID = "0x00CC"
+	)
+	var (
+		bridge   = prefix + "-bridge"
+		consumer = prefix + "-consumer"
+		dsRetry  = prefix + "-ds-retry"
+		usRetry  = prefix + "-us-retry"
+	)
+
+	// Upstream proxy (gid 0x000B).
+	e.AddNode(driver.NodeConfig{
+		Name:        prefix + "-proxy",
+		Image:       "shard-proxy:harness",
+		IPv6:        "fd10::2",
+		Env:         proxyEnv(),
+		MetricsPort: 9100,
+		Role:        driver.RoleProxy,
+	})
+
+	// Upstream retry: caches everything from the proxy; the recovery source.
+	usEnv := retryEnv()
+	usEnv["NACK_ADDR"] = "fd10::20"
+	e.AddNode(driver.NodeConfig{
+		Name:        usRetry,
+		Image:       "retry-endpoint:harness",
+		IPv6:        "fd10::20",
+		Env:         usEnv,
+		MetricsPort: 9400,
+		Role:        driver.RoleRetry,
+	})
+
+	// Bridge listener: ingress on the upstream domain, multicast egress into the
+	// downstream domain. No RETRY_ENDPOINTS, it never recovers its own ingress
+	// gaps, so a dropped frame is absent downstream.
+	brEnv := listenerEnv()
+	brEnv["MC_EGRESS_ENABLED"] = "true"
+	brEnv["MC_EGRESS_GROUP_ID"] = downstreamGID
+	brEnv["MC_EGRESS_PORT"] = "9001"
+	brEnv["MC_EGRESS_SCOPE"] = "site"
+	brEnv["MC_EGRESS_IFACE"] = "eth0"
+	delete(brEnv, "RETRY_ENDPOINTS")
+	e.AddNode(driver.NodeConfig{
+		Name:        bridge,
+		Image:       "shard-listener:harness",
+		IPv6:        "fd10::30",
+		Env:         brEnv,
+		MetricsPort: 9200,
+		Role:        driver.RoleListener,
+	})
+
+	// Downstream consumer: joins the downstream domain, NACKs the downstream retry.
+	coEnv := listenerEnv()
+	coEnv["MC_GROUP_ID"] = downstreamGID
+	coEnv["RETRY_ENDPOINTS"] = "[fd10::40]:9300"
+	e.AddNode(driver.NodeConfig{
+		Name:        consumer,
+		Image:       "shard-listener:harness",
+		IPv6:        "fd10::31",
+		Env:         coEnv,
+		MetricsPort: 9200,
+		Role:        driver.RoleListener,
+	})
+
+	// Downstream retry: serves the downstream domain; proxies misses upstream.
+	dsEnv := retryEnv()
+	dsEnv["MC_GROUP_ID"] = downstreamGID
+	dsEnv["NACK_ADDR"] = "fd10::40"
+	dsEnv["PROXY_ENABLED"] = "true"
+	dsEnv["UPSTREAM_RETRY_ENDPOINTS"] = "[fd10::20]:9300"
+	for k, v := range dsExtra {
+		dsEnv[k] = v
+	}
+	e.AddNode(driver.NodeConfig{
+		Name:        dsRetry,
+		Image:       "retry-endpoint:harness",
+		IPv6:        "fd10::40",
+		Env:         dsEnv,
+		MetricsPort: 9400,
+		Role:        driver.RoleRetry,
+	})
 }

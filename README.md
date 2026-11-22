@@ -68,7 +68,7 @@ make test-subtree-announce  # BRC-127 subtree announce scenarios
 make test-frag     # fragmentation scenarios
 make test-block    # BRC-131/132/134/135 block / subtree / anchor / header scenarios
 make test-bgp      # BGP ingress / anycast scenarios (all skip: deferred)
-make test-dedup    # TxID dedup scenarios
+make test-dedup    # dedup scenarios (TxID, egress, retransmit)
 make test-ssm      # SSM scenarios (RFC 4607)
 make test-manifest # BRC-139 manifest / auto-shard-config scenarios
 make test-coalesce # BRC-142 coalescing / bundle-frame scenarios
@@ -89,15 +89,17 @@ sudo go test ./harness/scenarios/... -v -run TestScenario01
 [`SCENARIOS.md`](SCENARIOS.md) is the canonical per-scenario index (titles,
 test names, make-target filters). Highlights:
 
-- **60/61: SSM (RFC 4607)** (`make test-ssm`): `netjoin` source-group
-  join/leave sanity plus ASM-fallback startup; see the
+- **60–62: SSM (RFC 4607)** (`make test-ssm`): `netjoin` source-group
+  join/leave sanity, ASM-fallback startup, and block broadcast joined for the
+  publishers; see the
   [Source-Specific Multicast design](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm).
 - **70–75: BRC-139 manifest, unified logging, NACK proxying**:
   `make test-manifest` (filter `Scenario7[0-5]`) runs 70–72 (wire pipeline,
   live-reshard signal, adoption safety gates), 73 (the `shard-manifest`
   [unified logging](https://github.com/lightwebinc/shard-common/blob/main/docs/logging.md)
   emit contract; the scenario itself uses no containers), and 74–75
-  (cross-domain NACK proxying, inter-fabric RTT repair); any one runs alone
+  (cross-domain NACK proxying, 74b with the downstream retry's Redis stopped,
+  inter-fabric RTT repair); any one runs alone
   via `make test-one T=TestScenario73_UnifiedLoggingContract`.
 - **92–98, 100: BRC-148 BEEF object plane** (`make test-beef`): submission-record
   ingress (open port + dedicated lane), topic/version filtered delivery,
