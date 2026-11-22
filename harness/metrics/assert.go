@@ -71,6 +71,16 @@ func AssertZero(t *testing.T, label string, got float64) {
 	}
 }
 
+// AssertLTE fails t if got > max.
+func AssertLTE(t *testing.T, label string, got, max float64) {
+	t.Helper()
+	if got <= max {
+		t.Logf("PASS  %s: got %.0f <= %.0f", label, got, max)
+	} else {
+		t.Errorf("FAIL  %s: got %.0f > %.0f", label, got, max)
+	}
+}
+
 // AssertLT fails t if got >= max.
 func AssertLT(t *testing.T, label string, got, max float64) {
 	t.Helper()

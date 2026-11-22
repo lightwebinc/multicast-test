@@ -14,9 +14,13 @@ import (
 // Ported from the retired bash scenario 99.
 //
 // Topology: proxy + 3 listeners + 1 retry endpoint + subtx-gen.
-// 1% netem loss on listeners creates gaps. Generator injects sequence gaps
-// (every=200, size=1, delay=50ms). Assertions: gaps detected, NACKs sent,
-// retransmits occur, gaps suppressed (recovered).
+// 1% netem loss on listeners creates gaps that retry1's cache repairs, and
+// the generator skips a sequence number every 200 frames of each flow and
+// sends it 50ms late. A late fill closes its gap itself; retry1 holds no copy
+// before it is sent, so a NACK that beats it gets a MISS. Assertions: gaps
+// detected, NACKs sent, retransmits served, late fills sent; every gap closes
+// and none is lost; no more gaps close than retransmits and late fills
+// account for.
 func TestScenario99_NACKRetransmit(t *testing.T) {
 	ctx := context.Background()
 	e, _ := retryTopology(t, "s99")
@@ -44,38 +48,34 @@ func TestScenario99_NACKRetransmit(t *testing.T) {
 	startGenerator(t, ctx, "s99", genCmd)
 	waitGenerator(t, ctx, "s99")
 
-	e.Sleep(4*time.Second, "NACK/retransmit pipeline drain")
-
-	afterL := scrapeListeners(t, e, ctx, "s99")
+	// Settle: every gap closed or booked unrecovered, and counters still.
+	afterL := settleRecovery(t, e, ctx, "s99", beforeL, 60*time.Second)
 	urlR := e.MetricsURL(ctx, "s99-retry1")
 	afterR := metrics.ScrapeOrFail(t, urlR)
 
 	e.LogContainerOutput(ctx, "s99-source")
+	late := generatorLate(t, ctx, "s99")
 
 	// Aggregate listener metrics.
 	gapsDetected := sumListenerDelta("s99", "bsl_gaps_detected_total", beforeL, afterL)
 	nacksDispatched := sumListenerDelta("s99", "bsl_nacks_dispatched_total", beforeL, afterL)
-	gapsSuppressed := sumListenerDelta("s99", "bsl_gaps_suppressed_total", beforeL, afterL)
-	gapsUnrecovered := sumListenerDelta("s99", "bsl_gaps_unrecovered_total", beforeL, afterL)
 
 	deltaR := metrics.DeltaMap(beforeR, afterR)
 	framesCached := deltaR["bre_frames_cached_total"]
 	nacksReceived := deltaR["bre_nack_requests_total"]
-	retransmits := deltaR["bre_retransmits_total"]
 
-	t.Logf("gaps_detected=%.0f nacks_dispatched=%.0f gaps_suppressed=%.0f gaps_unrecovered=%.0f",
-		gapsDetected, nacksDispatched, gapsSuppressed, gapsUnrecovered)
-	t.Logf("retry: cached=%.0f nacks_received=%.0f retransmits=%.0f",
-		framesCached, nacksReceived, retransmits)
+	g := newGapRepair(beforeL, afterL, beforeR, afterR, late)
+	g.log(t)
+	logGapOutcomes(t, e, ctx, "s99")
+	t.Logf("gaps_detected=%.0f nacks_dispatched=%.0f; retry: cached=%.0f nacks_received=%.0f",
+		gapsDetected, nacksDispatched, framesCached, nacksReceived)
 
 	metrics.AssertGT(t, "retry cached frames", framesCached)
 	metrics.AssertGT(t, "gaps detected", gapsDetected)
 	metrics.AssertGT(t, "NACKs dispatched", nacksDispatched)
 	metrics.AssertGT(t, "NACKs received by retry", nacksReceived)
-	metrics.AssertGT(t, "retransmits", retransmits)
-	metrics.AssertGT(t, "gaps suppressed (recovered)", gapsSuppressed)
-	// gaps_suppressed alone is not repair evidence (a late frame or a trusted
-	// bare ACK also suppresses). Tying suppressed to retransmits-served fails
-	// both a suppressed-without-served run and a served-but-never-received run.
-	metrics.AssertNear(t, "gaps suppressed ≈ retransmits served", gapsSuppressed, retransmits, 0.30)
+	metrics.AssertGT(t, "retransmits served", g.retransmits)
+	metrics.AssertGT(t, "late gap fills sent", late)
+	g.assertNothingLost(t)
+	g.assertAccounted(t, 0.10)
 }

@@ -28,7 +28,7 @@ make test-one T=TestScenario36_AnchorDelivery
 | 05  | Multicast egress bridge (group re-mapping)   | `TestScenario05_McEgressBridge`              | [harness](harness/scenarios/scenario05_test.go)              |
 | 06  | Functional BRC-128 (Extended Format payload) | `TestScenario06_FunctionalBRC128`            | [harness](harness/scenarios/scenario06_test.go)             |
 | 07  | Functional BRC-128 + BRC-124 coexistence     | `TestScenario07_FunctionalBRC128Mixed`       | [harness](harness/scenarios/scenario07_test.go)       |
-| 08  | NACK retransmit with BRC-128 payloads        | `TestScenario08_NackRetransmitBRC128`        | [harness](harness/scenarios/scenario08_test.go)        |
+| 08  | NACK retransmit with BRC-128 payloads        | `TestScenario08_NackRetransmitBRC128`        | [harness](harness/scenarios/scenario08_test.go) · as 99 with BRC-128 payloads |
 | 09  | Listener payload hash verification           | `TestScenario09_ListenerPayloadVerification` | [harness](harness/scenarios/scenario09_test.go) |
 
 ## 10–19: NACK / retransmit / rate limiting
@@ -39,11 +39,11 @@ make test-one T=TestScenario36_AnchorDelivery
 | --- | ----------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | 10  | Single endpoint ACK (tightened)                 | `TestScenario10_SingleEndpointACK`      | [harness](harness/scenarios/scenario10_test.go) · a second phase loses the multicast repair copy itself (nft in listener1's netns drops 40 frames from the proxy, then the retry's first 40 copies): the shortfall identity and `delivered == sent` must hold, so a gap is never closed on the ACK alone |
 | 11  | Permanent gap / MISS (cache-empty)              | `TestScenario11_PermanentGapMISS`       | [harness](harness/scenarios/scenario11_test.go)       |
-| 12  | Burst gap + rate limiting                       | `TestScenario12_BurstGapRatelimit`      | [harness](harness/scenarios/scenario12_test.go)      |
+| 12  | Burst gap + rate limiting                       | `TestScenario12_BurstGapRatelimit`      | [harness](harness/scenarios/scenario12_test.go) · 3-number late gaps (500ms) under 5% loss: the IP limiter fires, retransmits still go out, and the 99 ledger holds: every gap closes, none is lost |
 | 13  | MISS escalation by tier                         | `TestScenario13_MissEscalationTier`     | [harness](harness/scenarios/scenario13_test.go)     |
 | 14  | Multi-endpoint rate limit defense               | `TestScenario14_MultiEndpointRatelimit` | [harness](harness/scenarios/scenario14_test.go) |
 | 15  | Per-chain NACK rate limit                       | `TestScenario15_ChainRatelimit`         | [harness](harness/scenarios/scenario15_test.go)          |
-| 16  | Per-group retransmit rate limit (ACK preserved) | `TestScenario16_GroupRatelimit`         | [harness](harness/scenarios/scenario16_test.go)          |
+| 16  | Per-group retransmit rate limit (no ACK on throttle) | `TestScenario16_GroupRatelimit`    | [harness](harness/scenarios/scenario16_test.go) · the group limiter fires on cache-hit NACKs, some retransmits still go out, no ACK without one; closures within the 99 ledger bound |
 | 17  | Recovery shortfall identity (clean regime)      | `TestScenario17_RecoveryShortfallIdentity` | [harness](harness/scenarios/scenario17_test.go) · full exact identity: `unrecovered == sent − delivered == 0` plus gap closure per unfiltered listener (unicast-only repair, warmup/trailer); also guards the tracker against a low-seq repair being read as a proxy restart, which would flush pending gaps to phantom unrecovered; a second phase loses a contiguous 4,000-frame burst behind a receive backlog (listener frozen with `docker pause`, burst dropped by nft in its netns) and asserts the same identity, every frame NACKed and no flow re-baselined |
 | 18  | Unrecoverable-loss (cache MISS) shortfall identity | `TestScenario18_UnrecoverableLossShortfallIdentity` | [harness](harness/scenarios/scenario18_test.go) · same identity with `unrecovered > 0` forced by an empty retry cache (rate-limit starvation only delays repair: a late range-fill still delivers, breaking exactness) |
 | 19  | Listener retry-tee feeds a join-less cache      | `TestScenario19_ListenerTeeFedJoinlessRepair` | [harness](harness/scenarios/scenario19_test.go) · retry runs `MC_JOIN_ENABLED=false` + `TEE_LISTEN`, fed ONLY by a co-resident listener's `-retry-tee` (real shared netns via `ShareNetNS`); remote listeners' netem loss fully repaired from that cache, with per-source attribution preserved through the teewire envelope (`bre_cache_stored_total{source=<proxy>}` moves, `{source="::1"}` stays 0) |
@@ -229,7 +229,7 @@ per-domain quorum/hysteresis/divergence with BRC-139-only back-compat.
 
 | #   | Title                      | Test                            | Files                                                                                           |
 | --- | -------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------- |
-| 99  | NACK retransmit end-to-end | `TestScenario99_NACKRetransmit` | [harness](harness/scenarios/scenario99_test.go) |
+| 99  | NACK retransmit end-to-end | `TestScenario99_NACKRetransmit` | [harness](harness/scenarios/scenario99_test.go) · 1% loss repaired by retransmits, `-seq-gap-delay` gaps closed by their late fills (the generator's `late=`); after the gaps settle, none is lost (unrecovered minus late-filled is 0) and no more close than retransmits plus late fills at the listeners tracking them account for |
 
 ## Make targets
 
