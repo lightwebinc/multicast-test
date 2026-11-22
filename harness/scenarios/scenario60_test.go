@@ -18,9 +18,10 @@ import (
 // early-warning if the test host lacks SSM kernel support (e.g.
 // MCAST_JOIN_SOURCE_GROUP rejected, mld_max_msf at default 64).
 //
-// Posture C end-to-end across containers requires PIM-SSM in the
-// inter-container fabric, which Docker's default bridge does not
-// provide; that is validated on real fabric hosts (not in this
+// SSM delivery between containers on the harness's one bridge needs no
+// PIM: the bridge forwards the group and each receiver's kernel applies
+// its source filter (scenario 62). SSM routed across hosts needs PIM-SSM
+// in the fabric; that is validated on real fabric hosts (not in this
 // harness). See the Source-Specific Multicast section of bsv-multicast
 // DESIGN.md for the design.
 func TestScenario60_SSMLoopback(t *testing.T) {

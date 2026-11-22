@@ -94,14 +94,16 @@ tests.
 | 41  | BGP ingress failover (stub)                                 | `TestScenario41_BGPIngressFailover`   | [harness](harness/scenarios/scenario41_test.go)    |
 | 42  | BGP multi-proxy anycast: ECMP + failover (deferred)         | `TestScenario42_BGPMultiProxyAnycast` | [harness](harness/scenarios/scenario42_test.go) |
 
-## 50–53: TxID dedup
+## 50–55: Dedup
 
 `make test-dedup`
 
-The listeners' egress TxID dedup points `EGRESS_DEDUP_REDIS_ADDR` at a Redis
-container on the test fabric; listeners sharing a `DEPLOYMENT_ID` are HA
-siblings that forward each TxID once between them. The listener dials one Redis
-address and has no Sentinel client.
+In 50–53 the listeners' egress TxID dedup points `EGRESS_DEDUP_REDIS_ADDR` at
+a Redis container on the test fabric; listeners sharing a `DEPLOYMENT_ID` are
+HA siblings that forward each TxID once between them. The listener dials one
+Redis address and has no Sentinel client. 54 covers the listener's local
+egress dedup (`EGRESS_DEDUP_CAP`), and 55 the retry endpoint's cross-instance
+retransmit claim in Redis (`REDIS_ADDR`).
 
 | #   | Title                                                      | Test                                   | Files                                                                                                    |
 | --- | ---------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -109,20 +111,25 @@ address and has no Sentinel client.
 | 51  | TxID dedup: collision (single listener, no dedup expected) | `TestScenario51_TxIDDedupCollision`    | [harness](harness/scenarios/scenario51_test.go) · one listener on the Redis backend: one claim key in Redis per forwarded frame, nothing suppressed, no backend errors |
 | 52  | TxID dedup: Redis failure (fail-open)                      | `TestScenario52_TxIDDedupRedisFailure` | [harness](harness/scenarios/scenario52_test.go) · three HA siblings dedup through Redis; with Redis stopped every claim fails and each frame is forwarded anyway, nothing suppressed |
 | 53  | TxID dedup: HA sibling failover                            | `TestScenario53_TxIDDedupFailover`     | [harness](harness/scenarios/scenario53_test.go) · listener2 stops between two traffic phases; listener1 and listener3 still deliver each TxID once and keep deduplicating |
+| 54  | Egress dedup: two senders sharing (group, subtree, SeqNum) | `TestScenario54_EgressDedupTwoSenders` | [harness](harness/scenarios/scenario54_test.go) · two proxies' frames differ only in HashKey; with `EGRESS_DEDUP_CAP` on, every frame of both is delivered and none deduplicated |
+| 55  | Retransmit dedup: Redis failure (fail-open)                | `TestScenario55_RetransmitDedupRedisFailure` | [harness](harness/scenarios/scenario55_test.go) · retry1 claims retransmits in Redis, and a listener that missed the copy has its repeat NACK sent past the claim (`bre_retransmit_repeats_total`); with Redis stopped mid-run it retransmits anyway, skips claims behind the claim breaker (`bre_dedup_skipped_total{claim="retransmit"}`) with one failed probe per window after the first second (`bre_dedup_errors_total`), and every gap is repaired |
 
 ## 60–69: Source-Specific Multicast (RFC 4607)
 
 `make test-ssm`
 
 Validates the [Source-Specific Multicast design](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm)
-implementation. Full cross-host SSM data delivery requires
-PIM-SSM in the fabric (not provided by Docker's default bridge) and
-is validated on real fabric hosts.
+implementation. On the harness's one bridge no PIM is needed: the bridge
+forwards each group to its members and each receiver's kernel applies the
+source filter of its `(S,G)` join, which scenario 62 relies on. SSM routed
+across hosts needs PIM-SSM in the fabric and is validated on real fabric
+hosts.
 
 | #   | Title                                         | Test                              | Files                                                          |
 | --- | --------------------------------------------- | --------------------------------- | -------------------------------------------------------------- |
 | 60  | SSM loopback Join/Leave (kernel sanity check) | `TestScenario60_SSMLoopback`      | [harness](harness/scenarios/scenario60_test.go) |
 | 61  | SSM ASM-fallback startup (scaffolding no-op)  | `TestScenario61_SSMASMFallback`   | [harness](harness/scenarios/scenario61_test.go) |
+| 62  | SSM block broadcast follows the publisher roster | `TestScenario62_SSMBlockBroadcastPublishers` | [harness](harness/scenarios/scenario62_test.go) · a decoy at another source, the only manifest announcer, also emits on 0xFFFE; the listener delivers and the retry endpoint caches the publisher's block frames only |
 
 ## 70–79: BRC-139 manifest / auto-shard-config
 
@@ -151,6 +158,7 @@ The scenario itself needs only `go` + loopback (no containers); the package's
 | #  | Title                          | Test                                  | Files                                                          |
 | -- | ------------------------------ | ------------------------------------- | -------------------------------------------------------------- |
 | 74 | Cross-domain NACK proxying     | `TestScenario74_NACKProxyCrossDomain` | [harness](harness/scenarios/scenario74_test.go) |
+| 74b | Same, with the downstream retry's Redis stopped mid-run | `TestScenario74b_NACKProxyRedisFailure` | [harness](harness/scenarios/scenario74b_test.go) · its proxy and retransmit claims fail open, skipped behind the claim breaker (`bre_dedup_skipped_total`) with one failed probe per window after the first second (`bre_dedup_errors_total`), and the consumer recovers every gap |
 | 75 | NACK repair at inter-fabric RTT | `TestScenario75_NACKRepairInterFabric` | [harness](harness/scenarios/scenario75_test.go) · requires sudo (netem) |
 
 Two domains on one fabric (isolated by mc-group-id): a proxy + upstream
@@ -242,8 +250,8 @@ per-domain quorum/hysteresis/divergence with BRC-139-only back-compat.
 | `make test-frag`             | `Scenario2[2-6]`                | fragmentation                  |
 | `make test-block`            | `Scenario3[0-7]`                | BRC-131/132/134/135 lanes      |
 | `make test-bgp`              | `Scenario4[0-2]`                | BGP (all skip)                 |
-| `make test-dedup`            | `Scenario5[0-3]`                | TxID dedup                     |
-| `make test-ssm`              | `Scenario6[01]`                 | SSM (RFC 4607)                 |
+| `make test-dedup`            | `Scenario5[0-5]`                | dedup (TxID, egress, retransmit) |
+| `make test-ssm`              | `Scenario6[0-2]`                | SSM (RFC 4607)                 |
 | `make test-manifest`         | `Scenario7[0-5]`                | BRC-139 / auto-shard-config    |
 | `make test-coalesce`         | `Scenario(89\|9[01])`           | BRC-142 coalescing / bundle    |
 | `make test-beef`             | `Scenario(9[2-8]\|100)`         | BRC-148 BEEF object plane      |

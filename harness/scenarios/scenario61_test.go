@@ -20,9 +20,9 @@ import (
 // regression guard against accidentally making the SSM code path
 // non-optional.
 //
-// Full Posture C cross-container SSM data delivery requires PIM-SSM
-// in the fabric (not provided by Docker's default bridge) and is
-// covered on real fabric hosts.
+// SSM delivery between containers on the one bridge is scenario 62's;
+// SSM routed across hosts needs PIM-SSM in the fabric and is covered on
+// real fabric hosts.
 func TestScenario61_SSMASMFallback(t *testing.T) {
 	ctx := context.Background()
 	e := env.New(t, dockerdriver.New())
