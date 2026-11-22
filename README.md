@@ -46,13 +46,14 @@ directory:
 ├── retry-endpoint
 ├── subtx-generator
 ├── beef-generator      (BEEF scenarios 92–98, 100)
-└── shard-manifest      (scenario 73)
+└── shard-manifest      (scenarios 64, 72b, 73)
 ```
 
 Every run builds the `shard-proxy`, `shard-listener`, `retry-endpoint`,
 `subtx-generator` and `beef-generator` images before the first scenario (an
 existing image is reused), so those checkouts are needed whichever scenarios
-run; `shard-manifest` is built by scenario 73 alone.
+run. The `shard-manifest` image is built by the scenarios that run an
+announcer (64, 72b), its binary by scenario 73.
 
 If the parent directory has a `go.work` listing the repos, the builder uses
 it; otherwise it injects a temporary `replace` directive pointing at the
@@ -89,13 +90,15 @@ sudo go test ./harness/scenarios/... -v -run TestScenario01
 [`SCENARIOS.md`](SCENARIOS.md) is the canonical per-scenario index (titles,
 test names, make-target filters). Highlights:
 
-- **60–62: SSM (RFC 4607)** (`make test-ssm`): `netjoin` source-group
-  join/leave sanity, ASM-fallback startup, and block broadcast joined for the
-  publishers; see the
+- **60–65: SSM (RFC 4607)** (`make test-ssm`): `netjoin` source-group
+  join/leave sanity, ASM-fallback startup, block broadcast and subtree data
+  joined for the publishers, the manifest consumer beside the workers on the
+  stock port, and auto-join following the BRC-139 pilots; see the
   [Source-Specific Multicast design](https://github.com/lightwebinc/bsv-multicast/blob/main/DESIGN.md#source-specific-multicast-ssm).
 - **70–75: BRC-139 manifest, unified logging, NACK proxying**:
   `make test-manifest` (filter `Scenario7[0-5]`) runs 70–72 (wire pipeline,
-  live-reshard signal, adoption safety gates), 73 (the `shard-manifest`
+  live-reshard signal, adoption safety gates), 72b (the listener's manifest
+  consumer against its running config), 73 (the `shard-manifest`
   [unified logging](https://github.com/lightwebinc/shard-common/blob/main/docs/logging.md)
   emit contract; the scenario itself uses no containers), and 74–75
   (cross-domain NACK proxying, 74b with the downstream retry's Redis stopped,
