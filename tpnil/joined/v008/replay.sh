@@ -24,7 +24,10 @@ observation = json.loads(obj(record["observationHash"]))
 names = [i["environment"] for i in plan["inputs"]]
 fixture = obj(record["inputHashes"][names.index("TPNIL_TX_FIXTURE_EF")])
 capture = base64.b64decode("".join(re.findall(r"^V008-CAPTURE (.*)$", observation["stdout"], re.M)))
-hosts = re.search(r"^V008 observer: tcpdump on \S+, filter '(.*)'$", observation["stdout"], re.M).group(1)
+hosts = re.search(r"^V008 observer: tcpdump on \S+, filter '(.*)'$", observation["stdout"], re.M)
+if hosts is None or not capture:
+    sys.exit("replay: the bundle retains no capture")
+hosts = hosts.group(1)
 open(os.path.join(out, "fixture.ef.bin"), "wb").write(fixture)
 open(os.path.join(out, "lane.pcap"), "wb").write(capture)
 open(os.path.join(out, "port"), "w").write(plan["environment"]["TPNIL_TX_LANE_PORT"])

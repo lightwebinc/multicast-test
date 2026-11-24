@@ -67,6 +67,9 @@ HOSTS=$(sudo -n docker inspect "$TPNIL_TX_LANE_CONTAINER" \
 	fail BLOCKED "container $TPNIL_TX_LANE_CONTAINER not found"
 FILTER='' HOST_ARGS=()
 for h in $HOSTS; do
+	# An interface without an address of one family prints a placeholder
+	# word, not an address: keep only tokens made of address characters.
+	case $h in *[!0-9a-fA-F:.]*) continue ;; esac
 	FILTER="${FILTER:+$FILTER or }dst host $h"
 	HOST_ARGS+=(--host "$h")
 done
