@@ -76,7 +76,7 @@ TPNIL_COMMIT=<p2ppsr/interop commit holding scripts/isi5-observe-tx-lane.mjs> \
 | Freeze | One transaction is minted and written as `fixture.ef.bin`. The plan binds that file and the laboratory's observer script by SHA-256, and states the byte count and the time |
 | Start | The system starts in the fabric-only configuration. The run checks that every container started after the freeze |
 | Observe | `tcpdump` captures TCP segments to the processor bridge's lane port on the fabric network's host bridge. `curl` submits the fixture to Broadcaster. The capture runs 20 s past the first delivery |
-| Judge | TPNIL's `scripts/isi5-observe-tx-lane.mjs` reassembles the capture and compares it with the byte count and SHA-256 that `wc` and `sha256sum` give for the frozen file. `sha256sum` and `cmp` check the decoded payload again |
+| Judge | TPNIL's `scripts/isi5-observe-tx-lane.mjs` reassembles the capture and compares it with the byte count and SHA-256 that `wc` and `sha256sum` give for the frozen file. `sha256sum` and `cmp` check the decoded payload again, and the connection's source must be an address of the delivery edge |
 | Negative control | The same capture with one payload byte changed must be rejected by the same observer |
 
 | Outcome | Meaning |

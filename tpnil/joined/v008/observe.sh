@@ -23,6 +23,7 @@
 #   TPNIL_TX_LANE_IFACE          host interface of the fabric network
 #   TPNIL_TX_LANE_PORT           the transaction lane's TCP port
 #   TPNIL_TX_LANE_CONTAINER      the processor bridge's container
+#   TPNIL_TX_LANE_EDGE_CONTAINER the delivery edge's container
 #   TPNIL_SYSTEM_CONTAINERS      containers that must have started after the freeze
 #   TPNIL_TERANODE_BRIDGE_METRICS  the processor bridge's metrics URL
 #   TPNIL_SETTLE_SECONDS         how long the capture runs on after the first
@@ -31,7 +32,7 @@ set -uo pipefail
 
 need() { [ -n "${!1:-}" ] || { echo "observe.sh: $1 is required" >&2; exit 2; }; }
 for v in TPNIL_TX_FIXTURE_EF TPNIL_FIXTURE_FROZEN_AT TPNIL_TX_LANE_OBSERVER TPNIL_BROADCASTER_URL \
-	TPNIL_TX_LANE_IFACE TPNIL_TX_LANE_PORT TPNIL_TX_LANE_CONTAINER TPNIL_SYSTEM_CONTAINERS TPNIL_TERANODE_BRIDGE_METRICS; do need "$v"; done
+	TPNIL_TX_LANE_IFACE TPNIL_TX_LANE_PORT TPNIL_TX_LANE_CONTAINER TPNIL_TX_LANE_EDGE_CONTAINER TPNIL_SYSTEM_CONTAINERS TPNIL_TERANODE_BRIDGE_METRICS; do need "$v"; done
 SETTLE=${TPNIL_SETTLE_SECONDS:-20}
 TMP=$(mktemp -d) || exit 2
 CAPTURE=$TMP/lane.pcap
@@ -126,6 +127,15 @@ if [ -f "$TMP/payload.bin" ]; then
 	base64 -w 76 "$TMP/payload.bin" | sed 's/^/V008-PAYLOAD /'
 fi
 [ "$VERDICT" = PASS ] || fail "${VERDICT:-BLOCKED}" "see the observation above"
+# The connection that carried the delivery came from the delivery edge.
+EDGE=$(sudo -n docker inspect "$TPNIL_TX_LANE_EDGE_CONTAINER" \
+	--format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{.GlobalIPv6Address}} {{end}}' 2>/dev/null) ||
+	fail BLOCKED "container $TPNIL_TX_LANE_EDGE_CONTAINER not found"
+FROM=$(python3 -I -c 'import json, sys
+flows = [f for f in json.loads(sys.stdin.readline())["flows"] if f["payloadBytes"] > 0]
+print(flows[0]["flow"].split("]")[0].lstrip("["))' < "$TMP/observation.out") || fail BLOCKED "the observation names no connection"
+case " $EDGE " in *" $FROM "*) ;; *) fail FAIL "the delivery came from $FROM, which is not an address of the delivery edge ($EDGE)" ;; esac
+echo "V008 the delivery's connection came from the delivery edge: $FROM is an address of $TPNIL_TX_LANE_EDGE_CONTAINER"
 cmp -s "$TPNIL_TX_FIXTURE_EF" "$TMP/payload.bin" || fail FAIL "cmp: the decoded payload differs from the frozen fixture"
 echo "V008 cmp: the decoded payload equals the frozen fixture"
 
