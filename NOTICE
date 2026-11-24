@@ -28,10 +28,10 @@ this notice does not modify those licenses.
 
 go-sdk, which the tpnil fixture tool uses, is under the Apache License
 2.0 from v1.7.5, and go-overlay-services, which the tpnil overlay host
-uses, from v1.3.9; those are the versions this suite builds on. Earlier
+uses, from v1.3.9; this suite builds on v1.7.8 and v1.3.10. Earlier
 versions of both were under the Open BSV License Version 5, whose grant
 was revocable and limited to the BSV Blockchains; those terms do not
-apply to these versions.
+apply to the versions built on.
 
 Section 4(d) of the Apache License asks that a module's NOTICE travel
 with it. Both ship one, and their attribution notices are these:
