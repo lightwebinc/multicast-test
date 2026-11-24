@@ -58,6 +58,42 @@ verifying every bundle offline:
 | Overlay delivery | V011 | overlay-bridge | An object submitted to one host is delivered over the BEEF object plane and admitted by the other; both hosts answer the same lookup; a repeat creates no second admission |
 | Restore | Restore condition | arcade-bridge | Broadcaster's discovery and Merkle Service's own libp2p source return |
 
+## V008 by itself, with an outside observer
+
+`qualify-v008.sh` runs one assertion: the transaction lane delivers the
+fixture's Extended Format bytes, once, unchanged.
+
+```sh
+RUNNER_ID="Example Laboratory, operator A. Operator" \
+MULTICAST_TEST_COMMIT=<this repository's commit> \
+TPNIL_COMMIT=<p2ppsr/interop commit holding scripts/isi5-observe-tx-lane.mjs> \
+  tpnil/joined/qualify-v008.sh "$WORK"
+```
+
+| Step | What happens |
+| --- | --- |
+| Stop | Broadcaster, Merkle Service, the fabric and the bridges stop. The processor stays up, because the fixture spends a coinbase output of its regtest chain |
+| Freeze | One transaction is minted and written as `fixture.ef.bin`. The plan binds that file and the laboratory's observer script by SHA-256, and states the byte count and the time |
+| Start | The system starts in the fabric-only configuration. The run checks that every container started after the freeze |
+| Observe | `tcpdump` captures TCP segments to the processor bridge's lane port on the fabric network's host bridge. `curl` submits the fixture to Broadcaster. The capture runs 20 s past the first delivery |
+| Judge | TPNIL's `scripts/isi5-observe-tx-lane.mjs` reassembles the capture and compares it with the byte count and SHA-256 that `wc` and `sha256sum` give for the frozen file. `sha256sum` and `cmp` check the decoded payload again, and the connection's source must be an address of the delivery edge |
+| Negative control | The same capture with one payload byte changed must be rejected by the same observer |
+
+| Outcome | Meaning |
+| --- | --- |
+| PASS | Exactly one delivery, equal to the fixture |
+| FAIL | A changed byte, a different transaction, or a second delivery |
+| BLOCKED | No capture, no lane packets in it, or a stream with a hole |
+
+No fabric component's own check decides the result;
+[`v008/observe.sh`](v008/observe.sh) prints the processor bridge's lane counter
+beside it as an accompanying event. The run's output carries the capture and
+the decoded payload in base64, so the bundle replays offline:
+
+```sh
+tpnil/joined/v008/replay.sh BUNDLE path/to/interop/scripts/isi5-observe-tx-lane.mjs OUT
+```
+
 ## Notes
 
 - The processor's RPC service is bound to loopback and uses the fixed
