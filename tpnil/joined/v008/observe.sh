@@ -75,6 +75,19 @@ for h in $HOSTS; do
 	HOST_ARGS+=(--host "$h")
 done
 [ -n "$FILTER" ] || fail BLOCKED "container $TPNIL_TX_LANE_CONTAINER has no address"
+# The delivery edge's addresses: the observer requires the delivery to come
+# from one of them.
+EDGE=$(sudo -n docker inspect "$TPNIL_TX_LANE_EDGE_CONTAINER" \
+	--format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{.GlobalIPv6Address}} {{end}}' 2>/dev/null) ||
+	fail BLOCKED "container $TPNIL_TX_LANE_EDGE_CONTAINER not found"
+EDGE_ADDRS=''
+for h in $EDGE; do
+	case $h in *[!0-9a-fA-F:.]*) continue ;; esac
+	HOST_ARGS+=(--source "$h")
+	EDGE_ADDRS="${EDGE_ADDRS:+$EDGE_ADDRS }$h"
+done
+[ -n "$EDGE_ADDRS" ] || fail BLOCKED "container $TPNIL_TX_LANE_EDGE_CONTAINER has no address"
+echo "V008 delivery edge addresses: $EDGE_ADDRS"
 FILTER="tcp dst port $TPNIL_TX_LANE_PORT and ($FILTER)"
 sudo -n tcpdump -i "$TPNIL_TX_LANE_IFACE" -U -n -s 0 -Z root -w "$CAPTURE" "$FILTER" 2> "$TMP/tcpdump.err" &
 for _ in $(seq 1 100); do
@@ -127,15 +140,9 @@ if [ -f "$TMP/payload.bin" ]; then
 	base64 -w 76 "$TMP/payload.bin" | sed 's/^/V008-PAYLOAD /'
 fi
 [ "$VERDICT" = PASS ] || fail "${VERDICT:-BLOCKED}" "see the observation above"
-# The connection that carried the delivery came from the delivery edge.
-EDGE=$(sudo -n docker inspect "$TPNIL_TX_LANE_EDGE_CONTAINER" \
-	--format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{.GlobalIPv6Address}} {{end}}' 2>/dev/null) ||
-	fail BLOCKED "container $TPNIL_TX_LANE_EDGE_CONTAINER not found"
-FROM=$(python3 -I -c 'import json, sys
-flows = [f for f in json.loads(sys.stdin.readline())["flows"] if f["payloadBytes"] > 0]
-print(flows[0]["flow"].split("]")[0].lstrip("["))' < "$TMP/observation.out") || fail BLOCKED "the observation names no connection"
-case " $EDGE " in *" $FROM "*) ;; *) fail FAIL "the delivery came from $FROM, which is not an address of the delivery edge ($EDGE)" ;; esac
-echo "V008 the delivery's connection came from the delivery edge: $FROM is an address of $TPNIL_TX_LANE_EDGE_CONTAINER"
+# The observer was given the delivery edge's addresses: a PASS means the
+# delivery's connection came from one of them.
+echo "V008 the delivery's connection came from the delivery edge: $TPNIL_TX_LANE_EDGE_CONTAINER"
 cmp -s "$TPNIL_TX_FIXTURE_EF" "$TMP/payload.bin" || fail FAIL "cmp: the decoded payload differs from the frozen fixture"
 echo "V008 cmp: the decoded payload equals the frozen fixture"
 

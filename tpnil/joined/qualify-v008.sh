@@ -71,7 +71,8 @@ mkdir -p "$RUN" || die "cannot create $RUN"
 say "1. stop the system (the processor stays up)"
 sudo -n docker compose -p broadcaster stop >/dev/null 2>&1 || die "Broadcaster did not stop"
 sudo -n docker compose -p tpnil-fabric stop >/dev/null 2>&1 || die "the fabric did not stop"
-RUNNING=$(sudo -n docker ps --filter label=com.docker.compose.project=broadcaster --filter label=com.docker.compose.project=tpnil-fabric -q | wc -l)
+# One query per project: repeated label filters are ANDed.
+RUNNING=$(for p in broadcaster tpnil-fabric; do sudo -n docker ps -q --filter "label=com.docker.compose.project=$p"; done | wc -l)
 [ "$RUNNING" = 0 ] || die "$RUNNING system containers still run"
 # From here an early exit must leave the standing configuration up.
 restore() {

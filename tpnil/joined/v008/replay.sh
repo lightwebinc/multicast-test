@@ -32,10 +32,13 @@ open(os.path.join(out, "fixture.ef.bin"), "wb").write(fixture)
 open(os.path.join(out, "lane.pcap"), "wb").write(capture)
 open(os.path.join(out, "port"), "w").write(plan["environment"]["TPNIL_TX_LANE_PORT"])
 open(os.path.join(out, "hosts"), "w").write(" ".join(re.findall(r"dst host (\S+?)\)?(?: |$)", hosts)))
+edge = re.search(r"^V008 delivery edge addresses: (.*)$", observation["stdout"], re.M)
+open(os.path.join(out, "sources"), "w").write(edge.group(1) if edge else "")
 PY
 PORT=$(cat "$OUT/port")
 HOST_ARGS=()
 for h in $(cat "$OUT/hosts"); do HOST_ARGS+=(--host "$h"); done
+for h in $(cat "$OUT/sources"); do HOST_ARGS+=(--source "$h"); done
 SHA=$(sha256sum < "$OUT/fixture.ef.bin" | cut -d' ' -f1)
 BYTES=$(wc -c < "$OUT/fixture.ef.bin" | tr -d ' ')
 rm -f "$OUT/payload.bin" "$OUT/varied.pcap"
